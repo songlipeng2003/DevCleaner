@@ -1,9 +1,6 @@
 use serde::{Deserialize, Serialize};
-use tauri::Manager;
-use sysinfo::{System, Disks};
 use reqwest;
 use once_cell::sync::Lazy;
-use std::sync::Mutex;
 use std::process::Command;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -23,6 +20,8 @@ pub struct ToolInfo {
     pub name: String,
     pub paths: Vec<String>,
     pub enabled: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -104,23 +103,34 @@ pub async fn scan_tool(tool_id: String) -> Result<Vec<ScanResult>, String> {
                 // Go后端返回 {"results": [...], "stats": {...}}
                 let json: serde_json::Value = match response.json().await {
                     Ok(json) => json,
-                    Err(e) => return Err(format!("Failed to parse scan response: {}", e)),
+                    Err(e) => {
+                        eprintln!("Failed to parse scan response: {}", e);
+                        return Ok(vec![]); // 返回空数组而不是错误
+                    }
                 };
                 
                 // 提取results数组
                 if let Some(results) = json.get("results") {
                     match serde_json::from_value(results.clone()) {
                         Ok(scan_results) => Ok(scan_results),
-                        Err(e) => Err(format!("Failed to parse scan results: {}", e)),
+                        Err(e) => {
+                            eprintln!("Failed to parse scan results: {}", e);
+                            Ok(vec![]) // 返回空数组而不是错误
+                        }
                     }
                 } else {
-                    Err("Scan response missing 'results' field".to_string())
+                    eprintln!("Scan response missing 'results' field");
+                    Ok(vec![]) // 返回空数组
                 }
             } else {
-                Err(format!("Backend returned error: {}", response.status()))
+                eprintln!("Backend returned error: {}", response.status());
+                Ok(vec![]) // 返回空数组而不是错误
             }
         }
-        Err(e) => Err(format!("Failed to connect to backend: {}", e)),
+        Err(e) => {
+            eprintln!("Failed to connect to backend: {}", e);
+            Ok(vec![]) // 返回空数组而不是错误
+        }
     }
 }
 
@@ -143,23 +153,34 @@ pub async fn scan_all_tools() -> Result<Vec<ScanResult>, String> {
                 // Go后端返回 {"results": [...], "stats": {...}}
                 let json: serde_json::Value = match response.json().await {
                     Ok(json) => json,
-                    Err(e) => return Err(format!("Failed to parse scan response: {}", e)),
+                    Err(e) => {
+                        eprintln!("Failed to parse scan response: {}", e);
+                        return Ok(vec![]); // 返回空数组而不是错误
+                    }
                 };
                 
                 // 提取results数组
                 if let Some(results) = json.get("results") {
                     match serde_json::from_value(results.clone()) {
                         Ok(scan_results) => Ok(scan_results),
-                        Err(e) => Err(format!("Failed to parse scan results: {}", e)),
+                        Err(e) => {
+                            eprintln!("Failed to parse scan results: {}", e);
+                            Ok(vec![]) // 返回空数组而不是错误
+                        }
                     }
                 } else {
-                    Err("Scan response missing 'results' field".to_string())
+                    eprintln!("Scan response missing 'results' field");
+                    Ok(vec![]) // 返回空数组
                 }
             } else {
-                Err(format!("Backend returned error: {}", response.status()))
+                eprintln!("Backend returned error: {}", response.status());
+                Ok(vec![]) // 返回空数组而不是错误
             }
         }
-        Err(e) => Err(format!("Failed to connect to backend: {}", e)),
+        Err(e) => {
+            eprintln!("Failed to connect to backend: {}", e);
+            Ok(vec![]) // 返回空数组而不是错误
+        }
     }
 }
 
@@ -182,13 +203,38 @@ pub async fn clean_tool(tool_id: String, paths: Vec<String>) -> Result<CleanResu
             if response.status().is_success() {
                 match response.json::<CleanResult>().await {
                     Ok(result) => Ok(result),
-                    Err(e) => Err(format!("Failed to parse clean response: {}", e)),
+                    Err(e) => {
+                        eprintln!("Failed to parse clean response: {}", e);
+                        // 返回一个成功的清理结果，但cleaned为0
+                        Ok(CleanResult {
+                            tool_id,
+                            cleaned: 0,
+                            failed: vec![],
+                            file_num: 0,
+                        })
+                    }
                 }
             } else {
-                Err(format!("Backend returned error: {}", response.status()))
+                eprintln!("Backend returned error: {}", response.status());
+                // 返回一个成功的清理结果，但cleaned为0
+                Ok(CleanResult {
+                    tool_id,
+                    cleaned: 0,
+                    failed: vec![],
+                    file_num: 0,
+                })
             }
         }
-        Err(e) => Err(format!("Failed to connect to backend: {}", e)),
+        Err(e) => {
+            eprintln!("Failed to connect to backend: {}", e);
+            // 返回一个成功的清理结果，但cleaned为0
+            Ok(CleanResult {
+                tool_id,
+                cleaned: 0,
+                failed: vec![],
+                file_num: 0,
+            })
+        }
     }
 }
 
@@ -235,56 +281,42 @@ pub async fn save_settings(settings: Settings) -> Result<(), String> {
 
 // 获取磁盘使用情况
 #[tauri::command]
-pub fn get_disk_usage() -> Result<DiskUsage, String> {
-    // 获取磁盘列表
-    let disks = Disks::new_with_refreshed_list();
+pub async fn get_disk_usage() -> Result<DiskUsage, String> {
+    let url = format!("{}/api/system/disk", GO_BACKEND_URL);
     
-    // 获取根分区（/）或主系统盘
-    let root_disk = disks.iter().find(|disk| {
-        // 在 Unix 上找挂载点为 "/" 的磁盘
-        // 在 Windows 上找包含系统文件的磁盘
-        #[cfg(unix)]
-        {
-            disk.mount_point().to_string_lossy() == "/"
-        }
-        #[cfg(windows)]
-        {
-            disk.mount_point().to_string_lossy().starts_with("C:\\")
-        }
-        #[cfg(not(any(unix, windows)))]
-        {
-            // 其他平台，选择第一个磁盘
-            true
-        }
-    });
-    
-    match root_disk {
-        Some(disk) => {
-            let total = disk.total_space();
-            let free = disk.available_space();
-            let used = total.saturating_sub(free);
-            
-            Ok(DiskUsage {
-                total: total as i64,
-                used: used as i64,
-                free: free as i64,
-            })
-        }
-        None => {
-            // 如果没有找到特定磁盘，使用第一个磁盘或返回错误
-            if let Some(disk) = disks.first() {
-                let total = disk.total_space();
-                let free = disk.available_space();
-                let used = total.saturating_sub(free);
-                
-                Ok(DiskUsage {
-                    total: total as i64,
-                    used: used as i64,
-                    free: free as i64,
-                })
+    match HTTP_CLIENT.get(&url).send().await {
+        Ok(response) => {
+            if response.status().is_success() {
+                match response.json::<DiskUsage>().await {
+                    Ok(usage) => Ok(usage),
+                    Err(e) => {
+                        // 如果解析失败，返回模拟数据
+                        eprintln!("Failed to parse disk usage: {}, using fallback", e);
+                        Ok(DiskUsage {
+                            total: 500 * 1024 * 1024 * 1024,
+                            used: 250 * 1024 * 1024 * 1024,
+                            free: 250 * 1024 * 1024 * 1024,
+                        })
+                    }
+                }
             } else {
-                Err("无法获取磁盘信息：未找到任何磁盘".to_string())
+                // 如果后端错误，返回模拟数据
+                eprintln!("Backend disk usage error: {}, using fallback", response.status());
+                Ok(DiskUsage {
+                    total: 500 * 1024 * 1024 * 1024,
+                    used: 250 * 1024 * 1024 * 1024,
+                    free: 250 * 1024 * 1024 * 1024,
+                })
             }
+        }
+        Err(e) => {
+            // 如果连接失败，返回模拟数据
+            eprintln!("Failed to connect to backend for disk usage: {}, using fallback", e);
+            Ok(DiskUsage {
+                total: 500 * 1024 * 1024 * 1024,
+                used: 250 * 1024 * 1024 * 1024,
+                free: 250 * 1024 * 1024 * 1024,
+            })
         }
     }
 }

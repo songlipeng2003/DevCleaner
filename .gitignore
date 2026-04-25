@@ -12,3 +12,5 @@ backend/vendor
 backend/server
 backend/devcleaner-backend
 coverage.out
+playwright-report/
+test-results/
