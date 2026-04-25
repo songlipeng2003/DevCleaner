@@ -89,14 +89,11 @@ func TestWindows_EnvironmentVariables(t *testing.T) {
 			if expanded == "" {
 				t.Errorf("expandPath(%q) returned empty string", tc)
 			}
-			// 验证环境变量已被展开（使用纯字符串操作）
-			// 注意：某些环境变量在特定 Windows 配置下可能不存在
-			if len(tc) > 2 && tc[0] == '%' && tc[len(tc)-1] == '%' {
-				// 检查展开结果是否包含 % 符号，如果没有则说明展开成功
-				if contains(expanded, "%") {
-					// 展开结果仍包含 % 符号，可能是环境变量不存在
-					// 这不算错误，只是说明该环境变量在当前系统上不存在
-				}
+			// 验证环境变量已被展开
+			// 注意：某些环境变量可能不存在，展开结果仍包含 % 是正常的
+			if contains(expanded, tc) {
+				// 环境变量未被展开，但不算错误，只是说明该变量不存在
+				t.Logf("Warning: expandPath(%q) returned unchanged value %q", tc, expanded)
 			}
 		})
 	}
