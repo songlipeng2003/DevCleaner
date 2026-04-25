@@ -184,6 +184,7 @@ const diskUsage = ref({
 })
 
 const diskPercent = computed(() => {
+  if (diskUsage.value.total === 0) return 0
   return Math.round((diskUsage.value.used / diskUsage.value.total) * 100)
 })
 
