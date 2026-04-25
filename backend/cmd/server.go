@@ -91,7 +91,17 @@ func (s *Server) handleToolByID(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Tool not found", http.StatusNotFound)
 		return
 	}
-	jsonResponse(w, tool)
+	paths := make([]string, len(tool.Paths))
+	for i, p := range tool.Paths {
+		paths[i] = p.Path
+	}
+	result := ToolResponse{
+		ID:      tool.ID,
+		Name:    tool.Name,
+		Paths:   paths,
+		Enabled: true,
+	}
+	jsonResponse(w, result)
 }
 
 func (s *Server) handleScan(w http.ResponseWriter, r *http.Request) {

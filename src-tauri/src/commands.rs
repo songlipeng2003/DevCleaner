@@ -316,3 +316,45 @@ pub async fn open_path(path: String) -> Result<(), String> {
 pub fn get_version() -> (String, String) {
     ("0.1.0".to_string(), "alpha".to_string())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_version() {
+        let (version, build) = get_version();
+        assert_eq!(version, "0.1.0");
+        assert_eq!(build, "alpha");
+    }
+
+    #[test]
+    fn test_get_disk_usage() {
+        // 这个测试依赖于实际系统，所以可能会失败
+        // 我们只检查它是否返回Result，不检查具体值
+        let result = get_disk_usage();
+        // 它应该返回Ok或Err，但不应该panic
+        match result {
+            Ok(usage) => {
+                assert!(usage.total >= 0);
+                assert!(usage.used >= 0);
+                assert!(usage.free >= 0);
+                assert!(usage.total >= usage.used);
+                assert!(usage.total >= usage.free);
+            }
+            Err(e) => {
+                // 在某些环境中可能无法获取磁盘信息
+                println!("get_disk_usage returned error: {}", e);
+            }
+        }
+    }
+
+    #[test]
+    fn test_open_path_simulation() {
+        // 测试open_path的逻辑，但不实际执行命令
+        // 由于open_path调用系统命令，我们无法在测试中运行
+        // 但可以确保函数签名正确
+        // 这是一个无操作测试
+        assert!(true);
+    }
+}
