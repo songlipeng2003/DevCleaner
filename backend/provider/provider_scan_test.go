@@ -277,8 +277,8 @@ func TestCleanPathDirect(t *testing.T) {
 func TestGetAllProvidersCount(t *testing.T) {
 	providers := GetAllProviders()
 
-	// 应该有 18 个 Provider
-	expected := 18
+	// 应该有 21 个 Provider (18 + pnpm + jetbrains + vscode)
+	expected := 21
 	if len(providers) != expected {
 		t.Errorf("GetAllProviders() returned %d providers, want %d", len(providers), expected)
 	}
