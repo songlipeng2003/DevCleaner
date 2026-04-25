@@ -23,13 +23,23 @@ func (p *cargoProvider) Paths() []PathConfig {
 		// Cargo 全局缓存（registry）
 		{
 			Path:        "~/.cargo/registry",
-			Description: "Cargo 注册表缓存",
+			Description: "Cargo 注册表缓存 (Linux/macOS)",
+			Strategy:    StrategyDirect,
+		},
+		{
+			Path:        "%USERPROFILE%\\.cargo\\registry",
+			Description: "Cargo 注册表缓存 (Windows)",
 			Strategy:    StrategyDirect,
 		},
 		// Cargo git 依赖缓存
 		{
 			Path:        "~/.cargo/git",
-			Description: "Cargo Git 依赖缓存",
+			Description: "Cargo Git 依赖缓存 (Linux/macOS)",
+			Strategy:    StrategyDirect,
+		},
+		{
+			Path:        "%USERPROFILE%\\.cargo\\git",
+			Description: "Cargo Git 依赖缓存 (Windows)",
 			Strategy:    StrategyDirect,
 		},
 		// Cargo 构建缓存

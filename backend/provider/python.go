@@ -31,7 +31,7 @@ func (p *pythonProvider) Paths() []PathConfig {
 			Strategy:    StrategyDirect,
 		},
 		{
-			Path:        "~\\AppData\\Local\\pip\\cache",
+			Path:        "%LOCALAPPDATA%\\pip\\cache",
 			Description: "pip 缓存 (Windows)",
 			Strategy:    StrategyDirect,
 		},
