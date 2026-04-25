@@ -1,6 +1,10 @@
 use serde::{Deserialize, Serialize};
 use tauri::Manager;
 use sysinfo::{System, Disks};
+use reqwest;
+use once_cell::sync::Lazy;
+use std::sync::Mutex;
+use std::process::Command;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ScanResult {
@@ -9,6 +13,8 @@ pub struct ScanResult {
     pub size: i64,
     pub file_num: i32,
     pub last_modified: i64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -43,168 +49,188 @@ pub struct DiskUsage {
     pub free: i64,
 }
 
+// Go后端API配置
+const GO_BACKEND_URL: &str = "http://localhost:8080";
+static HTTP_CLIENT: Lazy<reqwest::Client> = Lazy::new(|| {
+    reqwest::Client::new()
+});
+
 // 获取工具列表
 #[tauri::command]
-pub fn get_tool_list() -> Vec<ToolInfo> {
-    vec![
-        ToolInfo {
-            id: "npm".to_string(),
-            name: "npm".to_string(),
-            paths: vec![
-                "~/.npm".to_string(),
-                "~/Library/Caches/npm".to_string(),
-            ],
-            enabled: true,
-        },
-        ToolInfo {
-            id: "yarn".to_string(),
-            name: "Yarn".to_string(),
-            paths: vec![
-                "~/.yarn-cache".to_string(),
-                "~/Library/Caches/Yarn".to_string(),
-            ],
-            enabled: true,
-        },
-        ToolInfo {
-            id: "pnpm".to_string(),
-            name: "pnpm".to_string(),
-            paths: vec![
-                "~/.pnpm-store".to_string(),
-                "~/Library/Caches/pnpm".to_string(),
-            ],
-            enabled: true,
-        },
-        ToolInfo {
-            id: "docker".to_string(),
-            name: "Docker".to_string(),
-            paths: vec![
-                "~/Library/Containers/com.docker.docker/Data/vms".to_string(),
-            ],
-            enabled: true,
-        },
-        ToolInfo {
-            id: "xcode".to_string(),
-            name: "Xcode".to_string(),
-            paths: vec![
-                "~/Library/Developer/Xcode/DerivedData".to_string(),
-                "~/Library/Developer/Xcode/Archives".to_string(),
-                "~/Library/Caches/com.apple.dt.Xcode".to_string(),
-            ],
-            enabled: true,
-        },
-        ToolInfo {
-            id: "homebrew".to_string(),
-            name: "Homebrew".to_string(),
-            paths: vec![
-                "~/Library/Caches/Homebrew".to_string(),
-                "/usr/local/Cellar".to_string(),
-            ],
-            enabled: true,
-        },
-        ToolInfo {
-            id: "python".to_string(),
-            name: "Python".to_string(),
-            paths: vec![
-                "~/.cache/pip".to_string(),
-                "~/Library/Caches/pip".to_string(),
-            ],
-            enabled: true,
-        },
-        ToolInfo {
-            id: "go".to_string(),
-            name: "Go".to_string(),
-            paths: vec![],
-            enabled: false,
-        },
-        ToolInfo {
-            id: "ruby".to_string(),
-            name: "Ruby".to_string(),
-            paths: vec![],
-            enabled: false,
-        },
-        ToolInfo {
-            id: "maven".to_string(),
-            name: "Maven".to_string(),
-            paths: vec![],
-            enabled: false,
-        },
-        ToolInfo {
-            id: "gradle".to_string(),
-            name: "Gradle".to_string(),
-            paths: vec![],
-            enabled: false,
-        },
-        ToolInfo {
-            id: "cocoapods".to_string(),
-            name: "CocoaPods".to_string(),
-            paths: vec![],
-            enabled: false,
-        },
-        ToolInfo {
-            id: "carthage".to_string(),
-            name: "Carthage".to_string(),
-            paths: vec![],
-            enabled: false,
-        },
-        ToolInfo {
-            id: "unity".to_string(),
-            name: "Unity".to_string(),
-            paths: vec![],
-            enabled: false,
-        },
-    ]
+pub async fn get_tool_list() -> Result<Vec<ToolInfo>, String> {
+    let url = format!("{}/api/tools", GO_BACKEND_URL);
+    
+    match HTTP_CLIENT.get(&url).send().await {
+        Ok(response) => {
+            if response.status().is_success() {
+                match response.json::<Vec<ToolInfo>>().await {
+                    Ok(tools) => Ok(tools),
+                    Err(e) => Err(format!("Failed to parse tools response: {}", e)),
+                }
+            } else {
+                Err(format!("Backend returned error: {}", response.status()))
+            }
+        }
+        Err(e) => Err(format!("Failed to connect to backend: {}", e)),
+    }
 }
 
 // 获取单个工具信息
 #[tauri::command]
-pub fn get_tool_info(tool_id: String) -> Option<ToolInfo> {
-    let tools = get_tool_list();
-    tools.into_iter().find(|t| t.id == tool_id)
+pub async fn get_tool_info(tool_id: String) -> Result<Option<ToolInfo>, String> {
+    match get_tool_list().await {
+        Ok(tools) => Ok(tools.into_iter().find(|t| t.id == tool_id)),
+        Err(e) => Err(e),
+    }
 }
 
 // 扫描指定工具
 #[tauri::command]
 pub async fn scan_tool(tool_id: String) -> Result<Vec<ScanResult>, String> {
-    // TODO: 调用 Go 后端或直接扫描
-    Ok(vec![])
+    let url = format!("{}/api/scan", GO_BACKEND_URL);
+    
+    let request_body = serde_json::json!({
+        "tool_id": tool_id,
+        "all": false
+    });
+    
+    match HTTP_CLIENT.post(&url)
+        .json(&request_body)
+        .send()
+        .await 
+    {
+        Ok(response) => {
+            if response.status().is_success() {
+                // Go后端返回 {"results": [...], "stats": {...}}
+                let json: serde_json::Value = match response.json().await {
+                    Ok(json) => json,
+                    Err(e) => return Err(format!("Failed to parse scan response: {}", e)),
+                };
+                
+                // 提取results数组
+                if let Some(results) = json.get("results") {
+                    match serde_json::from_value(results.clone()) {
+                        Ok(scan_results) => Ok(scan_results),
+                        Err(e) => Err(format!("Failed to parse scan results: {}", e)),
+                    }
+                } else {
+                    Err("Scan response missing 'results' field".to_string())
+                }
+            } else {
+                Err(format!("Backend returned error: {}", response.status()))
+            }
+        }
+        Err(e) => Err(format!("Failed to connect to backend: {}", e)),
+    }
 }
 
 // 扫描所有工具
 #[tauri::command]
 pub async fn scan_all_tools() -> Result<Vec<ScanResult>, String> {
-    // TODO: 并行扫描所有启用的工具
-    Ok(vec![])
+    let url = format!("{}/api/scan", GO_BACKEND_URL);
+    
+    let request_body = serde_json::json!({
+        "all": true
+    });
+    
+    match HTTP_CLIENT.post(&url)
+        .json(&request_body)
+        .send()
+        .await 
+    {
+        Ok(response) => {
+            if response.status().is_success() {
+                // Go后端返回 {"results": [...], "stats": {...}}
+                let json: serde_json::Value = match response.json().await {
+                    Ok(json) => json,
+                    Err(e) => return Err(format!("Failed to parse scan response: {}", e)),
+                };
+                
+                // 提取results数组
+                if let Some(results) = json.get("results") {
+                    match serde_json::from_value(results.clone()) {
+                        Ok(scan_results) => Ok(scan_results),
+                        Err(e) => Err(format!("Failed to parse scan results: {}", e)),
+                    }
+                } else {
+                    Err("Scan response missing 'results' field".to_string())
+                }
+            } else {
+                Err(format!("Backend returned error: {}", response.status()))
+            }
+        }
+        Err(e) => Err(format!("Failed to connect to backend: {}", e)),
+    }
 }
 
 // 清理工具缓存
 #[tauri::command]
 pub async fn clean_tool(tool_id: String, paths: Vec<String>) -> Result<CleanResult, String> {
-    // TODO: 调用清理逻辑
-    Ok(CleanResult {
-        tool_id,
-        cleaned: 0,
-        failed: vec![],
-        file_num: 0,
-    })
+    let url = format!("{}/api/clean", GO_BACKEND_URL);
+    
+    let request_body = serde_json::json!({
+        "tool_id": tool_id,
+        "paths": paths
+    });
+    
+    match HTTP_CLIENT.post(&url)
+        .json(&request_body)
+        .send()
+        .await 
+    {
+        Ok(response) => {
+            if response.status().is_success() {
+                match response.json::<CleanResult>().await {
+                    Ok(result) => Ok(result),
+                    Err(e) => Err(format!("Failed to parse clean response: {}", e)),
+                }
+            } else {
+                Err(format!("Backend returned error: {}", response.status()))
+            }
+        }
+        Err(e) => Err(format!("Failed to connect to backend: {}", e)),
+    }
 }
 
 // 获取设置
 #[tauri::command]
-pub fn get_settings() -> Settings {
-    Settings {
-        threshold: 100,
-        whitelist: vec![],
-        auto_scan: false,
-        scan_interval: 7,
-        theme: "system".to_string(),
+pub async fn get_settings() -> Result<Settings, String> {
+    let url = format!("{}/api/settings", GO_BACKEND_URL);
+    
+    match HTTP_CLIENT.get(&url).send().await {
+        Ok(response) => {
+            if response.status().is_success() {
+                match response.json::<Settings>().await {
+                    Ok(settings) => Ok(settings),
+                    Err(e) => Err(format!("Failed to parse settings response: {}", e)),
+                }
+            } else {
+                Err(format!("Backend returned error: {}", response.status()))
+            }
+        }
+        Err(e) => Err(format!("Failed to connect to backend: {}", e)),
     }
 }
 
 // 保存设置
 #[tauri::command]
-pub fn save_settings(settings: Settings) -> Result<(), String> {
-    // TODO: 保存到本地配置
-    Ok(())
+pub async fn save_settings(settings: Settings) -> Result<(), String> {
+    let url = format!("{}/api/settings", GO_BACKEND_URL);
+    
+    match HTTP_CLIENT.put(&url)
+        .json(&settings)
+        .send()
+        .await 
+    {
+        Ok(response) => {
+            if response.status().is_success() {
+                Ok(())
+            } else {
+                Err(format!("Backend returned error: {}", response.status()))
+            }
+        }
+        Err(e) => Err(format!("Failed to connect to backend: {}", e)),
+    }
 }
 
 // 获取磁盘使用情况
@@ -266,9 +292,23 @@ pub fn get_disk_usage() -> Result<DiskUsage, String> {
 // 打开路径
 #[tauri::command]
 pub async fn open_path(path: String) -> Result<(), String> {
-    let app = path.clone();
-    // TODO: 使用系统命令打开路径
-    Ok(())
+    #[cfg(target_os = "windows")]
+    let cmd = "explorer";
+    #[cfg(target_os = "macos")]
+    let cmd = "open";
+    #[cfg(target_os = "linux")]
+    let cmd = "xdg-open";
+    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+    let cmd = "echo";
+    
+    let status = Command::new(cmd)
+        .arg(&path)
+        .status();
+    
+    match status {
+        Ok(_) => Ok(()),
+        Err(e) => Err(format!("Failed to open path: {}", e)),
+    }
 }
 
 // 获取版本

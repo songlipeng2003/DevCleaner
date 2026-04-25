@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/devcleaner/backend/provider"
 	"github.com/devcleaner/backend/scanner"
 	"github.com/devcleaner/backend/tools"
 )
@@ -167,12 +168,24 @@ func (s *Server) handleClean(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: 实现清理逻辑
+	// 获取provider并清理
+	p := provider.GetProvider(req.ToolID)
+	if p == nil {
+		http.Error(w, "Tool provider not found", http.StatusNotFound)
+		return
+	}
+
+	cleanResult, err := p.Clean(req.Paths)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	result := map[string]interface{}{
 		"tool_id":  req.ToolID,
-		"cleaned":  0,
-		"failed":   []string{},
-		"file_num": 0,
+		"cleaned":  cleanResult.Cleaned,
+		"failed":   cleanResult.Failed,
+		"file_num": cleanResult.FileNum,
 	}
 	jsonResponse(w, result)
 }
