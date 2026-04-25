@@ -75,6 +75,21 @@ func (p *npmProvider) Paths() []PathConfig {
 			Description: "npm 内容缓存",
 			Strategy:    StrategyCommand,
 		},
+		{
+			Path:        "%APPDATA%\\npm-cache",
+			Description: "npm 缓存（Windows）",
+			Strategy:    StrategyDirect,
+		},
+		{
+			Path:        "%LOCALAPPDATA%\\npm-cache",
+			Description: "npm 本地缓存（Windows）",
+			Strategy:    StrategyDirect,
+		},
+		{
+			Path:        "~/.cache/npm",
+			Description: "npm 缓存（Linux）",
+			Strategy:    StrategyDirect,
+		},
 	}
 }
 
@@ -213,6 +228,16 @@ func (p *yarnProvider) Paths() []PathConfig {
 		{
 			Path:        "~/.cache/yarn",
 			Description: "Yarn 缓存（Linux）",
+			Strategy:    StrategyDirect,
+		},
+		{
+			Path:        "%LOCALAPPDATA%\\Yarn",
+			Description: "Yarn 缓存（Windows）",
+			Strategy:    StrategyDirect,
+		},
+		{
+			Path:        "%APPDATA%\\Yarn",
+			Description: "Yarn 全局缓存（Windows）",
 			Strategy:    StrategyDirect,
 		},
 	}

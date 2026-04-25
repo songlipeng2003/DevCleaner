@@ -19,35 +19,53 @@ func (p *unityProvider) Name() string { return "Unity" }
 
 func (p *unityProvider) Paths() []PathConfig {
 	return []PathConfig{
+		// macOS 路径
 		{
 			Path:        "~/Library/Unity/Cache",
-			Description: "Unity 编辑器缓存",
+			Description: "Unity 编辑器缓存 (macOS)",
 			Strategy:    StrategyDirect,
 		},
 		{
 			Path:        "~/Library/Caches/Unity",
-			Description: "Unity 下载和构建缓存",
+			Description: "Unity 下载和构建缓存 (macOS)",
 			Strategy:    StrategyDirect,
 		},
 		{
 			Path:        "~/Library/Logs/Unity",
-			Description: "Unity 日志文件",
+			Description: "Unity 日志文件 (macOS)",
 			Strategy:    StrategyDirect,
 		},
 		{
 			Path:        "~/Library/Application Support/Unity",
-			Description: "Unity 应用数据",
+			Description: "Unity 应用数据 (macOS)",
 			Strategy:    StrategySafe,
 		},
+		// Windows 路径
 		{
-			Path:        "C:\\Users\\{username}\\AppData\\Local\\Unity",
+			Path:        "%USERPROFILE%\\AppData\\Local\\Unity",
 			Description: "Unity 缓存 (Windows)",
 			Strategy:    StrategyDirect,
 		},
 		{
-			Path:        "C:\\Users\\{username}\\AppData\\LocalLow\\Unity",
+			Path:        "%USERPROFILE%\\AppData\\LocalLow\\Unity",
 			Description: "Unity 低完整性缓存 (Windows)",
 			Strategy:    StrategyDirect,
+		},
+		// Linux 路径
+		{
+			Path:        "~/.config/unity3d",
+			Description: "Unity 配置目录 (Linux)",
+			Strategy:    StrategyDirect,
+		},
+		{
+			Path:        "~/.cache/Unity",
+			Description: "Unity 缓存 (Linux)",
+			Strategy:    StrategyDirect,
+		},
+		{
+			Path:        "~/.local/share/unity3d",
+			Description: "Unity 数据目录 (Linux)",
+			Strategy:    StrategySafe,
 		},
 	}
 }

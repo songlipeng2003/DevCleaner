@@ -7,7 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  # 前端测试
+  frontend-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,8 +31,72 @@ jobs:
       - name: Build
         run: npm run build
 
+  # Go 后端测试 - Linux
+  backend-test-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+          cache-dependency-path: backend/go.sum
+      
+      - name: Run Go tests (Linux specific)
+        working-directory: backend
+        run: go test -v ./provider/... -run "Linux"
+      
+      - name: Run cross-platform tests
+        working-directory: backend
+        run: go test -v ./provider/... -run "CrossPlatform|PathExpansion|Consistency"
+
+  # Go 后端测试 - macOS
+  backend-test-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+          cache-dependency-path: backend/go.sum
+      
+      - name: Run Go tests (macOS specific)
+        working-directory: backend
+        run: go test -v ./provider/... -run "MacOS"
+      
+      - name: Run macOS platform tests
+        working-directory: backend
+        run: go test -v ./provider/... -run "Xcode|Homebrew|CocoaPods|Carthage"
+
+  # Go 后端测试 - Windows
+  backend-test-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+          cache-dependency-path: backend/go.sum
+      
+      - name: Run Go tests (Windows specific)
+        working-directory: backend
+        run: go test -v ./provider/... -run "Windows"
+      
+      - name: Run Windows platform tests
+        working-directory: backend
+        run: go test -v ./provider/... -run "NuGet|Gradle|Maven|Unity"
+
+  # Tauri 构建 - macOS
   build-tauri:
-    needs: test
+    needs: [frontend-test, backend-test-linux]
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4

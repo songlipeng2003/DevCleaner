@@ -19,17 +19,23 @@ func (p *rubyProvider) Name() string { return "Ruby" }
 
 func (p *rubyProvider) Paths() []PathConfig {
 	return []PathConfig{
-		// gem 缓存
+		// gem 缓存（跨平台）
 		{
 			Path:        "~/.gem/cache",
-			Description: "gem 本地缓存",
+			Description: "gem 本地缓存 (Linux/macOS)",
 			Strategy:    StrategyDirect,
 		},
 		{
 			Path:        "~/.gem/specifications",
-			Description: "gem 规格缓存",
+			Description: "gem 规格缓存 (Linux/macOS)",
 			Strategy:    StrategyDirect,
 		},
+		{
+			Path:        "%USERPROFILE%\\AppData\\Local\\Microsoft\\Windows\\PowerShell\\GemStorage",
+			Description: "gem 缓存 (Windows PowerShell)",
+			Strategy:    StrategyDirect,
+		},
+		// Bundler 缓存（跨平台）
 		{
 			Path:        "~/Library/Caches/bundler",
 			Description: "Bundler 缓存 (macOS)",
@@ -41,13 +47,13 @@ func (p *rubyProvider) Paths() []PathConfig {
 			Strategy:    StrategyDirect,
 		},
 		{
-			Path:        "~\\AppData\\Local\\bundler",
+			Path:        "%USERPROFILE%\\AppData\\Local\\bundler",
 			Description: "Bundler 缓存 (Windows)",
 			Strategy:    StrategyDirect,
 		},
-		// Ruby 缓存
+		// Ruby 缓存（跨平台）
 		{
-			Path:        "~/.ruby缓存",
+			Path:        "~/.ruby_cache",
 			Description: "Ruby 缓存 (Linux)",
 			Strategy:    StrategyDirect,
 		},
@@ -56,15 +62,25 @@ func (p *rubyProvider) Paths() []PathConfig {
 			Description: "Ruby 缓存 (macOS)",
 			Strategy:    StrategyDirect,
 		},
-		// rvm / rbenv 缓存
+		{
+			Path:        "%USERPROFILE%\\.ruby",
+			Description: "Ruby 缓存 (Windows)",
+			Strategy:    StrategyDirect,
+		},
+		// rvm / rbenv 缓存（跨平台）
 		{
 			Path:        "~/.rvm/archives",
-			Description: "RVM 归档",
+			Description: "RVM 归档 (Linux/macOS)",
 			Strategy:    StrategyDirect,
 		},
 		{
 			Path:        "~/.rbenv/versions/*/cache",
-			Description: "rbenv 版本缓存",
+			Description: "rbenv 版本缓存 (Linux/macOS)",
+			Strategy:    StrategyDirect,
+		},
+		{
+			Path:        "%USERPROFILE%\\.rbenv\\versions/*/cache",
+			Description: "rbenv 版本缓存 (Windows)",
 			Strategy:    StrategyDirect,
 		},
 		// Rails 缓存

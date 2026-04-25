@@ -29,7 +29,7 @@ func (p *mavenProvider) Paths() []PathConfig {
 			Strategy:    StrategyDirect,
 		},
 		{
-			Path:        "C:\\Users\\{username}\\.m2\\repository",
+			Path:        "%USERPROFILE%\\.m2\\repository",
 			Description: "Maven 本地仓库 (Windows)",
 			Strategy:    StrategySafe,
 		},

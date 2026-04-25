@@ -29,7 +29,7 @@ func (p *gradleProvider) Paths() []PathConfig {
 			Strategy:    StrategyDirect,
 		},
 		{
-			Path:        "C:\\Users\\{username}\\.gradle\\caches",
+			Path:        "%USERPROFILE%\\.gradle\\caches",
 			Description: "Gradle 缓存目录 (Windows)",
 			Strategy:    StrategyDirect,
 		},
