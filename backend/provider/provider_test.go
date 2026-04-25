@@ -57,7 +57,10 @@ func TestGetProvider(t *testing.T) {
 }
 
 func TestNPMProvider(t *testing.T) {
-	p := NewNPMProvider()
+	p := GetProvider("npm")
+	if p == nil {
+		t.Fatal("NPMProvider is nil")
+	}
 	
 	if p.ID() != "npm" {
 		t.Errorf("NPMProvider.ID() = %q, want %q", p.ID(), "npm")
@@ -77,7 +80,10 @@ func TestNPMProvider(t *testing.T) {
 }
 
 func TestYarnProvider(t *testing.T) {
-	p := NewYarnProvider()
+	p := GetProvider("yarn")
+	if p == nil {
+		t.Fatal("YarnProvider is nil")
+	}
 	
 	if p.ID() != "yarn" {
 		t.Errorf("YarnProvider.ID() = %q, want %q", p.ID(), "yarn")
@@ -90,7 +96,10 @@ func TestYarnProvider(t *testing.T) {
 }
 
 func TestDockerProvider(t *testing.T) {
-	p := NewDockerProvider()
+	p := GetProvider("docker")
+	if p == nil {
+		t.Fatal("DockerProvider is nil")
+	}
 	
 	if p.ID() != "docker" {
 		t.Errorf("DockerProvider.ID() = %q, want %q", p.ID(), "docker")
@@ -103,7 +112,10 @@ func TestDockerProvider(t *testing.T) {
 }
 
 func TestXcodeProvider(t *testing.T) {
-	p := NewXcodeProvider()
+	p := GetProvider("xcode")
+	if p == nil {
+		t.Fatal("XcodeProvider is nil")
+	}
 	
 	if p.ID() != "xcode" {
 		t.Errorf("XcodeProvider.ID() = %q, want %q", p.ID(), "xcode")
@@ -131,7 +143,10 @@ func TestXcodeProvider(t *testing.T) {
 }
 
 func TestHomebrewProvider(t *testing.T) {
-	p := NewHomebrewProvider()
+	p := GetProvider("homebrew")
+	if p == nil {
+		t.Fatal("HomebrewProvider is nil")
+	}
 	
 	if p.ID() != "homebrew" {
 		t.Errorf("HomebrewProvider.ID() = %q, want %q", p.ID(), "homebrew")
@@ -144,7 +159,10 @@ func TestHomebrewProvider(t *testing.T) {
 }
 
 func TestMavenProvider(t *testing.T) {
-	p := NewMavenProvider()
+	p := GetProvider("maven")
+	if p == nil {
+		t.Fatal("MavenProvider is nil")
+	}
 
 	if p.ID() != "maven" {
 		t.Errorf("MavenProvider.ID() = %q, want %q", p.ID(), "maven")
@@ -172,7 +190,10 @@ func TestMavenProvider(t *testing.T) {
 }
 
 func TestGradleProvider(t *testing.T) {
-	p := NewGradleProvider()
+	p := GetProvider("gradle")
+	if p == nil {
+		t.Fatal("GradleProvider is nil")
+	}
 
 	if p.ID() != "gradle" {
 		t.Errorf("GradleProvider.ID() = %q, want %q", p.ID(), "gradle")
@@ -200,7 +221,10 @@ func TestGradleProvider(t *testing.T) {
 }
 
 func TestCocoaPodsProvider(t *testing.T) {
-	p := NewCocoaPodsProvider()
+	p := GetProvider("cocoapods")
+	if p == nil {
+		t.Fatal("CocoaPodsProvider is nil")
+	}
 
 	if p.ID() != "cocoapods" {
 		t.Errorf("CocoaPodsProvider.ID() = %q, want %q", p.ID(), "cocoapods")
@@ -228,7 +252,10 @@ func TestCocoaPodsProvider(t *testing.T) {
 }
 
 func TestCarthageProvider(t *testing.T) {
-	p := NewCarthageProvider()
+	p := GetProvider("carthage")
+	if p == nil {
+		t.Fatal("CarthageProvider is nil")
+	}
 
 	if p.ID() != "carthage" {
 		t.Errorf("CarthageProvider.ID() = %q, want %q", p.ID(), "carthage")
@@ -241,7 +268,10 @@ func TestCarthageProvider(t *testing.T) {
 }
 
 func TestUnityProvider(t *testing.T) {
-	p := NewUnityProvider()
+	p := GetProvider("unity")
+	if p == nil {
+		t.Fatal("UnityProvider is nil")
+	}
 
 	if p.ID() != "unity" {
 		t.Errorf("UnityProvider.ID() = %q, want %q", p.ID(), "unity")
@@ -269,7 +299,10 @@ func TestUnityProvider(t *testing.T) {
 }
 
 func TestComposerProvider(t *testing.T) {
-	p := NewComposerProvider()
+	p := GetProvider("composer")
+	if p == nil {
+		t.Fatal("ComposerProvider is nil")
+	}
 	
 	if p.ID() != "composer" {
 		t.Errorf("ComposerProvider.ID() = %q, want %q", p.ID(), "composer")
@@ -297,7 +330,10 @@ func TestComposerProvider(t *testing.T) {
 }
 
 func TestCargoProvider(t *testing.T) {
-	p := NewCargoProvider()
+	p := GetProvider("cargo")
+	if p == nil {
+		t.Fatal("CargoProvider is nil")
+	}
 	
 	if p.ID() != "cargo" {
 		t.Errorf("CargoProvider.ID() = %q, want %q", p.ID(), "cargo")
@@ -325,7 +361,10 @@ func TestCargoProvider(t *testing.T) {
 }
 
 func TestFlutterProvider(t *testing.T) {
-	p := NewFlutterProvider()
+	p := GetProvider("flutter")
+	if p == nil {
+		t.Fatal("FlutterProvider is nil")
+	}
 	
 	if p.ID() != "flutter" {
 		t.Errorf("FlutterProvider.ID() = %q, want %q", p.ID(), "flutter")
@@ -353,7 +392,10 @@ func TestFlutterProvider(t *testing.T) {
 }
 
 func TestNuGetProvider(t *testing.T) {
-	p := NewNuGetProvider()
+	p := GetProvider("nuget")
+	if p == nil {
+		t.Fatal("NuGetProvider is nil")
+	}
 	
 	if p.ID() != "nuget" {
 		t.Errorf("NuGetProvider.ID() = %q, want %q", p.ID(), "nuget")
@@ -381,7 +423,10 @@ func TestNuGetProvider(t *testing.T) {
 }
 
 func TestAndroidSDKProvider(t *testing.T) {
-	p := NewAndroidSDKProvider()
+	p := GetProvider("android_sdk")
+	if p == nil {
+		t.Fatal("AndroidSDKProvider is nil")
+	}
 	
 	if p.ID() != "android_sdk" {
 		t.Errorf("AndroidSDKProvider.ID() = %q, want %q", p.ID(), "android_sdk")

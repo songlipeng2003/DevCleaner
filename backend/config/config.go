@@ -63,6 +63,26 @@ func GetCurrentPlatform() string {
 
 // LoadConfig 加载配置文件
 func LoadConfig() (*Config, error) {
+	// 获取当前源文件所在目录（config.go 所在目录）
+	_, filename, _, ok := runtime.Caller(0)
+	if ok {
+		baseDir := filepath.Dir(filename)
+		// 添加相对于 config.go 的配置文件路径
+		configPaths := []string{
+			filepath.Join(baseDir, "..", "providers.json"), // 上级目录的 providers.json
+		}
+		// 尝试这些路径
+		for _, path := range configPaths {
+			data, err := os.ReadFile(path)
+			if err == nil {
+				config := &Config{}
+				if err := json.Unmarshal(data, config); err == nil {
+					return config, nil
+				}
+			}
+		}
+	}
+
 	// 获取可执行文件所在目录
 	execPath, err := os.Executable()
 	if err != nil {
@@ -70,7 +90,7 @@ func LoadConfig() (*Config, error) {
 	}
 	execDir := filepath.Dir(execPath)
 
-	// 可能的配置文件路径
+	// 可能的配置文件路径（回退方案）
 	configPaths := []string{
 		filepath.Join(execDir, "providers.json"),           // 与可执行文件同目录
 		filepath.Join(execDir, "..", "providers.json"),     // 上级目录

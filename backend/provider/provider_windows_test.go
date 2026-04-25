@@ -11,7 +11,7 @@ import (
 func TestWindows_OnlyProviders(t *testing.T) {
 	// NuGet 主要在 Windows 上使用，但也支持其他平台
 	t.Run("NuGet", func(t *testing.T) {
-		p := NewNuGetProvider()
+		p := GetProvider("nuget")
 		if p == nil {
 			t.Fatal("NuGetProvider is nil")
 		}
@@ -105,10 +105,10 @@ func TestWindows_ProviderPaths(t *testing.T) {
 		name     string
 		provider Provider
 	}{
-		{"npm", NewNPMProvider()},
-		{"yarn", NewYarnProvider()},
-		{"nuget", NewNuGetProvider()},
-		{"python", NewPythonProvider()},
+		{"npm", GetProvider("npm")},
+		{"yarn", GetProvider("yarn")},
+		{"nuget", GetProvider("nuget")},
+		{"python", GetProvider("python")},
 	}
 
 	for _, tt := range providers {
@@ -138,7 +138,7 @@ func TestWindows_ProviderPaths(t *testing.T) {
 
 // TestWindows_GradlePaths 测试 Gradle Windows 路径
 func TestWindows_GradlePaths(t *testing.T) {
-	p := NewGradleProvider()
+	p := GetProvider("gradle")
 	paths := p.Paths()
 
 	// 验证包含 Windows 路径
@@ -157,7 +157,7 @@ func TestWindows_GradlePaths(t *testing.T) {
 
 // TestWindows_MavenPaths 测试 Maven Windows 路径
 func TestWindows_MavenPaths(t *testing.T) {
-	p := NewMavenProvider()
+	p := GetProvider("maven")
 	paths := p.Paths()
 
 	// 验证包含 Windows 路径
@@ -176,7 +176,7 @@ func TestWindows_MavenPaths(t *testing.T) {
 
 // TestWindows_UnityPaths 测试 Unity Windows 路径
 func TestWindows_UnityPaths(t *testing.T) {
-	p := NewUnityProvider()
+	p := GetProvider("unity")
 	paths := p.Paths()
 
 	// 验证包含 Windows 路径

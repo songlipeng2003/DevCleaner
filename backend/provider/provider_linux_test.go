@@ -11,10 +11,10 @@ import (
 func TestLinux_SpecificProviders(t *testing.T) {
 	// Homebrew on Linux
 	t.Run("Homebrew", func(t *testing.T) {
-		p := NewHomebrewProvider()
-		if p == nil {
-			t.Fatal("HomebrewProvider is nil")
-		}
+	p := GetProvider("homebrew")
+	if p == nil {
+		t.Fatal("HomebrewProvider is nil")
+	}
 
 		paths := p.Paths()
 		if len(paths) == 0 {
@@ -66,10 +66,10 @@ func TestLinux_CachePaths(t *testing.T) {
 		name     string
 		provider Provider
 	}{
-		{"npm", NewNPMProvider()},
-		{"yarn", NewYarnProvider()},
-		{"python", NewPythonProvider()},
-		{"go", NewGoProvider()},
+		{"npm", GetProvider("npm")},
+		{"yarn", GetProvider("yarn")},
+		{"python", GetProvider("python")},
+		{"go", GetProvider("go")},
 	}
 
 	for _, tt := range providers {
@@ -98,7 +98,7 @@ func TestLinux_CachePaths(t *testing.T) {
 
 // TestGradleLinuxPaths 测试 Gradle Linux 路径
 func TestLinux_GradlePaths(t *testing.T) {
-	p := NewGradleProvider()
+	p := GetProvider("gradle")
 	paths := p.Paths()
 
 	// 验证包含 Linux 路径
@@ -118,7 +118,7 @@ func TestLinux_GradlePaths(t *testing.T) {
 
 // TestMavenLinuxPaths 测试 Maven Linux 路径
 func TestLinux_MavenPaths(t *testing.T) {
-	p := NewMavenProvider()
+	p := GetProvider("maven")
 	paths := p.Paths()
 
 	// 验证包含 Linux 路径
@@ -138,7 +138,7 @@ func TestLinux_MavenPaths(t *testing.T) {
 
 // TestUnityLinuxPaths 测试 Unity Linux 路径
 func TestLinux_UnityPaths(t *testing.T) {
-	p := NewUnityProvider()
+	p := GetProvider("unity")
 	paths := p.Paths()
 
 	// 验证包含 Linux 路径
@@ -159,7 +159,7 @@ func TestLinux_UnityPaths(t *testing.T) {
 
 // TestLinuxFlutterPaths 测试 Flutter Linux 路径
 func TestLinux_FlutterPaths(t *testing.T) {
-	p := NewFlutterProvider()
+	p := GetProvider("flutter")
 	paths := p.Paths()
 
 	// 验证包含 Linux Android SDK 路径
@@ -179,7 +179,7 @@ func TestLinux_FlutterPaths(t *testing.T) {
 
 // TestLinuxCargoPaths 测试 Cargo Linux 路径
 func TestLinux_CargoPaths(t *testing.T) {
-	p := NewCargoProvider()
+	p := GetProvider("cargo")
 	paths := p.Paths()
 
 	expectedPaths := []string{"cargo", "registry", "git"}
@@ -200,7 +200,7 @@ func TestLinux_CargoPaths(t *testing.T) {
 
 // TestLinuxRubyPaths 测试 Ruby Linux 路径
 func TestLinux_RubyPaths(t *testing.T) {
-	p := NewRubyProvider()
+	p := GetProvider("ruby")
 	paths := p.Paths()
 
 	// 验证包含 Linux Ruby 路径

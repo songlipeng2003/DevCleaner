@@ -11,7 +11,7 @@ import (
 func TestMacOS_OnlyProviders(t *testing.T) {
 	// Xcode Provider - macOS 专用
 	t.Run("Xcode", func(t *testing.T) {
-		p := NewXcodeProvider()
+		p := GetProvider("xcode")
 		if p == nil {
 			t.Fatal("XcodeProvider is nil")
 		}
@@ -36,7 +36,7 @@ func TestMacOS_OnlyProviders(t *testing.T) {
 
 	// CocoaPods Provider - macOS 专用
 	t.Run("CocoaPods", func(t *testing.T) {
-		p := NewCocoaPodsProvider()
+		p := GetProvider("cocoapods")
 		if p == nil {
 			t.Fatal("CocoaPodsProvider is nil")
 		}
@@ -49,7 +49,7 @@ func TestMacOS_OnlyProviders(t *testing.T) {
 
 	// Carthage Provider - macOS 专用
 	t.Run("Carthage", func(t *testing.T) {
-		p := NewCarthageProvider()
+		p := GetProvider("carthage")
 		if p == nil {
 			t.Fatal("CarthageProvider is nil")
 		}
@@ -63,7 +63,7 @@ func TestMacOS_OnlyProviders(t *testing.T) {
 
 // TestHomebrewMacOSPaths 测试 Homebrew macOS 路径
 func TestMacOS_HomebrewPaths(t *testing.T) {
-	p := NewHomebrewProvider()
+	p := GetProvider("homebrew")
 	paths := p.Paths()
 
 	if len(paths) == 0 {
@@ -86,7 +86,7 @@ func TestMacOS_HomebrewPaths(t *testing.T) {
 
 // TestXcodeCachePaths 测试 Xcode 缓存路径
 func TestMacOS_XcodeCachePaths(t *testing.T) {
-	p := NewXcodeProvider()
+	p := GetProvider("xcode")
 	paths := p.Paths()
 
 	expectedPaths := []string{
@@ -136,10 +136,10 @@ func TestMacOS_PlatformCachePaths(t *testing.T) {
 		name     string
 		provider Provider
 	}{
-		{"npm", NewNPMProvider()},
-		{"yarn", NewYarnProvider()},
-		{"homebrew", NewHomebrewProvider()},
-		{"cocoapods", NewCocoaPodsProvider()},
+		{"npm", GetProvider("npm")},
+		{"yarn", GetProvider("yarn")},
+		{"homebrew", GetProvider("homebrew")},
+		{"cocoapods", GetProvider("cocoapods")},
 	}
 
 	for _, tt := range providers {

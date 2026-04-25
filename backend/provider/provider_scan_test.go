@@ -8,7 +8,7 @@ import (
 
 // TestAndroidSDKProviderPaths 测试 Android SDK Provider 路径配置
 func TestAndroidSDKProviderPaths(t *testing.T) {
-	p := NewAndroidSDKProvider()
+	p := GetProvider("android_sdk")
 	paths := p.Paths()
 
 	if len(paths) == 0 {
@@ -33,7 +33,7 @@ func TestAndroidSDKProviderPaths(t *testing.T) {
 
 // TestCargoProviderPaths 测试 Cargo Provider 路径配置
 func TestCargoProviderPaths(t *testing.T) {
-	p := NewCargoProvider()
+	p := GetProvider("cargo")
 	paths := p.Paths()
 
 	if len(paths) == 0 {
@@ -58,7 +58,7 @@ func TestCargoProviderPaths(t *testing.T) {
 
 // TestFlutterProviderPaths 测试 Flutter Provider 路径配置
 func TestFlutterProviderPaths(t *testing.T) {
-	p := NewFlutterProvider()
+	p := GetProvider("flutter")
 	paths := p.Paths()
 
 	if len(paths) == 0 {
@@ -83,7 +83,7 @@ func TestFlutterProviderPaths(t *testing.T) {
 
 // TestNuGetProviderPaths 测试 NuGet Provider 路径配置
 func TestNuGetProviderPaths(t *testing.T) {
-	p := NewNuGetProvider()
+	p := GetProvider("nuget")
 	paths := p.Paths()
 
 	if len(paths) == 0 {
@@ -122,24 +122,24 @@ func TestScanMethods(t *testing.T) {
 		provider Provider
 		wantErr  bool
 	}{
-		{"NPM", NewNPMProvider(), false},
-		{"Yarn", NewYarnProvider(), false},
-		{"Docker", NewDockerProvider(), false},
-		{"Xcode", NewXcodeProvider(), false},
-		{"Homebrew", NewHomebrewProvider(), false},
-		{"Python", NewPythonProvider(), false},
-		{"Go", NewGoProvider(), false},
-		{"Ruby", NewRubyProvider(), false},
-		{"Maven", NewMavenProvider(), false},
-		{"Gradle", NewGradleProvider(), false},
-		{"CocoaPods", NewCocoaPodsProvider(), false},
-		{"Carthage", NewCarthageProvider(), false},
-		{"Unity", NewUnityProvider(), false},
-		{"Composer", NewComposerProvider(), false},
-		{"Cargo", NewCargoProvider(), false},
-		{"Flutter", NewFlutterProvider(), false},
-		{"NuGet", NewNuGetProvider(), false},
-		{"AndroidSDK", NewAndroidSDKProvider(), false},
+		{"NPM", GetProvider("npm"), false},
+		{"Yarn", GetProvider("yarn"), false},
+		{"Docker", GetProvider("docker"), false},
+		{"Xcode", GetProvider("xcode"), false},
+		{"Homebrew", GetProvider("homebrew"), false},
+		{"Python", GetProvider("python"), false},
+		{"Go", GetProvider("go"), false},
+		{"Ruby", GetProvider("ruby"), false},
+		{"Maven", GetProvider("maven"), false},
+		{"Gradle", GetProvider("gradle"), false},
+		{"CocoaPods", GetProvider("cocoapods"), false},
+		{"Carthage", GetProvider("carthage"), false},
+		{"Unity", GetProvider("unity"), false},
+		{"Composer", GetProvider("composer"), false},
+		{"Cargo", GetProvider("cargo"), false},
+		{"Flutter", GetProvider("flutter"), false},
+		{"NuGet", GetProvider("nuget"), false},
+		{"AndroidSDK", GetProvider("android_sdk"), false},
 	}
 
 	for _, tt := range tests {
@@ -172,24 +172,24 @@ func TestCleanMethods(t *testing.T) {
 		name     string
 		provider Provider
 	}{
-		{"NPM", NewNPMProvider()},
-		{"Yarn", NewYarnProvider()},
-		{"Docker", NewDockerProvider()},
-		{"Xcode", NewXcodeProvider()},
-		{"Homebrew", NewHomebrewProvider()},
-		{"Python", NewPythonProvider()},
-		{"Go", NewGoProvider()},
-		{"Ruby", NewRubyProvider()},
-		{"Maven", NewMavenProvider()},
-		{"Gradle", NewGradleProvider()},
-		{"CocoaPods", NewCocoaPodsProvider()},
-		{"Carthage", NewCarthageProvider()},
-		{"Unity", NewUnityProvider()},
-		{"Composer", NewComposerProvider()},
-		{"Cargo", NewCargoProvider()},
-		{"Flutter", NewFlutterProvider()},
-		{"NuGet", NewNuGetProvider()},
-		{"AndroidSDK", NewAndroidSDKProvider()},
+		{"NPM", GetProvider("npm")},
+		{"Yarn", GetProvider("yarn")},
+		{"Docker", GetProvider("docker")},
+		{"Xcode", GetProvider("xcode")},
+		{"Homebrew", GetProvider("homebrew")},
+		{"Python", GetProvider("python")},
+		{"Go", GetProvider("go")},
+		{"Ruby", GetProvider("ruby")},
+		{"Maven", GetProvider("maven")},
+		{"Gradle", GetProvider("gradle")},
+		{"CocoaPods", GetProvider("cocoapods")},
+		{"Carthage", GetProvider("carthage")},
+		{"Unity", GetProvider("unity")},
+		{"Composer", GetProvider("composer")},
+		{"Cargo", GetProvider("cargo")},
+		{"Flutter", GetProvider("flutter")},
+		{"NuGet", GetProvider("nuget")},
+		{"AndroidSDK", GetProvider("android_sdk")},
 	}
 
 	for _, tt := range tests {
