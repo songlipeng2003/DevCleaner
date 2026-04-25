@@ -107,11 +107,9 @@ func (p *pythonProvider) Scan() ([]ScanResult, error) {
 func (p *pythonProvider) scanSinglePath(path, description string) (ScanResult, bool) {
 	expandedPath := expandPath(path)
 	
-	info, err := os.Stat(expandedPath)
-	if os.IsNotExist(err) {
+	if _, err := os.Stat(expandedPath); os.IsNotExist(err) {
 		return ScanResult{}, false
-	}
-	if err != nil {
+	} else if err != nil {
 		return ScanResult{}, false
 	}
 
@@ -119,14 +117,14 @@ func (p *pythonProvider) scanSinglePath(path, description string) (ScanResult, b
 	var fileCount int
 	var lastMod int64
 
-	filepath.Walk(expandedPath, func(walkPath string, info os.FileInfo, err error) error {
+	filepath.Walk(expandedPath, func(walkPath string, fileInfo os.FileInfo, err error) error {
 		if err != nil {
 			return nil
 		}
-		if !info.IsDir() {
-			totalSize += info.Size()
+		if !fileInfo.IsDir() {
+			totalSize += fileInfo.Size()
 			fileCount++
-			if mod := info.ModTime().Unix(); mod > lastMod {
+			if mod := fileInfo.ModTime().Unix(); mod > lastMod {
 				lastMod = mod
 			}
 		}

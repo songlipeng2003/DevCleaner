@@ -91,11 +91,9 @@ func (p *homebrewProvider) Scan() ([]ScanResult, error) {
 		}
 		expandedPath := expandPath(pathConfig.Path)
 		
-		info, err := os.Stat(expandedPath)
-		if os.IsNotExist(err) {
+		if _, err := os.Stat(expandedPath); os.IsNotExist(err) {
 			continue
-		}
-		if err != nil {
+		} else if err != nil {
 			continue
 		}
 
@@ -103,14 +101,14 @@ func (p *homebrewProvider) Scan() ([]ScanResult, error) {
 		var fileCount int
 		var lastMod int64
 
-		filepath.Walk(expandedPath, func(path string, info os.FileInfo, err error) error {
+		filepath.Walk(expandedPath, func(path string, fileInfo os.FileInfo, err error) error {
 			if err != nil {
 				return nil
 			}
-			if !info.IsDir() {
-				totalSize += info.Size()
+			if !fileInfo.IsDir() {
+				totalSize += fileInfo.Size()
 				fileCount++
-				if mod := info.ModTime().Unix(); mod > lastMod {
+				if mod := fileInfo.ModTime().Unix(); mod > lastMod {
 					lastMod = mod
 				}
 			}
@@ -174,11 +172,9 @@ func (p *homebrewProvider) getBrewCache() string {
 func (p *homebrewProvider) scanPath(path, description string) (ScanResult, bool) {
 	expandedPath := expandPath(path)
 	
-	info, err := os.Stat(expandedPath)
-	if os.IsNotExist(err) {
+	if _, err := os.Stat(expandedPath); os.IsNotExist(err) {
 		return ScanResult{}, false
-	}
-	if err != nil {
+	} else if err != nil {
 		return ScanResult{}, false
 	}
 
@@ -186,14 +182,14 @@ func (p *homebrewProvider) scanPath(path, description string) (ScanResult, bool)
 	var fileCount int
 	var lastMod int64
 
-	filepath.Walk(expandedPath, func(path string, info os.FileInfo, err error) error {
+	filepath.Walk(expandedPath, func(path string, fileInfo os.FileInfo, err error) error {
 		if err != nil {
 			return nil
 		}
-		if !info.IsDir() {
-			totalSize += info.Size()
+		if !fileInfo.IsDir() {
+			totalSize += fileInfo.Size()
 			fileCount++
-			if mod := info.ModTime().Unix(); mod > lastMod {
+			if mod := fileInfo.ModTime().Unix(); mod > lastMod {
 				lastMod = mod
 			}
 		}

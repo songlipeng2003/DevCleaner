@@ -78,11 +78,9 @@ func (p *xcodeProvider) Scan() ([]ScanResult, error) {
 	for _, pathConfig := range p.Paths() {
 		expandedPath := expandPath(pathConfig.Path)
 		
-		info, err := os.Stat(expandedPath)
-		if os.IsNotExist(err) {
+		if _, err := os.Stat(expandedPath); os.IsNotExist(err) {
 			continue
-		}
-		if err != nil {
+		} else if err != nil {
 			continue
 		}
 
@@ -90,14 +88,14 @@ func (p *xcodeProvider) Scan() ([]ScanResult, error) {
 		var fileCount int
 		var lastMod int64
 
-		filepath.Walk(expandedPath, func(path string, info os.FileInfo, err error) error {
+		filepath.Walk(expandedPath, func(path string, fileInfo os.FileInfo, err error) error {
 			if err != nil {
 				return nil
 			}
-			if !info.IsDir() {
-				totalSize += info.Size()
+			if !fileInfo.IsDir() {
+				totalSize += fileInfo.Size()
 				fileCount++
-				if mod := info.ModTime().Unix(); mod > lastMod {
+				if mod := fileInfo.ModTime().Unix(); mod > lastMod {
 					lastMod = mod
 				}
 			}
@@ -177,7 +175,7 @@ func (p *xcodeProvider) cleanDerivedData(path string) (int64, []string) {
 func (p *xcodeProvider) cleanOldDeviceSupport(path string) (int64, []string) {
 	var totalSize int64
 	var failed []string
-	var daysOld = 30
+	_ = 30 // daysOld threshold
 
 	filepath.Walk(path, func(walkPath string, info os.FileInfo, err error) error {
 		if err != nil || !info.IsDir() {

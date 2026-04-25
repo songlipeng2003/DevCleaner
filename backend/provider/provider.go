@@ -84,11 +84,9 @@ func (p *npmProvider) Scan() ([]ScanResult, error) {
 	for _, pathConfig := range p.Paths() {
 		expandedPath := expandPath(pathConfig.Path)
 		
-		info, err := os.Stat(expandedPath)
-		if os.IsNotExist(err) {
+		if _, err := os.Stat(expandedPath); os.IsNotExist(err) {
 			continue
-		}
-		if err != nil {
+		} else if err != nil {
 			continue
 		}
 
@@ -96,14 +94,14 @@ func (p *npmProvider) Scan() ([]ScanResult, error) {
 		var fileCount int
 		var lastMod int64
 
-		filepath.Walk(expandedPath, func(path string, info os.FileInfo, err error) error {
+		filepath.Walk(expandedPath, func(path string, fileInfo os.FileInfo, err error) error {
 			if err != nil {
 				return nil
 			}
-			if !info.IsDir() {
-				totalSize += info.Size()
+			if !fileInfo.IsDir() {
+				totalSize += fileInfo.Size()
 				fileCount++
-				if mod := info.ModTime().Unix(); mod > lastMod {
+				if mod := fileInfo.ModTime().Unix(); mod > lastMod {
 					lastMod = mod
 				}
 			}
@@ -150,8 +148,7 @@ func (p *npmProvider) Clean(paths []string) (*CleanResult, error) {
 
 func (p *npmProvider) cleanByCommand() (int64, error) {
 	cmd := exec.Command("npm", "cache", "clean", "--force")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
+	if _, err := cmd.CombinedOutput(); err != nil {
 		return 0, err
 	}
 	
@@ -227,11 +224,9 @@ func (p *yarnProvider) Scan() ([]ScanResult, error) {
 	for _, pathConfig := range p.Paths() {
 		expandedPath := expandPath(pathConfig.Path)
 		
-		info, err := os.Stat(expandedPath)
-		if os.IsNotExist(err) {
+		if _, err := os.Stat(expandedPath); os.IsNotExist(err) {
 			continue
-		}
-		if err != nil {
+		} else if err != nil {
 			continue
 		}
 
@@ -239,14 +234,14 @@ func (p *yarnProvider) Scan() ([]ScanResult, error) {
 		var fileCount int
 		var lastMod int64
 
-		filepath.Walk(expandedPath, func(path string, info os.FileInfo, err error) error {
+		filepath.Walk(expandedPath, func(path string, fileInfo os.FileInfo, err error) error {
 			if err != nil {
 				return nil
 			}
-			if !info.IsDir() {
-				totalSize += info.Size()
+			if !fileInfo.IsDir() {
+				totalSize += fileInfo.Size()
 				fileCount++
-				if mod := info.ModTime().Unix(); mod > lastMod {
+				if mod := fileInfo.ModTime().Unix(); mod > lastMod {
 					lastMod = mod
 				}
 			}
@@ -322,11 +317,9 @@ func (p *dockerProvider) Scan() ([]ScanResult, error) {
 	for _, pathConfig := range p.Paths() {
 		expandedPath := expandPath(pathConfig.Path)
 		
-		info, err := os.Stat(expandedPath)
-		if os.IsNotExist(err) {
+		if _, err := os.Stat(expandedPath); os.IsNotExist(err) {
 			continue
-		}
-		if err != nil {
+		} else if err != nil {
 			continue
 		}
 
@@ -334,14 +327,14 @@ func (p *dockerProvider) Scan() ([]ScanResult, error) {
 		var fileCount int
 		var lastMod int64
 
-		filepath.Walk(expandedPath, func(path string, info os.FileInfo, err error) error {
+		filepath.Walk(expandedPath, func(path string, fileInfo os.FileInfo, err error) error {
 			if err != nil {
 				return nil
 			}
-			if !info.IsDir() {
-				totalSize += info.Size()
+			if !fileInfo.IsDir() {
+				totalSize += fileInfo.Size()
 				fileCount++
-				if mod := info.ModTime().Unix(); mod > lastMod {
+				if mod := fileInfo.ModTime().Unix(); mod > lastMod {
 					lastMod = mod
 				}
 			}
@@ -367,18 +360,19 @@ func (p *dockerProvider) Clean(paths []string) (*CleanResult, error) {
 		Failed: []string{},
 	}
 
-	for _, path := range paths {
-		// Docker 必须使用命令清理
-		commands := [][]string{
-			{"docker", "system", "df"},
-			{"docker", "system", "prune", "-a", "-f"},
-		}
-		
-		for _, args := range commands {
-			cmd := exec.Command(args[0], args[1:]...)
-			cmd.Run() // 忽略错误，继续尝试
-		}
-		
+	// Docker 必须使用命令清理
+	commands := [][]string{
+		{"docker", "system", "df"},
+		{"docker", "system", "prune", "-a", "-f"},
+	}
+	
+	for _, args := range commands {
+		cmd := exec.Command(args[0], args[1:]...)
+		cmd.Run() // 忽略错误，继续尝试
+	}
+	
+	// Docker 使用全局命令，不需要遍历 paths
+	for range paths {
 		result.Failed = append(result.Failed, "Docker cleanup attempted via docker CLI")
 	}
 
@@ -448,6 +442,16 @@ func GetProvider(id string) Provider {
 		return NewGoProvider()
 	case "ruby":
 		return NewRubyProvider()
+	case "maven":
+		return NewMavenProvider()
+	case "gradle":
+		return NewGradleProvider()
+	case "cocoapods":
+		return NewCocoaPodsProvider()
+	case "carthage":
+		return NewCarthageProvider()
+	case "unity":
+		return NewUnityProvider()
 	default:
 		return nil
 	}
@@ -464,5 +468,10 @@ func GetAllProviders() []Provider {
 		NewPythonProvider(),
 		NewGoProvider(),
 		NewRubyProvider(),
+		NewMavenProvider(),
+		NewGradleProvider(),
+		NewCocoaPodsProvider(),
+		NewCarthageProvider(),
+		NewUnityProvider(),
 	}
 }

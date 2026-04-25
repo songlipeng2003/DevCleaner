@@ -96,8 +96,8 @@ func (p *rubyProvider) Scan() ([]ScanResult, error) {
 		{expandPath("~/Library/Caches/Ruby"), "Ruby 缓存"},
 	}
 	
-	for _, p := range paths {
-		if result, ok := p.scanSinglePath(p.path, p.description); ok {
+	for _, pathItem := range paths {
+		if result, ok := p.scanSinglePath(pathItem.path, pathItem.description); ok {
 			results = append(results, result)
 		}
 	}
@@ -106,11 +106,9 @@ func (p *rubyProvider) Scan() ([]ScanResult, error) {
 }
 
 func (p *rubyProvider) scanSinglePath(path, description string) (ScanResult, bool) {
-	info, err := os.Stat(path)
-	if os.IsNotExist(err) {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return ScanResult{}, false
-	}
-	if err != nil {
+	} else if err != nil {
 		return ScanResult{}, false
 	}
 
@@ -118,14 +116,14 @@ func (p *rubyProvider) scanSinglePath(path, description string) (ScanResult, boo
 	var fileCount int
 	var lastMod int64
 
-	filepath.Walk(path, func(walkPath string, info os.FileInfo, err error) error {
+	filepath.Walk(path, func(walkPath string, fileInfo os.FileInfo, err error) error {
 		if err != nil {
 			return nil
 		}
-		if !info.IsDir() {
-			totalSize += info.Size()
+		if !fileInfo.IsDir() {
+			totalSize += fileInfo.Size()
 			fileCount++
-			if mod := info.ModTime().Unix(); mod > lastMod {
+			if mod := fileInfo.ModTime().Unix(); mod > lastMod {
 				lastMod = mod
 			}
 		}
