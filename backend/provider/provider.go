@@ -631,53 +631,13 @@ func cleanPathDirect(path string) (int64, []string) {
 
 // GetProvider 获取指定类型的提供商
 func GetProvider(id string) Provider {
-	switch id {
-	case "npm":
-		return NewNPMProvider()
-	case "yarn":
-		return NewYarnProvider()
-	case "pnpm":
-		return NewPnpmProvider()
-	case "docker":
-		return NewDockerProvider()
-	case "xcode":
-		return NewXcodeProvider()
-	case "homebrew":
-		return NewHomebrewProvider()
-	case "python":
-		return NewPythonProvider()
-	case "go":
-		return NewGoProvider()
-	case "ruby":
-		return NewRubyProvider()
-	case "maven":
-		return NewMavenProvider()
-	case "gradle":
-		return NewGradleProvider()
-	case "cocoapods":
-		return NewCocoaPodsProvider()
-	case "carthage":
-		return NewCarthageProvider()
-	case "unity":
-		return NewUnityProvider()
-	case "composer":
-		return NewComposerProvider()
-	case "cargo":
-		return NewCargoProvider()
-	case "flutter":
-		return NewFlutterProvider()
-	case "nuget":
-		return NewNuGetProvider()
-	case "android_sdk":
-		return NewAndroidSDKProvider()
-	case "jetbrains":
-		return NewJetBrainsProvider()
-	case "vscode":
-		return NewVSCodeProvider()
-	default:
-		// 尝试从配置文件加载
-		return GetProviderFromConfig(id)
+	// 优先从配置文件加载
+	provider := GetProviderFromConfig(id)
+	if provider != nil {
+		return provider
 	}
+	// 配置中没有找到，返回nil
+	return nil
 }
 
 // GetProviderFromConfig 从配置文件获取 Provider
@@ -697,36 +657,14 @@ func GetProviderFromConfig(id string) Provider {
 
 // GetAllProviders 获取所有提供商
 func GetAllProviders() []Provider {
-	return []Provider{
-		NewNPMProvider(),
-		NewYarnProvider(),
-		NewPnpmProvider(),
-		NewDockerProvider(),
-		NewXcodeProvider(),
-		NewHomebrewProvider(),
-		NewPythonProvider(),
-		NewGoProvider(),
-		NewRubyProvider(),
-		NewMavenProvider(),
-		NewGradleProvider(),
-		NewCocoaPodsProvider(),
-		NewCarthageProvider(),
-		NewUnityProvider(),
-		NewComposerProvider(),
-		NewCargoProvider(),
-		NewFlutterProvider(),
-		NewNuGetProvider(),
-		NewAndroidSDKProvider(),
-		NewJetBrainsProvider(),
-		NewVSCodeProvider(),
-	}
+	return GetAllProvidersFromConfig()
 }
 
 // GetAllProvidersFromConfig 获取所有配置中的提供商（包括未硬编码的）
 func GetAllProvidersFromConfig() []Provider {
 	cfg, err := config.LoadConfig()
 	if err != nil || cfg == nil {
-		return GetAllProviders()
+		return []Provider{} // 配置加载失败，返回空列表
 	}
 
 	var providers []Provider
