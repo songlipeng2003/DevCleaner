@@ -55,17 +55,22 @@ describe('DevCleaner Tests', () => {
   })
 
   describe('Tool ID Validation', () => {
-    const validToolIds = ['npm', 'yarn', 'pnpm', 'docker', 'xcode', 'homebrew', 'python', 'go', 'ruby', 'maven', 'gradle', 'cocoapods', 'unity']
+    const validToolIds = ['npm', 'yarn', 'pnpm', 'docker', 'xcode', 'homebrew', 'python', 'go', 'ruby', 'maven', 'gradle', 'cocoapods', 'carthage', 'unity']
     
     it('contains all expected tool IDs', () => {
       expect(validToolIds).toContain('npm')
       expect(validToolIds).toContain('docker')
       expect(validToolIds).toContain('xcode')
       expect(validToolIds).toContain('homebrew')
+      expect(validToolIds).toContain('maven')
+      expect(validToolIds).toContain('gradle')
+      expect(validToolIds).toContain('cocoapods')
+      expect(validToolIds).toContain('carthage')
+      expect(validToolIds).toContain('unity')
     })
 
-    it('has 13 tools defined', () => {
-      expect(validToolIds.length).toBe(13)
+    it('has 14 tools defined', () => {
+      expect(validToolIds.length).toBe(14)
     })
   })
 })

@@ -17,7 +17,6 @@ export const useToolStore = defineStore('tools', () => {
   const totalCacheSize = computed(() => 
     scanResults.value.reduce((sum, r) => sum + r.size, 0)
   )
-  const toolIds = computed(() => enabledTools.value.map(t => t.id))
 
   // 获取工具列表
   async function fetchTools() {
@@ -117,6 +116,11 @@ export const useToolStore = defineStore('tools', () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 
+  // 打开路径
+  async function openPath(path: string) {
+    return tauriApi.openPath(path)
+  }
+
   return {
     // 状态
     tools,
@@ -136,5 +140,6 @@ export const useToolStore = defineStore('tools', () => {
     getToolResults,
     getToolSize,
     formatSize,
+    openPath,
   }
 })

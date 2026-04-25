@@ -133,6 +133,24 @@ pub fn get_tool_list() -> Vec<ToolInfo> {
             paths: vec![],
             enabled: false,
         },
+        ToolInfo {
+            id: "cocoapods".to_string(),
+            name: "CocoaPods".to_string(),
+            paths: vec![],
+            enabled: false,
+        },
+        ToolInfo {
+            id: "carthage".to_string(),
+            name: "Carthage".to_string(),
+            paths: vec![],
+            enabled: false,
+        },
+        ToolInfo {
+            id: "unity".to_string(),
+            name: "Unity".to_string(),
+            paths: vec![],
+            enabled: false,
+        },
     ]
 }
 

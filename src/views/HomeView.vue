@@ -204,6 +204,7 @@ const toolIcons: Record<string, string> = {
   maven: '📚',
   gradle: '⚙️',
   cocoapods: '🫘',
+  carthage: '🐴',
   unity: '🎮',
 }
 
@@ -213,6 +214,10 @@ function getToolIcon(toolId: string): string {
 
 function formatSize(bytes: number): string {
   return toolStore.formatSize(bytes)
+}
+
+function getToolSize(toolId: string): number {
+  return toolStore.getToolSize(toolId)
 }
 
 async function refreshTools() {

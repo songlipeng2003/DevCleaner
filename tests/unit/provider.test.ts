@@ -138,6 +138,131 @@ func TestHomebrewProvider(t *testing.T) {
 	}
 }
 
+func TestMavenProvider(t *testing.T) {
+	p := NewMavenProvider()
+
+	if p.ID() != "maven" {
+		t.Errorf("MavenProvider.ID() = %q, want %q", p.ID(), "maven")
+	}
+
+	paths := p.Paths()
+	if len(paths) == 0 {
+		t.Error("MavenProvider has no paths")
+	}
+
+	// 验证包含关键路径
+	expectedPaths := []string{".m2/repository"}
+	for _, expected := range expectedPaths {
+		found := false
+		for _, path := range paths {
+			if contains(path.Path, expected) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("MavenProvider missing path containing %q", expected)
+		}
+	}
+}
+
+func TestGradleProvider(t *testing.T) {
+	p := NewGradleProvider()
+
+	if p.ID() != "gradle" {
+		t.Errorf("GradleProvider.ID() = %q, want %q", p.ID(), "gradle")
+	}
+
+	paths := p.Paths()
+	if len(paths) == 0 {
+		t.Error("GradleProvider has no paths")
+	}
+
+	// 验证包含关键路径
+	expectedPaths := []string{".gradle/caches"}
+	for _, expected := range expectedPaths {
+		found := false
+		for _, path := range paths {
+			if contains(path.Path, expected) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("GradleProvider missing path containing %q", expected)
+		}
+	}
+}
+
+func TestCocoaPodsProvider(t *testing.T) {
+	p := NewCocoaPodsProvider()
+
+	if p.ID() != "cocoapods" {
+		t.Errorf("CocoaPodsProvider.ID() = %q, want %q", p.ID(), "cocoapods")
+	}
+
+	paths := p.Paths()
+	if len(paths) == 0 {
+		t.Error("CocoaPodsProvider has no paths")
+	}
+
+	// 验证包含关键路径
+	expectedPaths := []string{"CocoaPods"}
+	for _, expected := range expectedPaths {
+		found := false
+		for _, path := range paths {
+			if contains(path.Path, expected) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("CocoaPodsProvider missing path containing %q", expected)
+		}
+	}
+}
+
+func TestCarthageProvider(t *testing.T) {
+	p := NewCarthageProvider()
+
+	if p.ID() != "carthage" {
+		t.Errorf("CarthageProvider.ID() = %q, want %q", p.ID(), "carthage")
+	}
+
+	paths := p.Paths()
+	if len(paths) == 0 {
+		t.Error("CarthageProvider has no paths")
+	}
+}
+
+func TestUnityProvider(t *testing.T) {
+	p := NewUnityProvider()
+
+	if p.ID() != "unity" {
+		t.Errorf("UnityProvider.ID() = %q, want %q", p.ID(), "unity")
+	}
+
+	paths := p.Paths()
+	if len(paths) == 0 {
+		t.Error("UnityProvider has no paths")
+	}
+
+	// 验证包含关键路径
+	expectedPaths := []string{"Unity"}
+	for _, expected := range expectedPaths {
+		found := false
+		for _, path := range paths {
+			if contains(path.Path, expected) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("UnityProvider missing path containing %q", expected)
+		}
+	}
+}
+
 func TestCleanStrategy(t *testing.T) {
 	if StrategyDirect != 0 {
 		t.Errorf("StrategyDirect = %d, want 0", StrategyDirect)
