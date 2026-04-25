@@ -1,0 +1,313 @@
+{
+  "version": "1.0",
+  "providers": [
+    {
+      "id": "npm",
+      "name": "npm",
+      "description": "Node.js 包管理器",
+      "platforms": ["darwin", "linux", "windows"],
+      "paths": [
+        {"path": "~/.npm", "description": "npm 全局缓存", "strategy": "command", "command": "npm cache clean --force"},
+        {"path": "~/Library/Caches/npm", "description": "npm 缓存（macOS）", "strategy": "direct"},
+        {"path": "~/.npm/_cacache", "description": "npm 内容缓存", "strategy": "command", "command": "npm cache clean --force"},
+        {"path": "%APPDATA%\\npm-cache", "description": "npm 缓存（Windows）", "strategy": "direct"},
+        {"path": "%LOCALAPPDATA%\\npm-cache", "description": "npm 本地缓存（Windows）", "strategy": "direct"},
+        {"path": "~/.cache/npm", "description": "npm 缓存（Linux）", "strategy": "direct"}
+      ]
+    },
+    {
+      "id": "yarn",
+      "name": "Yarn",
+      "description": "Node.js 包管理器",
+      "platforms": ["darwin", "linux", "windows"],
+      "paths": [
+        {"path": "~/.yarn-cache", "description": "Yarn 缓存", "strategy": "command", "command": "yarn cache clean"},
+        {"path": "~/Library/Caches/Yarn", "description": "Yarn 缓存（macOS）", "strategy": "direct"},
+        {"path": "~/.cache/yarn", "description": "Yarn 缓存（Linux）", "strategy": "direct"},
+        {"path": "%LOCALAPPDATA%\\Yarn", "description": "Yarn 缓存（Windows）", "strategy": "direct"},
+        {"path": "%APPDATA%\\Yarn", "description": "Yarn 全局缓存（Windows）", "strategy": "direct"}
+      ]
+    },
+    {
+      "id": "pnpm",
+      "name": "pnpm",
+      "description": "Node.js 高效包管理器",
+      "platforms": ["darwin", "linux", "windows"],
+      "paths": [
+        {"path": "~/.pnpm-store", "description": "pnpm 存储", "strategy": "command", "command": "pnpm store prune"},
+        {"path": "~/Library/Caches/pnpm", "description": "pnpm 全局缓存（macOS）", "strategy": "direct"},
+        {"path": "%LOCALAPPDATA%\\pnpm", "description": "pnpm 缓存（Windows）", "strategy": "direct"},
+        {"path": "%APPDATA%\\pnpm", "description": "pnpm 全局缓存（Windows）", "strategy": "direct"},
+        {"path": "~/.cache/pnpm", "description": "pnpm 缓存（Linux）", "strategy": "direct"}
+      ]
+    },
+    {
+      "id": "docker",
+      "name": "Docker",
+      "description": "容器引擎",
+      "platforms": ["darwin", "linux", "windows"],
+      "paths": [
+        {"path": "~/Library/Containers/com.docker.docker/Data/vms", "description": "Docker VM（macOS）", "strategy": "command", "command": "docker system prune -a -f"},
+        {"path": "/var/lib/docker", "description": "Docker 数据目录（Linux）", "strategy": "command", "command": "docker system prune -a -f"},
+        {"path": "C:\\ProgramData\\docker", "description": "Docker 数据目录（Windows）", "strategy": "command", "command": "docker system prune -a -f"},
+        {"path": "%USERPROFILE%\\AppData\\Local\\Docker", "description": "Docker 本地数据（Windows）", "strategy": "command", "command": "docker system prune -a -f"}
+      ]
+    },
+    {
+      "id": "xcode",
+      "name": "Xcode",
+      "description": "Apple IDE",
+      "platforms": ["darwin"],
+      "paths": [
+        {"path": "~/Library/Developer/Xcode/DerivedData", "description": "编译缓存", "strategy": "direct"},
+        {"path": "~/Library/Developer/Xcode/Archives", "description": "归档文件", "strategy": "direct"},
+        {"path": "~/Library/Developer/Xcode/iOS DeviceSupport", "description": "设备支持", "strategy": "direct"},
+        {"path": "~/Library/Caches/com.apple.dt.Xcode", "description": "Xcode 缓存", "strategy": "direct"}
+      ]
+    },
+    {
+      "id": "homebrew",
+      "name": "Homebrew",
+      "description": "macOS/Linux 包管理器",
+      "platforms": ["darwin", "linux"],
+      "paths": [
+        {"path": "$(brew --cache)", "description": "Homebrew 下载缓存", "strategy": "direct"},
+        {"path": "/usr/local/Cellar", "description": "Homebrew Cellar（Intel macOS）", "strategy": "direct"},
+        {"path": "/opt/homebrew/Cellar", "description": "Homebrew Cellar（Apple Silicon macOS）", "strategy": "direct"},
+        {"path": "~/Library/Caches/Homebrew", "description": "Homebrew 缓存（macOS）", "strategy": "direct"},
+        {"path": "/home/linuxbrew/.linuxbrew/Cellar", "description": "Homebrew Cellar（Linux）", "strategy": "direct"},
+        {"path": "~/.cache/Homebrew", "description": "Homebrew 缓存（Linux）", "strategy": "direct"}
+      ]
+    },
+    {
+      "id": "python",
+      "name": "Python",
+      "description": "Python pip 缓存",
+      "platforms": ["darwin", "linux", "windows"],
+      "paths": [
+        {"path": "~/.cache/pip", "description": "pip 缓存（Linux/macOS）", "strategy": "command", "command": "pip cache purge"},
+        {"path": "~/Library/Caches/pip", "description": "pip 全局缓存（macOS）", "strategy": "direct"},
+        {"path": "%APPDATA%\\pip\\cache", "description": "pip 缓存（Windows）", "strategy": "direct"},
+        {"path": "%LOCALAPPDATA%\\pip\\cache", "description": "pip 本地缓存（Windows）", "strategy": "direct"}
+      ]
+    },
+    {
+      "id": "go",
+      "name": "Go",
+      "description": "Go 模块缓存",
+      "platforms": ["darwin", "linux", "windows"],
+      "paths": [
+        {"path": "$(go env GOPATH)/pkg/mod", "description": "Go 模块缓存", "strategy": "direct"}
+      ]
+    },
+    {
+      "id": "ruby",
+      "name": "Ruby",
+      "description": "Ruby gem 缓存",
+      "platforms": ["darwin", "linux", "windows"],
+      "paths": [
+        {"path": "~/.gem/cache", "description": "gem 本地缓存", "strategy": "direct"},
+        {"path": "~/Library/Caches/bundler", "description": "Bundler 缓存（macOS）", "strategy": "command", "command": "bundle clean --force"},
+        {"path": "~/.cache/bundler", "description": "Bundler 缓存（Linux）", "strategy": "direct"},
+        {"path": "%APPDATA%\\bundler", "description": "Bundler 缓存（Windows）", "strategy": "direct"},
+        {"path": "%LOCALAPPDATA%\\bundler", "description": "Bundler 本地缓存（Windows）", "strategy": "direct"}
+      ]
+    },
+    {
+      "id": "maven",
+      "name": "Maven",
+      "description": "Java 构建工具",
+      "platforms": ["darwin", "linux", "windows"],
+      "paths": [
+        {"path": "~/.m2/repository", "description": "Maven 本地仓库", "strategy": "direct"},
+        {"path": "%USERPROFILE%\\.m2\\repository", "description": "Maven 本地仓库（Windows）", "strategy": "direct"},
+        {"path": "/root/.m2/repository", "description": "Maven 本地仓库（Linux）", "strategy": "direct"}
+      ]
+    },
+    {
+      "id": "gradle",
+      "name": "Gradle",
+      "description": "Java 构建工具",
+      "platforms": ["darwin", "linux", "windows"],
+      "paths": [
+        {"path": "~/.gradle/caches", "description": "Gradle 缓存目录", "strategy": "direct"},
+        {"path": "%USERPROFILE%\\.gradle\\caches", "description": "Gradle 缓存目录（Windows）", "strategy": "direct"},
+        {"path": "/root/.gradle/caches", "description": "Gradle 缓存目录（Linux）", "strategy": "direct"},
+        {"path": "~/Library/Caches/Gradle", "description": "Gradle 缓存（macOS）", "strategy": "direct"}
+      ]
+    },
+    {
+      "id": "cocoapods",
+      "name": "CocoaPods",
+      "description": "iOS 依赖管理",
+      "platforms": ["darwin"],
+      "paths": [
+        {"path": "~/Library/Caches/CocoaPods", "description": "CocoaPods 缓存", "strategy": "command", "command": "pod cache clean --all"},
+        {"path": "~/Library/Developer/Xcode/DerivedData", "description": "Pods 构建缓存", "strategy": "direct"}
+      ]
+    },
+    {
+      "id": "unity",
+      "name": "Unity",
+      "description": "游戏引擎",
+      "platforms": ["darwin", "linux", "windows"],
+      "paths": [
+        {"path": "~/Library/Unity/Cache", "description": "Unity 缓存（macOS）", "strategy": "direct"},
+        {"path": "~/Library/Caches/Unity", "description": "Unity 下载缓存（macOS）", "strategy": "direct"},
+        {"path": "%USERPROFILE%\\AppData\\Local\\Unity", "description": "Unity 缓存（Windows）", "strategy": "direct"},
+        {"path": "%USERPROFILE%\\AppData\\LocalLow\\Unity", "description": "Unity 低完整性缓存（Windows）", "strategy": "direct"},
+        {"path": "~/.cache/Unity", "description": "Unity 缓存（Linux）", "strategy": "direct"},
+        {"path": "~/.config/unity3d", "description": "Unity 配置目录（Linux）", "strategy": "direct"}
+      ]
+    },
+    {
+      "id": "composer",
+      "name": "Composer",
+      "description": "PHP 依赖管理",
+      "platforms": ["darwin", "linux", "windows"],
+      "paths": [
+        {"path": "~/.cache/composer", "description": "Composer 全局缓存（Linux/macOS）", "strategy": "command", "command": "composer clear-cache"},
+        {"path": "~/Library/Caches/composer", "description": "Composer 全局缓存（macOS）", "strategy": "direct"},
+        {"path": "%APPDATA%\\Composer", "description": "Composer 全局缓存（Windows）", "strategy": "direct"},
+        {"path": "~/.composer/cache", "description": "Composer 本地缓存（旧版本）", "strategy": "direct"}
+      ]
+    },
+    {
+      "id": "cargo",
+      "name": "Cargo",
+      "description": "Rust 包管理器",
+      "platforms": ["darwin", "linux", "windows"],
+      "paths": [
+        {"path": "~/.cargo/registry", "description": "Cargo 注册表缓存（Linux/macOS）", "strategy": "command", "command": "cargo cache -a"},
+        {"path": "~/.cargo/git", "description": "Cargo Git 依赖缓存（Linux/macOS）", "strategy": "direct"},
+        {"path": "%USERPROFILE%\\.cargo\\registry", "description": "Cargo 注册表缓存（Windows）", "strategy": "direct"},
+        {"path": "%USERPROFILE%\\.cargo\\git", "description": "Cargo Git 依赖缓存（Windows）", "strategy": "direct"}
+      ]
+    },
+    {
+      "id": "flutter",
+      "name": "Flutter",
+      "description": "跨平台开发框架",
+      "platforms": ["darwin", "linux", "windows"],
+      "paths": [
+        {"path": "~/.pub-cache", "description": "Pub 全局缓存（Linux/macOS）", "strategy": "command", "command": "flutter pub cache clean"},
+        {"path": "~/.flutter_cache", "description": "Flutter 全局缓存（Linux/macOS）", "strategy": "direct"},
+        {"path": "%USERPROFILE%\\.pub-cache", "description": "Pub 全局缓存（Windows）", "strategy": "direct"},
+        {"path": "%USERPROFILE%\\.flutter_cache", "description": "Flutter 全局缓存（Windows）", "strategy": "direct"}
+      ]
+    },
+    {
+      "id": "nuget",
+      "name": "NuGet",
+      "description": ".NET 包管理器",
+      "platforms": ["darwin", "linux", "windows"],
+      "paths": [
+        {"path": "~/.nuget/packages", "description": "NuGet 全局包缓存", "strategy": "direct"},
+        {"path": "%USERPROFILE%\\.nuget\\packages", "description": "NuGet 全局包缓存（Windows）", "strategy": "direct"},
+        {"path": "~/.local/share/NuGet/Cache", "description": "NuGet HTTP 缓存（Linux/macOS）", "strategy": "direct"},
+        {"path": "%APPDATA%\\NuGet\\Cache", "description": "NuGet HTTP 缓存（Windows）", "strategy": "direct"}
+      ]
+    },
+    {
+      "id": "android_sdk",
+      "name": "Android SDK",
+      "description": "Android 开发工具",
+      "platforms": ["darwin", "linux", "windows"],
+      "paths": [
+        {"path": "~/Library/Android/sdk/.caches", "description": "Android SDK 构建缓存（macOS）", "strategy": "direct"},
+        {"path": "%USERPROFILE%\\AppData\\Local\\Android\\Sdk\\.caches", "description": "Android SDK 构建缓存（Windows）", "strategy": "direct"},
+        {"path": "~/Android/Sdk/.caches", "description": "Android SDK 构建缓存（Linux）", "strategy": "direct"}
+      ]
+    },
+    {
+      "id": "jetbrains",
+      "name": "JetBrains IDEs",
+      "description": "JetBrains IDE 全家桶缓存清理",
+      "platforms": ["darwin", "linux", "windows"],
+      "ides": [
+        {"id": "intellij", "name": "IntelliJ IDEA", "paths": [
+          {"path": "~/Library/Caches/JetBrains/IntelliJIdea*", "description": "缓存", "strategy": "direct"},
+          {"path": "~/.cache/JetBrains/IntelliJIdea*", "description": "缓存（Linux）", "strategy": "direct"},
+          {"path": "%LOCALAPPDATA%\\JetBrains\\IntelliJIdea*", "description": "缓存（Windows）", "strategy": "direct"}
+        ]},
+        {"id": "webstorm", "name": "WebStorm", "paths": [
+          {"path": "~/Library/Caches/JetBrains/WebStorm*", "description": "缓存", "strategy": "direct"},
+          {"path": "~/.cache/JetBrains/WebStorm*", "description": "缓存（Linux）", "strategy": "direct"},
+          {"path": "%LOCALAPPDATA%\\JetBrains\\WebStorm*", "description": "缓存（Windows）", "strategy": "direct"}
+        ]},
+        {"id": "pycharm", "name": "PyCharm", "paths": [
+          {"path": "~/Library/Caches/JetBrains/PyCharm*", "description": "缓存", "strategy": "direct"},
+          {"path": "~/.cache/JetBrains/PyCharm*", "description": "缓存（Linux）", "strategy": "direct"},
+          {"path": "%LOCALAPPDATA%\\JetBrains\\PyCharm*", "description": "缓存（Windows）", "strategy": "direct"}
+        ]},
+        {"id": "goland", "name": "GoLand", "paths": [
+          {"path": "~/Library/Caches/JetBrains/GoLand*", "description": "缓存", "strategy": "direct"},
+          {"path": "~/.cache/JetBrains/GoLand*", "description": "缓存（Linux）", "strategy": "direct"},
+          {"path": "%LOCALAPPDATA%\\JetBrains\\GoLand*", "description": "缓存（Windows）", "strategy": "direct"}
+        ]},
+        {"id": "datagrip", "name": "DataGrip", "paths": [
+          {"path": "~/Library/Caches/JetBrains/DataGrip*", "description": "缓存", "strategy": "direct"},
+          {"path": "~/.cache/JetBrains/DataGrip*", "description": "缓存（Linux）", "strategy": "direct"},
+          {"path": "%LOCALAPPDATA%\\JetBrains\\DataGrip*", "description": "缓存（Windows）", "strategy": "direct"}
+        ]},
+        {"id": "rider", "name": "Rider", "paths": [
+          {"path": "~/Library/Caches/JetBrains/Rider*", "description": "缓存", "strategy": "direct"},
+          {"path": "~/.cache/JetBrains/Rider*", "description": "缓存（Linux）", "strategy": "direct"},
+          {"path": "%LOCALAPPDATA%\\JetBrains\\Rider*", "description": "缓存（Windows）", "strategy": "direct"}
+        ]},
+        {"id": "clion", "name": "CLion", "paths": [
+          {"path": "~/Library/Caches/JetBrains/CLion*", "description": "缓存", "strategy": "direct"},
+          {"path": "~/.cache/JetBrains/CLion*", "description": "缓存（Linux）", "strategy": "direct"},
+          {"path": "%LOCALAPPDATA%\\JetBrains\\CLion*", "description": "缓存（Windows）", "strategy": "direct"}
+        ]},
+        {"id": "rubymine", "name": "RubyMine", "paths": [
+          {"path": "~/Library/Caches/JetBrains/RubyMine*", "description": "缓存", "strategy": "direct"},
+          {"path": "~/.cache/JetBrains/RubyMine*", "description": "缓存（Linux）", "strategy": "direct"},
+          {"path": "%LOCALAPPDATA%\\JetBrains\\RubyMine*", "description": "缓存（Windows）", "strategy": "direct"}
+        ]},
+        {"id": "phpstorm", "name": "PhpStorm", "paths": [
+          {"path": "~/Library/Caches/JetBrains/PhpStorm*", "description": "缓存", "strategy": "direct"},
+          {"path": "~/.cache/JetBrains/PhpStorm*", "description": "缓存（Linux）", "strategy": "direct"},
+          {"path": "%LOCALAPPDATA%\\JetBrains\\PhpStorm*", "description": "缓存（Windows）", "strategy": "direct"}
+        ]},
+        {"id": "android-studio", "name": "Android Studio", "paths": [
+          {"path": "~/Library/Caches/Google/AndroidStudio*", "description": "缓存", "strategy": "direct"},
+          {"path": "~/.cache/Google/AndroidStudio*", "description": "缓存（Linux）", "strategy": "direct"},
+          {"path": "%LOCALAPPDATA%\\Google\\AndroidStudio*", "description": "缓存（Windows）", "strategy": "direct"}
+        ]}
+      ]
+    },
+    {
+      "id": "vscode",
+      "name": "VS Code",
+      "description": "Visual Studio Code 缓存清理",
+      "platforms": ["darwin", "linux", "windows"],
+      "清理项": [
+        {"id": "cache", "name": "Cache", "description": "缓存", "paths": [
+          {"path": "~/.config/Code/Cache", "description": "缓存", "strategy": "direct"},
+          {"path": "%APPDATA%\\Code\\Cache", "description": "缓存（Windows）", "strategy": "direct"}
+        ]},
+        {"id": "gpu-cache", "name": "GPUCache", "description": "GPU 缓存", "paths": [
+          {"path": "~/.config/Code/GPUCache", "description": "GPU缓存", "strategy": "direct"},
+          {"path": "%APPDATA%\\Code\\GPUCache", "description": "GPU缓存（Windows）", "strategy": "direct"}
+        ]},
+        {"id": "logs", "name": "Logs", "description": "日志文件", "paths": [
+          {"path": "~/.config/Code/logs", "description": "日志", "strategy": "direct"},
+          {"path": "%APPDATA%\\Code\\logs", "description": "日志（Windows）", "strategy": "direct"}
+        ]},
+        {"id": "indexeddb", "name": "IndexedDB", "description": "数据库", "paths": [
+          {"path": "~/.config/Code/CachedData", "description": "数据", "strategy": "direct"},
+          {"path": "%APPDATA%\\Code\\CachedData", "description": "数据（Windows）", "strategy": "direct"}
+        ]},
+        {"id": "cached-extensions", "name": "CachedExtensions", "description": "扩展缓存", "paths": [
+          {"path": "~/.config/Code/CachedExtensions", "description": "扩展", "strategy": "direct"},
+          {"path": "%APPDATA%\\Code\\CachedExtensions", "description": "扩展（Windows）", "strategy": "direct"}
+        ]},
+        {"id": "global-storage", "name": "GlobalStorage", "description": "全局存储", "paths": [
+          {"path": "~/.config/Code/globalStorage", "description": "存储", "strategy": "direct"},
+          {"path": "%APPDATA%\\Code\\globalStorage", "description": "存储（Windows）", "strategy": "direct"}
+        ]}
+      ]
+    }
+  ]
+}

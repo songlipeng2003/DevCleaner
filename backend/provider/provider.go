@@ -5,6 +5,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/devcleaner/backend/config"
 )
 
 // Provider 提供商接口
@@ -21,6 +23,7 @@ type PathConfig struct {
 	Path        string
 	Description string
 	Strategy    CleanStrategy
+	Command     string
 }
 
 // CleanStrategy 清理策略
@@ -48,6 +51,138 @@ type CleanResult struct {
 	FileNum  int      `json:"file_num"`
 }
 
+// ConfigProvider 基于配置的 Provider
+type ConfigProvider struct {
+	id          string
+	name        string
+	description string
+	paths       []PathConfig
+}
+
+// NewConfigProviderFromConfig 从配置创建 Provider
+func NewConfigProviderFromConfig(providerConfig config.ProviderConfig) *ConfigProvider {
+	paths := make([]PathConfig, 0)
+	for _, pathConfig := range providerConfig.Paths {
+		strategy := StrategyDirect
+		if pathConfig.Strategy == "command" {
+			strategy = StrategyCommand
+		}
+		paths = append(paths, PathConfig{
+			Path:        pathConfig.Path,
+			Description: pathConfig.Description,
+			Strategy:    strategy,
+			Command:     pathConfig.Command,
+		})
+	}
+
+	return &ConfigProvider{
+		id:          providerConfig.ID,
+		name:        providerConfig.Name,
+		description: providerConfig.Description,
+		paths:       paths,
+	}
+}
+
+func (p *ConfigProvider) ID() string   { return p.id }
+func (p *ConfigProvider) Name() string { return p.name }
+
+func (p *ConfigProvider) Paths() []PathConfig {
+	return p.paths
+}
+
+func (p *ConfigProvider) Scan() ([]ScanResult, error) {
+	var results []ScanResult
+
+	for _, pathConfig := range p.Paths() {
+		expandedPath := expandPath(pathConfig.Path)
+
+		if _, err := os.Stat(expandedPath); os.IsNotExist(err) {
+			continue
+		} else if err != nil {
+			continue
+		}
+
+		var totalSize int64
+		var fileCount int
+		var lastMod int64
+
+		filepath.Walk(expandedPath, func(path string, fileInfo os.FileInfo, err error) error {
+			if err != nil {
+				return nil
+			}
+			if !fileInfo.IsDir() {
+				totalSize += fileInfo.Size()
+				fileCount++
+				if mod := fileInfo.ModTime().Unix(); mod > lastMod {
+					lastMod = mod
+				}
+			}
+			return nil
+		})
+
+		if totalSize > 0 {
+			results = append(results, ScanResult{
+				Path:        expandedPath,
+				Size:        totalSize,
+				FileNum:     fileCount,
+				LastMod:     lastMod,
+				Description: pathConfig.Description,
+			})
+		}
+	}
+
+	return results, nil
+}
+
+func (p *ConfigProvider) Clean(paths []string) (*CleanResult, error) {
+	result := &CleanResult{
+		Failed: []string{},
+	}
+
+	for _, path := range paths {
+		// 查找对应的路径配置
+		var pathConfig PathConfig
+		for _, pc := range p.Paths() {
+			expanded := expandPath(pc.Path)
+			if expanded == path {
+				pathConfig = pc
+				break
+			}
+		}
+
+		// 根据策略清理
+		if pathConfig.Strategy == StrategyCommand && pathConfig.Command != "" {
+			cleaned, err := p.cleanByCommand(pathConfig.Command)
+			if err == nil {
+				result.Cleaned += cleaned
+				continue
+			}
+		}
+
+		// 直接删除
+		cleaned, failed := cleanPathDirect(path)
+		result.Cleaned += cleaned
+		result.FileNum += len(failed)
+		result.Failed = append(result.Failed, failed...)
+	}
+
+	return result, nil
+}
+
+func (p *ConfigProvider) cleanByCommand(command string) (int64, error) {
+	parts := strings.Fields(command)
+	if len(parts) == 0 {
+		return 0, nil
+	}
+
+	cmd := exec.Command(parts[0], parts[1:]...)
+	if _, err := cmd.CombinedOutput(); err != nil {
+		return 0, err
+	}
+
+	return 0, nil
+}
+
 // npmProvider npm 提供商
 type npmProvider struct{}
 
@@ -64,6 +199,7 @@ func (p *npmProvider) Paths() []PathConfig {
 			Path:        "~/.npm",
 			Description: "npm 全局缓存",
 			Strategy:    StrategyCommand,
+			Command:     "npm cache clean --force",
 		},
 		{
 			Path:        "~/Library/Caches/npm",
@@ -74,6 +210,7 @@ func (p *npmProvider) Paths() []PathConfig {
 			Path:        "~/.npm/_cacache",
 			Description: "npm 内容缓存",
 			Strategy:    StrategyCommand,
+			Command:     "npm cache clean --force",
 		},
 		{
 			Path:        "%APPDATA%\\npm-cache",
@@ -95,10 +232,10 @@ func (p *npmProvider) Paths() []PathConfig {
 
 func (p *npmProvider) Scan() ([]ScanResult, error) {
 	var results []ScanResult
-	
+
 	for _, pathConfig := range p.Paths() {
 		expandedPath := expandPath(pathConfig.Path)
-		
+
 		if _, err := os.Stat(expandedPath); os.IsNotExist(err) {
 			continue
 		} else if err != nil {
@@ -155,6 +292,7 @@ func (p *npmProvider) Clean(paths []string) (*CleanResult, error) {
 		// 直接删除
 		cleaned, failed := p.cleanDirect(path)
 		result.Cleaned += cleaned
+		result.FileNum += len(failed)
 		result.Failed = append(result.Failed, failed...)
 	}
 
@@ -166,7 +304,7 @@ func (p *npmProvider) cleanByCommand() (int64, error) {
 	if _, err := cmd.CombinedOutput(); err != nil {
 		return 0, err
 	}
-	
+
 	// 尝试获取清理的大小（通过扫描清理前的缓存大小估算）
 	// 这里简化处理，实际可记录清理前的状态
 	return 0, nil
@@ -219,6 +357,7 @@ func (p *yarnProvider) Paths() []PathConfig {
 			Path:        "~/.yarn-cache",
 			Description: "Yarn 缓存",
 			Strategy:    StrategyCommand,
+			Command:     "yarn cache clean",
 		},
 		{
 			Path:        "~/Library/Caches/Yarn",
@@ -245,10 +384,10 @@ func (p *yarnProvider) Paths() []PathConfig {
 
 func (p *yarnProvider) Scan() ([]ScanResult, error) {
 	var results []ScanResult
-	
+
 	for _, pathConfig := range p.Paths() {
 		expandedPath := expandPath(pathConfig.Path)
-		
+
 		if _, err := os.Stat(expandedPath); os.IsNotExist(err) {
 			continue
 		} else if err != nil {
@@ -299,6 +438,7 @@ func (p *yarnProvider) Clean(paths []string) (*CleanResult, error) {
 			// 命令失败，直接删除
 			cleaned, failed := cleanPathDirect(path)
 			result.Cleaned += cleaned
+			result.FileNum += len(failed)
 			result.Failed = append(result.Failed, failed...)
 		}
 	}
@@ -322,26 +462,29 @@ func (p *dockerProvider) Paths() []PathConfig {
 			Path:        "~/Library/Containers/com.docker.docker/Data/vms",
 			Description: "Docker VM 数据",
 			Strategy:    StrategyCommand,
+			Command:     "docker system prune -a -f",
 		},
 		{
 			Path:        "/var/lib/docker",
 			Description: "Docker 数据目录（Linux）",
 			Strategy:    StrategyCommand,
+			Command:     "docker system prune -a -f",
 		},
 		{
 			Path:        "C:\\ProgramData\\docker",
 			Description: "Docker 数据目录（Windows）",
 			Strategy:    StrategyCommand,
+			Command:     "docker system prune -a -f",
 		},
 	}
 }
 
 func (p *dockerProvider) Scan() ([]ScanResult, error) {
 	var results []ScanResult
-	
+
 	for _, pathConfig := range p.Paths() {
 		expandedPath := expandPath(pathConfig.Path)
-		
+
 		if _, err := os.Stat(expandedPath); os.IsNotExist(err) {
 			continue
 		} else if err != nil {
@@ -390,12 +533,12 @@ func (p *dockerProvider) Clean(paths []string) (*CleanResult, error) {
 		{"docker", "system", "df"},
 		{"docker", "system", "prune", "-a", "-f"},
 	}
-	
+
 	for _, args := range commands {
 		cmd := exec.Command(args[0], args[1:]...)
 		cmd.Run() // 忽略错误，继续尝试
 	}
-	
+
 	// Docker 使用全局命令，不需要遍历 paths
 	for range paths {
 		result.Failed = append(result.Failed, "Docker cleanup attempted via docker CLI")
@@ -492,8 +635,24 @@ func GetProvider(id string) Provider {
 	case "vscode":
 		return NewVSCodeProvider()
 	default:
+		// 尝试从配置文件加载
+		return GetProviderFromConfig(id)
+	}
+}
+
+// GetProviderFromConfig 从配置文件获取 Provider
+func GetProviderFromConfig(id string) Provider {
+	cfg, err := config.LoadConfig()
+	if err != nil || cfg == nil {
 		return nil
 	}
+
+	providerConfig := cfg.GetProviderByID(id)
+	if providerConfig == nil {
+		return nil
+	}
+
+	return NewConfigProviderFromConfig(*providerConfig)
 }
 
 // GetAllProviders 获取所有提供商
@@ -521,4 +680,19 @@ func GetAllProviders() []Provider {
 		NewJetBrainsProvider(),
 		NewVSCodeProvider(),
 	}
+}
+
+// GetAllProvidersFromConfig 获取所有配置中的提供商（包括未硬编码的）
+func GetAllProvidersFromConfig() []Provider {
+	cfg, err := config.LoadConfig()
+	if err != nil || cfg == nil {
+		return GetAllProviders()
+	}
+
+	var providers []Provider
+	for _, providerConfig := range cfg.Providers {
+		providers = append(providers, NewConfigProviderFromConfig(providerConfig))
+	}
+
+	return providers
 }
