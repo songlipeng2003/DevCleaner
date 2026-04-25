@@ -1,0 +1,220 @@
+/* 自然元素风格主题变量 */
+:root {
+  /* 自然色调色板 */
+  --nature-primary-color: #388E3C; /* 森林绿 */
+  --nature-primary-hover: #2E7D32;
+  --nature-primary-active: #1B5E20;
+  --nature-secondary-color: #8D6E63; /* 陶土棕 */
+  --nature-secondary-hover: #795548;
+  --nature-secondary-active: #5D4037;
+  --nature-success-color: #4CAF50;
+  --nature-warning-color: #FF9800;
+  --nature-error-color: #F44336;
+  --nature-info-color: #2196F3;
+
+  /* 背景与表面 */
+  --nature-bg-body: #F5F5DC; /* 米白 */
+  --nature-bg-container: #FFF8E1; /* 浅黄 */
+  --nature-bg-surface: #FFFFFF; /* 纯白 */
+  --nature-bg-hover: #F1F8E9; /* 浅绿 */
+  --nature-bg-selected: #E8F5E8;
+
+  /* 文本颜色 */
+  --nature-text-primary: #3E2723; /* 深棕 */
+  --nature-text-secondary: #5D4037;
+  --nature-text-tertiary: #8D6E63;
+  --nature-text-disabled: #BCAAA4;
+  --nature-text-inverse: #FFFFFF;
+
+  /* 边框与分割线 */
+  --nature-border-color: #C8E6C9; /* 浅绿 */
+  --nature-border-color-split: #DCEDC8;
+  --nature-border-radius-base: 12px; /* 更大圆角 */
+  --nature-border-radius-sm: 8px;
+
+  /* 阴影 */
+  --nature-box-shadow: 0 4px 12px rgba(56, 142, 60, 0.1);
+  --nature-box-shadow-hover: 0 8px 16px rgba(56, 142, 60, 0.2);
+
+  /* 间距 */
+  --nature-space-xs: 4px;
+  --nature-space-sm: 8px;
+  --nature-space-md: 16px;
+  --nature-space-lg: 24px;
+  --nature-space-xl: 32px;
+
+  /* 字体 */
+  --nature-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+  --nature-font-size-base: 14px;
+  --nature-line-height-base: 1.6;
+
+  /* 自然元素装饰 */
+  --nature-leaf-pattern: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path d="M50 10 Q70 30 50 50 Q30 70 10 50 Q30 30 50 10Z" fill="none" stroke="%23C8E6C9" stroke-width="1" opacity="0.3"/></svg>');
+
+  /* Ant Design 变量映射 */
+  --ant-primary-color: var(--nature-primary-color);
+  --ant-primary-color-hover: var(--nature-primary-hover);
+  --ant-primary-color-active: var(--nature-primary-active);
+  --ant-primary-color-outline: rgba(56, 142, 60, 0.2);
+  --ant-success-color: var(--nature-success-color);
+  --ant-warning-color: var(--nature-warning-color);
+  --ant-error-color: var(--nature-error-color);
+  --ant-info-color: var(--nature-info-color);
+  --ant-border-radius-base: var(--nature-border-radius-base);
+  --ant-border-radius-sm: var(--nature-border-radius-sm);
+  --ant-font-family: var(--nature-font-family);
+  --ant-font-size-base: var(--nature-font-size-base);
+  --ant-line-height-base: var(--nature-line-height-base);
+  --ant-bg-base: var(--nature-bg-body);
+  --ant-bg-container: var(--nature-bg-container);
+  --ant-bg-elevated: var(--nature-bg-surface);
+  --ant-text-color: var(--nature-text-primary);
+  --ant-text-color-secondary: var(--nature-text-secondary);
+  --ant-text-color-tertiary: var(--nature-text-tertiary);
+  --ant-text-color-disabled: var(--nature-text-disabled);
+  --ant-border-color-base: var(--nature-border-color);
+  --ant-border-color-split: var(--nature-border-color-split);
+  --ant-box-shadow-base: var(--nature-box-shadow);
+  --ant-box-shadow-secondary: var(--nature-box-shadow-hover);
+}
+
+/* 深色模式变量 */
+[data-theme="dark"] {
+  --nature-primary-color: #66BB6A; /* 亮绿 */
+  --nature-primary-hover: #81C784;
+  --nature-primary-active: #43A047;
+  --nature-secondary-color: #A1887F;
+  --nature-secondary-hover: #8D6E63;
+  --nature-secondary-active: #6D4C41;
+  --nature-success-color: #66BB6A;
+  --nature-warning-color: #FFB74D;
+  --nature-error-color: #EF5350;
+  --nature-info-color: #64B5F6;
+
+  --nature-bg-body: #1A1A1A; /* 深灰 */
+  --nature-bg-container: #2D2D2D;
+  --nature-bg-surface: #3C3C3C;
+  --nature-bg-hover: #2E7D32;
+  --nature-bg-selected: #1B5E20;
+
+  --nature-text-primary: #E0E0E0;
+  --nature-text-secondary: #B0B0B0;
+  --nature-text-tertiary: #8D8D8D;
+  --nature-text-disabled: #666666;
+  --nature-text-inverse: #1A1A1A;
+
+  --nature-border-color: #2E7D32;
+  --nature-border-color-split: #1B5E20;
+  --nature-box-shadow: 0 4px 12px rgba(102, 187, 106, 0.2);
+  --nature-box-shadow-hover: 0 8px 16px rgba(102, 187, 106, 0.3);
+
+  /* Ant Design 深色变量映射 */
+  --ant-primary-color: var(--nature-primary-color);
+  --ant-primary-color-hover: var(--nature-primary-hover);
+  --ant-primary-color-active: var(--nature-primary-active);
+  --ant-primary-color-outline: rgba(102, 187, 106, 0.2);
+  --ant-success-color: var(--nature-success-color);
+  --ant-warning-color: var(--nature-warning-color);
+  --ant-error-color: var(--nature-error-color);
+  --ant-info-color: var(--nature-info-color);
+  --ant-bg-base: var(--nature-bg-body);
+  --ant-bg-container: var(--nature-bg-container);
+  --ant-bg-elevated: var(--nature-bg-surface);
+  --ant-text-color: var(--nature-text-primary);
+  --ant-text-color-secondary: var(--nature-text-secondary);
+  --ant-text-color-tertiary: var(--nature-text-tertiary);
+  --ant-text-color-disabled: var(--nature-text-disabled);
+  --ant-border-color-base: var(--nature-border-color);
+  --ant-border-color-split: var(--nature-border-color-split);
+  --ant-box-shadow-base: var(--nature-box-shadow);
+  --ant-box-shadow-secondary: var(--nature-box-shadow-hover);
+}
+
+/* 基础样式重置 */
+body {
+  background-color: var(--nature-bg-body);
+  color: var(--nature-text-primary);
+  font-family: var(--nature-font-family);
+  font-size: var(--nature-font-size-base);
+  line-height: var(--nature-line-height-base);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* 自然元素装饰背景 */
+.nature-bg-pattern {
+  background-image: var(--nature-leaf-pattern);
+  background-repeat: repeat;
+  background-size: 100px;
+  opacity: 0.1;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--nature-bg-container);
+  border-radius: var(--nature-border-radius-sm);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--nature-primary-color);
+  border-radius: var(--nature-border-radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--nature-primary-hover);
+}
+
+/* 链接样式 */
+a {
+  color: var(--nature-primary-color);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: var(--nature-primary-hover);
+  text-decoration: underline;
+}
+
+/* 卡片样式 */
+.nature-card {
+  background: var(--nature-bg-surface);
+  border-radius: var(--nature-border-radius-base);
+  border: 1px solid var(--nature-border-color);
+  box-shadow: var(--nature-box-shadow);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.nature-card:hover {
+  box-shadow: var(--nature-box-shadow-hover);
+  transform: translateY(-2px);
+}
+
+/* 按钮样式 */
+.nature-btn {
+  border-radius: var(--nature-border-radius-sm);
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+/* 输入框样式 */
+.nature-input {
+  border-radius: var(--nature-border-radius-sm);
+  border: 1px solid var(--nature-border-color);
+  transition: border-color 0.3s ease;
+}
+
+.nature-input:focus {
+  border-color: var(--nature-primary-color);
+  box-shadow: 0 0 0 2px rgba(56, 142, 60, 0.2);
+}

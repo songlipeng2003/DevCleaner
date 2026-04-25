@@ -220,31 +220,36 @@ onMounted(async () => {
 <style scoped>
 .scan {
   height: 100vh;
-  background: #f0f2f5;
+  background: var(--nature-bg-body);
+  position: relative;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #fff;
+  background: var(--nature-bg-surface);
   padding: 0 24px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: var(--nature-box-shadow);
+  border-bottom: 1px solid var(--nature-border-color);
+  backdrop-filter: blur(10px);
 }
 
 .content {
   padding: 24px;
   margin: 24px;
-  background: #fff;
-  border-radius: 8px;
+  background: var(--nature-bg-surface);
+  border-radius: var(--nature-border-radius-base);
   overflow-y: auto;
+  border: 1px solid var(--nature-border-color);
+  box-shadow: var(--nature-box-shadow);
 }
 
 .progress-stats {
   display: flex;
   justify-content: space-between;
   margin-top: 12px;
-  color: #666;
+  color: var(--nature-text-secondary);
   font-size: 14px;
 }
 
@@ -255,13 +260,14 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f5f5f5;
-  border-radius: 8px;
+  background: var(--nature-bg-hover);
+  border-radius: var(--nature-border-radius-sm);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .current-path {
   font-size: 12px;
-  color: #999;
+  color: var(--nature-text-tertiary);
   margin-top: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -271,5 +277,26 @@ onMounted(async () => {
 .scan-list {
   max-height: 400px;
   overflow-y: auto;
+}
+
+/* 自定义卡片样式 */
+:deep(.ant-card) {
+  background: var(--nature-bg-surface);
+  border: 1px solid var(--nature-border-color);
+  border-radius: var(--nature-border-radius-base);
+  box-shadow: var(--nature-box-shadow);
+}
+
+:deep(.ant-card:hover) {
+  box-shadow: var(--nature-box-shadow-hover);
+}
+
+/* 进度条颜色覆盖 */
+:deep(.ant-progress-inner) {
+  background-color: var(--nature-bg-container);
+}
+
+:deep(.ant-progress-bg) {
+  background-color: var(--nature-primary-color);
 }
 </style>

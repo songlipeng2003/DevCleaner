@@ -122,23 +122,46 @@ onMounted(async () => {
 <style scoped>
 .settings {
   height: 100vh;
-  background: #f0f2f5;
+  background: var(--nature-bg-body);
+  position: relative;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #fff;
+  background: var(--nature-bg-surface);
   padding: 0 24px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: var(--nature-box-shadow);
+  border-bottom: 1px solid var(--nature-border-color);
+  backdrop-filter: blur(10px);
 }
 
 .content {
   padding: 24px;
   margin: 24px;
-  background: #fff;
-  border-radius: 8px;
+  background: var(--nature-bg-surface);
+  border-radius: var(--nature-border-radius-base);
   max-width: 600px;
+  border: 1px solid var(--nature-border-color);
+  box-shadow: var(--nature-box-shadow);
+}
+
+/* 表单样式 */
+:deep(.ant-form-item-label) {
+  color: var(--nature-text-primary);
+  font-weight: 500;
+}
+
+:deep(.ant-slider-track) {
+  background-color: var(--nature-primary-color);
+}
+
+:deep(.ant-slider:hover .ant-slider-track) {
+  background-color: var(--nature-primary-hover);
+}
+
+:deep(.ant-switch-checked) {
+  background-color: var(--nature-primary-color);
 }
 </style>

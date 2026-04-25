@@ -334,7 +334,8 @@ onUnmounted(() => {
 <style scoped>
 .home {
   height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--nature-primary-color) 0%, var(--nature-secondary-color) 100%);
+  position: relative;
 }
 
 .layout {
@@ -348,7 +349,9 @@ onUnmounted(() => {
   align-items: center;
   background: rgba(255, 255, 255, 0.95);
   padding: 0 24px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: var(--nature-box-shadow);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--nature-border-color);
 }
 
 .header-left {
@@ -360,15 +363,17 @@ onUnmounted(() => {
 .header h1 {
   font-size: 20px;
   margin: 0;
-  color: #333;
+  color: var(--nature-text-primary);
+  font-weight: 600;
 }
 
 .version {
   font-size: 12px;
-  color: #999;
-  background: #f5f5f5;
+  color: var(--nature-text-tertiary);
+  background: var(--nature-bg-hover);
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: var(--nature-border-radius-sm);
+  font-weight: 500;
 }
 
 .content {
@@ -378,13 +383,20 @@ onUnmounted(() => {
 
 .disk-card {
   margin-bottom: 24px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-radius: var(--nature-border-radius-base);
+  box-shadow: var(--nature-box-shadow);
+  background: var(--nature-bg-surface);
+  border: 1px solid var(--nature-border-color);
+  transition: box-shadow 0.3s ease;
+}
+
+.disk-card:hover {
+  box-shadow: var(--nature-box-shadow-hover);
 }
 
 .disk-info {
   font-size: 14px;
-  color: #666;
+  color: var(--nature-text-secondary);
 }
 
 .scan-actions {
@@ -395,8 +407,11 @@ onUnmounted(() => {
 }
 
 .scan-summary {
-  color: #fff;
+  color: var(--nature-text-inverse);
   font-size: 14px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 4px 12px;
+  border-radius: var(--nature-border-radius-sm);
 }
 
 .tools-grid {
@@ -404,13 +419,21 @@ onUnmounted(() => {
 }
 
 .tool-card {
-  border-radius: 12px;
-  transition: all 0.3s;
-  background: rgba(255, 255, 255, 0.95);
+  border-radius: var(--nature-border-radius-base);
+  transition: all 0.3s ease;
+  background: var(--nature-bg-surface);
+  border: 1px solid var(--nature-border-color);
+  box-shadow: var(--nature-box-shadow);
+  height: 100%;
+}
+
+.tool-card:hover {
+  box-shadow: var(--nature-box-shadow-hover);
+  transform: translateY(-2px);
 }
 
 .tool-card.has-cache {
-  border: 2px solid #1890ff;
+  border: 2px solid var(--nature-primary-color);
 }
 
 .tool-header {
@@ -422,6 +445,7 @@ onUnmounted(() => {
 
 .tool-icon {
   font-size: 32px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .tool-info {
@@ -432,23 +456,23 @@ onUnmounted(() => {
 .tool-name {
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: var(--nature-text-primary);
   margin-bottom: 4px;
 }
 
 .tool-size {
   font-size: 14px;
-  color: #999;
+  color: var(--nature-text-tertiary);
 }
 
 .tool-size.has-size {
-  color: #1890ff;
+  color: var(--nature-primary-color);
   font-weight: 600;
 }
 
 .tool-paths {
   font-size: 12px;
-  color: #999;
+  color: var(--nature-text-tertiary);
   margin-top: 4px;
 }
 
@@ -458,12 +482,14 @@ onUnmounted(() => {
   gap: 8px;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--nature-border-color-split);
 }
 
 .footer {
   text-align: center;
   background: rgba(255, 255, 255, 0.9);
-  color: #666;
+  color: var(--nature-text-secondary);
+  border-top: 1px solid var(--nature-border-color);
+  padding: 12px 24px;
 }
 </style>
