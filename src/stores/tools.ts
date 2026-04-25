@@ -121,6 +121,19 @@ export const useToolStore = defineStore('tools', () => {
     return tauriApi.openPath(path)
   }
 
+  // 切换工具启用状态
+  function toggleTool(toolId: string, enabled: boolean) {
+    const tool = tools.value.find(t => t.id === toolId)
+    if (tool) {
+      tool.enabled = enabled
+    }
+  }
+
+  // 更新工具启用状态（批量）
+  function updateToolEnabled(toolId: string, enabled: boolean) {
+    toggleTool(toolId, enabled)
+  }
+
   return {
     // 状态
     tools,
@@ -141,5 +154,7 @@ export const useToolStore = defineStore('tools', () => {
     getToolSize,
     formatSize,
     openPath,
+    toggleTool,
+    updateToolEnabled,
   }
 })

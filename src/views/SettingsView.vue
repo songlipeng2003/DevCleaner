@@ -4,73 +4,119 @@
       <a-layout-header class="header">
         <a-button @click="goBack">返回</a-button>
         <h2>设置</h2>
-        <div></div>
+        <div>
+          <a-button type="primary" :loading="isSaving" @click="saveSettings">保存</a-button>
+        </div>
       </a-layout-header>
       
       <a-layout-content class="content">
-        <a-form layout="vertical">
-          <a-form-item label="磁盘空间阈值">
-            <a-slider v-model:value="settings.threshold" :min="10" :max="500" />
-            <span>{{ settings.threshold }} GB</span>
-          </a-form-item>
-          
-          <a-form-item label="白名单（排除的路径）">
-            <a-list size="small" :data-source="settings.whitelist">
-              <template #renderItem="{ item }">
-                <a-list-item>
-                  {{ item }}
-                  <template #actions>
-                    <a-button type="link" danger size="small">删除</a-button>
-                  </template>
-                </a-list-item>
-              </template>
-            </a-list>
-            <a-input-group compact style="margin-top: 8px">
-              <a-input v-model:value="newWhitelist" style="width: calc(100% - 80px)" placeholder="添加排除路径" />
-              <a-button type="primary" @click="addWhitelist">添加</a-button>
-            </a-input-group>
-          </a-form-item>
-          
-          <a-form-item label="自动扫描">
-            <a-switch v-model:checked="settings.autoScan" />
-          </a-form-item>
-          
-          <a-form-item label="扫描间隔（天）" v-if="settings.autoScan">
-            <a-input-number v-model:value="settings.scanInterval" :min="1" :max="30" />
-          </a-form-item>
-        </a-form>
+        <a-alert
+          v-if="error"
+          type="error"
+          :message="error"
+          show-icon
+          closable
+          style="margin-bottom: 16px"
+          @close="error = null"
+        />
+        
+        <a-spin :spinning="isLoading">
+          <a-form layout="vertical">
+            <a-form-item label="磁盘空间阈值 (GB)">
+              <a-slider v-model:value="settings.threshold" :min="10" :max="500" />
+              <span>{{ settings.threshold }} GB</span>
+            </a-form-item>
+            
+            <a-form-item label="白名单（排除的路径）">
+              <a-list size="small" :data-source="settings.whitelist" bordered>
+                <template #renderItem="{ item }">
+                  <a-list-item>
+                    {{ item }}
+                    <template #actions>
+                      <a-button type="link" danger size="small" @click="removeWhitelist(item)">删除</a-button>
+                    </template>
+                  </a-list-item>
+                </template>
+              </a-list>
+              <a-input-group compact style="margin-top: 8px">
+                <a-input v-model:value="newWhitelist" style="width: calc(100% - 80px)" placeholder="添加排除路径" />
+                <a-button type="primary" @click="addWhitelist" :disabled="!newWhitelist.trim()">添加</a-button>
+              </a-input-group>
+            </a-form-item>
+            
+            <a-form-item label="自动扫描">
+              <a-switch v-model:checked="settings.autoScan" />
+            </a-form-item>
+            
+            <a-form-item label="扫描间隔（天）" v-if="settings.autoScan">
+              <a-input-number v-model:value="settings.scanInterval" :min="1" :max="30" />
+            </a-form-item>
+
+            <a-form-item label="主题">
+              <a-radio-group v-model:value="settings.theme">
+                <a-radio value="light">浅色</a-radio>
+                <a-radio value="dark">深色</a-radio>
+                <a-radio value="auto">跟随系统</a-radio>
+              </a-radio-group>
+            </a-form-item>
+          </a-form>
+        </a-spin>
       </a-layout-content>
     </a-layout>
   </div>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { message } from 'ant-design-vue'
+import { useSettingsStore } from '@/stores/settings'
+import type { Settings } from '@/types'
 
 const router = useRouter()
-const newWhitelist = ref('')
+const settingsStore = useSettingsStore()
 
-const settings = reactive({
-  threshold: 100,
-  whitelist: [
-    '~/Documents',
-    '~/Desktop'
-  ],
-  autoScan: false,
-  scanInterval: 7
-})
+const newWhitelist = ref('')
+const error = ref<string | null>(null)
+
+const settings = computed(() => settingsStore.settings)
+const isLoading = computed(() => settingsStore.isLoading)
+const isSaving = computed(() => settingsStore.isSaving)
 
 const goBack = () => {
   router.push('/')
 }
 
 const addWhitelist = () => {
-  if (newWhitelist.value && !settings.whitelist.includes(newWhitelist.value)) {
-    settings.whitelist.push(newWhitelist.value)
+  const path = newWhitelist.value.trim()
+  if (path) {
+    settingsStore.addWhitelist(path)
     newWhitelist.value = ''
   }
 }
+
+const removeWhitelist = (path: string) => {
+  settingsStore.removeWhitelist(path)
+}
+
+const saveSettings = async () => {
+  try {
+    await settingsStore.saveSettings(settings.value)
+    message.success('设置已保存')
+    error.value = null
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : '保存设置失败'
+  }
+}
+
+onMounted(async () => {
+  try {
+    await settingsStore.fetchSettings()
+    error.value = null
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : '获取设置失败'
+  }
+})
 </script>
 
 <style scoped>
@@ -85,6 +131,7 @@ const addWhitelist = () => {
   align-items: center;
   background: #fff;
   padding: 0 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .content {

@@ -55,46 +55,60 @@
         </div>
 
         <!-- 开发工具列表 -->
-        <a-row :gutter="[16, 16]" class="tools-grid">
-          <a-col :xs="24" :sm="12" :md="8" :lg="6" v-for="tool in enabledTools" :key="tool.id">
-            <a-card 
-              class="tool-card" 
-              :class="{ 'has-cache': getToolSize(tool.id) > 0 }"
-              hoverable
-              @click="showToolDetail(tool)"
-            >
-              <div class="tool-header">
-                <div class="tool-icon">{{ getToolIcon(tool.id) }}</div>
-                <a-switch 
-                  v-model:checked="tool.enabled" 
-                  size="small" 
-                  @click.stop
-                  @change="toggleTool(tool)"
-                />
-              </div>
-              <div class="tool-info">
-                <div class="tool-name">{{ tool.name }}</div>
-                <div class="tool-size" :class="{ 'has-size': getToolSize(tool.id) > 0 }">
-                  {{ getToolSize(tool.id) > 0 ? formatSize(getToolSize(tool.id)) : '无缓存' }}
+        <a-alert
+          v-if="toolStore.error"
+          type="error"
+          :message="toolStore.error"
+          show-icon
+          closable
+          style="margin-bottom: 16px"
+          @close="toolStore.error = null"
+        />
+        
+        <a-spin :spinning="toolStore.isLoading">
+          <a-row :gutter="[16, 16]" class="tools-grid" v-if="enabledTools.length > 0">
+            <a-col :xs="24" :sm="12" :md="8" :lg="6" v-for="tool in enabledTools" :key="tool.id">
+              <a-card 
+                class="tool-card" 
+                :class="{ 'has-cache': getToolSize(tool.id) > 0 }"
+                hoverable
+                @click="showToolDetail(tool)"
+              >
+                <div class="tool-header">
+                  <div class="tool-icon">{{ getToolIcon(tool.id) }}</div>
+                  <a-switch 
+                    v-model:checked="tool.enabled" 
+                    size="small" 
+                    @click.stop
+                    @change="toggleTool(tool)"
+                  />
                 </div>
-                <div class="tool-paths">{{ tool.paths.length }} 个路径</div>
-              </div>
-              <div class="tool-actions" @click.stop>
-                <a-button 
-                  type="text" 
-                  size="small" 
-                  :disabled="getToolSize(tool.id) === 0"
-                  @click="cleanTool(tool)"
-                >
-                  清理
-                </a-button>
-                <a-button type="text" size="small" @click="openToolPath(tool)">
-                  打开
-                </a-button>
-              </div>
-            </a-card>
-          </a-col>
-        </a-row>
+                <div class="tool-info">
+                  <div class="tool-name">{{ tool.name }}</div>
+                  <div class="tool-size" :class="{ 'has-size': getToolSize(tool.id) > 0 }">
+                    {{ getToolSize(tool.id) > 0 ? formatSize(getToolSize(tool.id)) : '无缓存' }}
+                  </div>
+                  <div class="tool-paths">{{ tool.paths.length }} 个路径</div>
+                </div>
+                <div class="tool-actions" @click.stop>
+                  <a-button 
+                    type="text" 
+                    size="small" 
+                    :disabled="getToolSize(tool.id) === 0"
+                    @click="cleanTool(tool)"
+                  >
+                    清理
+                  </a-button>
+                  <a-button type="text" size="small" @click="openToolPath(tool)">
+                    打开
+                  </a-button>
+                </div>
+              </a-card>
+            </a-col>
+          </a-row>
+          
+          <a-empty v-else-if="!toolStore.isLoading" description="暂无启用的开发工具" />
+        </a-spin>
       </a-layout-content>
       
       <a-layout-footer class="footer">
@@ -158,7 +172,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { message, Modal } from 'ant-design-vue'
 import { 
@@ -176,6 +190,7 @@ const toolStore = useToolStore()
 const version = ref('0.1.0')
 const drawerVisible = ref(false)
 const selectedTool = ref<ToolInfo | null>(null)
+const diskRefreshTimer = ref<NodeJS.Timeout | null>(null)
 
 const diskUsage = ref({
   total: 0,
@@ -251,6 +266,7 @@ function showToolDetail(tool: ToolInfo) {
 }
 
 function toggleTool(tool: ToolInfo) {
+  toolStore.toggleTool(tool.id, tool.enabled)
   message.info(`${tool.name} 已${tool.enabled ? '启用' : '禁用'}`)
 }
 
@@ -300,6 +316,18 @@ async function fetchDiskUsage() {
 onMounted(async () => {
   await toolStore.fetchTools()
   await fetchDiskUsage()
+  
+  // 每30秒刷新磁盘使用情况
+  diskRefreshTimer.value = setInterval(async () => {
+    await fetchDiskUsage()
+  }, 30000)
+})
+
+onUnmounted(() => {
+  if (diskRefreshTimer.value) {
+    clearInterval(diskRefreshTimer.value)
+    diskRefreshTimer.value = null
+  }
 })
 </script>
 
