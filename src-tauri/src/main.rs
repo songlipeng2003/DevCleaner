@@ -1,14 +1,23 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod commands;
+
 use tauri::Manager;
 
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
-            scan_directory,
-            get_tool_info,
-            clean_cache
+            commands::get_tool_list,
+            commands::get_tool_info,
+            commands::scan_tool,
+            commands::scan_all_tools,
+            commands::clean_tool,
+            commands::get_settings,
+            commands::save_settings,
+            commands::get_disk_usage,
+            commands::open_path,
+            commands::get_version,
         ])
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
@@ -17,56 +26,4 @@ fn main() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
-}
-
-#[tauri::command]
-async fn scan_directory(path: String) -> Result<Vec<ToolCache>, String> {
-    // TODO: 调用 Go 后端扫描
-    Ok(vec![])
-}
-
-#[tauri::command]
-async fn get_tool_info() -> Result<Vec<ToolInfo>, String> {
-    Ok(vec![
-        ToolInfo {
-            id: "npm".to_string(),
-            name: "npm".to_string(),
-            paths: vec!["~/.npm".to_string()],
-        },
-        ToolInfo {
-            id: "docker".to_string(),
-            name: "Docker".to_string(),
-            paths: vec![
-                "~/Library/Containers/com.docker.docker".to_string(),
-                "/var/lib/docker".to_string(),
-            ],
-        },
-    ])
-}
-
-#[tauri::command]
-async fn clean_cache(tool_id: String, paths: Vec<String>) -> Result<CleanResult, String> {
-    // TODO: 调用 Go 后端清理
-    Ok(CleanResult { cleaned: 0, failed: vec![] })
-}
-
-#[derive(serde::Serialize)]
-struct ToolCache {
-    tool_id: String,
-    path: String,
-    size: u64,
-    last_modified: String,
-}
-
-#[derive(serde::Serialize)]
-struct ToolInfo {
-    id: String,
-    name: String,
-    paths: Vec<String>,
-}
-
-#[derive(serde::Serialize)]
-struct CleanResult {
-    cleaned: u64,
-    failed: Vec<String>,
 }
