@@ -8,6 +8,27 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['tests/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      reportsDirectory: './coverage',
+      exclude: [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/coverage/**',
+        '**/*.d.ts',
+        '**/src-tauri/**',
+        '**/tests/**',
+        '**/scripts/**',
+        '**/*.config.*'
+      ],
+      thresholds: {
+        statements: 50,
+        branches: 50,
+        functions: 50,
+        lines: 50
+      }
+    }
   },
   resolve: {
     alias: {

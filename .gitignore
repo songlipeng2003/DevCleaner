@@ -11,3 +11,4 @@ src-tauri/gen
 backend/vendor
 backend/server
 backend/devcleaner-backend
+coverage.out
