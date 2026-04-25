@@ -32,6 +32,11 @@ func TestGetProvider(t *testing.T) {
 		{"npm", "npm"},
 		{"yarn", "yarn"},
 		{"docker", "docker"},
+		{"composer", "composer"},
+		{"cargo", "cargo"},
+		{"flutter", "flutter"},
+		{"nuget", "nuget"},
+		{"android_sdk", "android_sdk"},
 		{"unknown", ""},
 	}
 
@@ -259,6 +264,146 @@ func TestUnityProvider(t *testing.T) {
 		}
 		if !found {
 			t.Errorf("UnityProvider missing path containing %q", expected)
+		}
+	}
+}
+
+func TestComposerProvider(t *testing.T) {
+	p := NewComposerProvider()
+	
+	if p.ID() != "composer" {
+		t.Errorf("ComposerProvider.ID() = %q, want %q", p.ID(), "composer")
+	}
+
+	paths := p.Paths()
+	if len(paths) == 0 {
+		t.Error("ComposerProvider has no paths")
+	}
+
+	// 验证包含关键路径
+	expectedPaths := []string{"composer", "cache"}
+	for _, expected := range expectedPaths {
+		found := false
+		for _, path := range paths {
+			if contains(path.Path, expected) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("ComposerProvider missing path containing %q", expected)
+		}
+	}
+}
+
+func TestCargoProvider(t *testing.T) {
+	p := NewCargoProvider()
+	
+	if p.ID() != "cargo" {
+		t.Errorf("CargoProvider.ID() = %q, want %q", p.ID(), "cargo")
+	}
+
+	paths := p.Paths()
+	if len(paths) == 0 {
+		t.Error("CargoProvider has no paths")
+	}
+
+	// 验证包含关键路径
+	expectedPaths := []string{"cargo", "registry"}
+	for _, expected := range expectedPaths {
+		found := false
+		for _, path := range paths {
+			if contains(path.Path, expected) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("CargoProvider missing path containing %q", expected)
+		}
+	}
+}
+
+func TestFlutterProvider(t *testing.T) {
+	p := NewFlutterProvider()
+	
+	if p.ID() != "flutter" {
+		t.Errorf("FlutterProvider.ID() = %q, want %q", p.ID(), "flutter")
+	}
+
+	paths := p.Paths()
+	if len(paths) == 0 {
+		t.Error("FlutterProvider has no paths")
+	}
+
+	// 验证包含关键路径
+	expectedPaths := []string{"pub", "cache"}
+	for _, expected := range expectedPaths {
+		found := false
+		for _, path := range paths {
+			if contains(path.Path, expected) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("FlutterProvider missing path containing %q", expected)
+		}
+	}
+}
+
+func TestNuGetProvider(t *testing.T) {
+	p := NewNuGetProvider()
+	
+	if p.ID() != "nuget" {
+		t.Errorf("NuGetProvider.ID() = %q, want %q", p.ID(), "nuget")
+	}
+
+	paths := p.Paths()
+	if len(paths) == 0 {
+		t.Error("NuGetProvider has no paths")
+	}
+
+	// 验证包含关键路径
+	expectedPaths := []string{"nuget", "packages"}
+	for _, expected := range expectedPaths {
+		found := false
+		for _, path := range paths {
+			if contains(path.Path, expected) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("NuGetProvider missing path containing %q", expected)
+		}
+	}
+}
+
+func TestAndroidSDKProvider(t *testing.T) {
+	p := NewAndroidSDKProvider()
+	
+	if p.ID() != "android_sdk" {
+		t.Errorf("AndroidSDKProvider.ID() = %q, want %q", p.ID(), "android_sdk")
+	}
+
+	paths := p.Paths()
+	if len(paths) == 0 {
+		t.Error("AndroidSDKProvider has no paths")
+	}
+
+	// 验证包含关键路径
+	expectedPaths := []string{"android", "sdk"}
+	for _, expected := range expectedPaths {
+		found := false
+		for _, path := range paths {
+			if contains(path.Path, expected) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("AndroidSDKProvider missing path containing %q", expected)
 		}
 	}
 }

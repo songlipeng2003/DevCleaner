@@ -452,6 +452,16 @@ func GetProvider(id string) Provider {
 		return NewCarthageProvider()
 	case "unity":
 		return NewUnityProvider()
+	case "composer":
+		return NewComposerProvider()
+	case "cargo":
+		return NewCargoProvider()
+	case "flutter":
+		return NewFlutterProvider()
+	case "nuget":
+		return NewNuGetProvider()
+	case "android_sdk":
+		return NewAndroidSDKProvider()
 	default:
 		return nil
 	}
@@ -473,5 +483,10 @@ func GetAllProviders() []Provider {
 		NewCocoaPodsProvider(),
 		NewCarthageProvider(),
 		NewUnityProvider(),
+		NewComposerProvider(),
+		NewCargoProvider(),
+		NewFlutterProvider(),
+		NewNuGetProvider(),
+		NewAndroidSDKProvider(),
 	}
 }

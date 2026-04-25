@@ -121,6 +121,46 @@ var AllTools = []Tool{
 			{Path: "~/Library/Caches/Unity", Description: "Unity 下载缓存"},
 		},
 	},
+	{
+		ID:   "composer",
+		Name: "Composer",
+		Paths: []PathConfig{
+			{Path: "~/.cache/composer", Description: "Composer 全局缓存"},
+			{Path: "~/.composer/cache", Description: "Composer 本地缓存"},
+		},
+	},
+	{
+		ID:   "cargo",
+		Name: "Cargo",
+		Paths: []PathConfig{
+			{Path: "~/.cargo/registry", Description: "Cargo 注册表缓存"},
+			{Path: "~/.cargo/git", Description: "Cargo Git 依赖缓存"},
+		},
+	},
+	{
+		ID:   "flutter",
+		Name: "Flutter",
+		Paths: []PathConfig{
+			{Path: "~/.pub-cache", Description: "Pub 全局缓存"},
+			{Path: "~/.flutter_cache", Description: "Flutter 全局缓存"},
+		},
+	},
+	{
+		ID:   "nuget",
+		Name: "NuGet",
+		Paths: []PathConfig{
+			{Path: "~/.nuget/packages", Description: "NuGet 全局包缓存"},
+			{Path: "~/.local/share/NuGet/Cache", Description: "NuGet HTTP 缓存"},
+		},
+	},
+	{
+		ID:   "android_sdk",
+		Name: "Android SDK",
+		Paths: []PathConfig{
+			{Path: "~/Library/Android/sdk/.caches", Description: "Android SDK 构建缓存"},
+			{Path: "~/.gradle/caches", Description: "Gradle 构建缓存"},
+		},
+	},
 }
 
 // GetToolByID 根据 ID 获取工具
