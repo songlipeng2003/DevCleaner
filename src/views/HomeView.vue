@@ -167,6 +167,7 @@ import {
   ReloadOutlined 
 } from '@ant-design/icons-vue'
 import { useToolStore } from '@/stores/tools'
+import { getDiskUsage } from '@/services/tauri'
 import type { ToolInfo } from '@/types'
 
 const router = useRouter()
@@ -177,9 +178,9 @@ const drawerVisible = ref(false)
 const selectedTool = ref<ToolInfo | null>(null)
 
 const diskUsage = ref({
-  total: 500 * 1024 * 1024 * 1024,
-  used: 250 * 1024 * 1024 * 1024,
-  free: 250 * 1024 * 1024
+  total: 0,
+  used: 0,
+  free: 0
 })
 
 const diskPercent = computed(() => {
@@ -222,6 +223,7 @@ function getToolSize(toolId: string): number {
 
 async function refreshTools() {
   await toolStore.fetchTools()
+  await fetchDiskUsage()
 }
 
 async function startScan() {
@@ -284,8 +286,19 @@ function openSettings() {
   router.push('/settings')
 }
 
+async function fetchDiskUsage() {
+  try {
+    const usage = await getDiskUsage()
+    diskUsage.value = usage
+  } catch (error) {
+    console.error('获取磁盘使用情况失败:', error)
+    message.error('获取磁盘使用情况失败')
+  }
+}
+
 onMounted(async () => {
   await toolStore.fetchTools()
+  await fetchDiskUsage()
 })
 </script>
 

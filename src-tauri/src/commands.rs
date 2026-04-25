@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use tauri::Manager;
+use sysinfo::{System, Disks};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ScanResult {
@@ -209,11 +210,57 @@ pub fn save_settings(settings: Settings) -> Result<(), String> {
 // 获取磁盘使用情况
 #[tauri::command]
 pub fn get_disk_usage() -> Result<DiskUsage, String> {
-    Ok(DiskUsage {
-        total: 500_000_000_000,
-        used: 250_000_000_000,
-        free: 250_000_000_000,
-    })
+    // 获取磁盘列表
+    let disks = Disks::new_with_refreshed_list();
+    
+    // 获取根分区（/）或主系统盘
+    let root_disk = disks.iter().find(|disk| {
+        // 在 Unix 上找挂载点为 "/" 的磁盘
+        // 在 Windows 上找包含系统文件的磁盘
+        #[cfg(unix)]
+        {
+            disk.mount_point().to_string_lossy() == "/"
+        }
+        #[cfg(windows)]
+        {
+            disk.mount_point().to_string_lossy().starts_with("C:\\")
+        }
+        #[cfg(not(any(unix, windows)))]
+        {
+            // 其他平台，选择第一个磁盘
+            true
+        }
+    });
+    
+    match root_disk {
+        Some(disk) => {
+            let total = disk.total_space();
+            let free = disk.available_space();
+            let used = total.saturating_sub(free);
+            
+            Ok(DiskUsage {
+                total: total as i64,
+                used: used as i64,
+                free: free as i64,
+            })
+        }
+        None => {
+            // 如果没有找到特定磁盘，使用第一个磁盘或返回错误
+            if let Some(disk) = disks.first() {
+                let total = disk.total_space();
+                let free = disk.available_space();
+                let used = total.saturating_sub(free);
+                
+                Ok(DiskUsage {
+                    total: total as i64,
+                    used: used as i64,
+                    free: free as i64,
+                })
+            } else {
+                Err("无法获取磁盘信息：未找到任何磁盘".to_string())
+            }
+        }
+    }
 }
 
 // 打开路径
