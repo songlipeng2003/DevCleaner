@@ -212,6 +212,12 @@ const toolIcons: Record<string, string> = {
   npm: '📦',
   yarn: '🧶',
   pnpm: '📁',
+  bun: '🍞',
+  composer: '💎',
+  cargo: '📦',
+  flutter: '🦋',
+  nuget: '📐',
+  android_sdk: '🤖',
   docker: '🐳',
   xcode: '🍎',
   homebrew: '🍺',
@@ -223,6 +229,8 @@ const toolIcons: Record<string, string> = {
   cocoapods: '🫘',
   carthage: '🐴',
   unity: '🎮',
+  jetbrains: '💡',
+  vscode: '💻',
 }
 
 function getToolIcon(toolId: string): string {

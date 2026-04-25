@@ -9,7 +9,7 @@ import (
 
 // Config 配置结构
 type Config struct {
-	Version   string             `json:"version"`
+	Version   string            `json:"version"`
 	Providers []ProviderConfig  `json:"providers"`
 }
 
@@ -18,10 +18,10 @@ type ProviderConfig struct {
 	ID          string            `json:"id"`
 	Name        string            `json:"name"`
 	Description string            `json:"description"`
-	Platforms  []string          `json:"platforms"`
+	Platforms   []string          `json:"platforms"`
 	Paths       []PathConfig      `json:"paths,omitempty"`
 	IDEs        []IDEConfig       `json:"ides,omitempty"`
-	CleanItems  []CleanItemConfig `json:"清理项,omitempty"`
+	CleanItems  []CleanItemConfig `json:"cleanItems,omitempty"`
 }
 
 // PathConfig 路径配置
@@ -32,14 +32,14 @@ type PathConfig struct {
 	Command     string `json:"command,omitempty"`
 }
 
-// IDEConfig IDE 配置
+// IDEConfig IDE 配置（用于 JetBrains 等）
 type IDEConfig struct {
 	ID    string        `json:"id"`
 	Name  string        `json:"name"`
 	Paths []PathConfig  `json:"paths"`
 }
 
-// CleanItemConfig 清理项配置
+// CleanItemConfig 清理项配置（用于 VSCode 等）
 type CleanItemConfig struct {
 	ID          string       `json:"id"`
 	Name        string       `json:"name"`
@@ -73,10 +73,11 @@ func LoadConfig() (*Config, error) {
 	// 可能的配置文件路径
 	configPaths := []string{
 		filepath.Join(execDir, "providers.json"),           // 与可执行文件同目录
-		filepath.Join(execDir, "..", "providers.json"),    // 上级目录
+		filepath.Join(execDir, "..", "providers.json"),     // 上级目录
 		filepath.Join(execDir, "backend", "providers.json"), // backend 目录
-		"providers.json",                                  // 当前目录
-		"./backend/providers.json",                        // 相对路径
+		"providers.json",                                   // 当前目录
+		"./backend/providers.json",                         // 相对路径
+		"./providers.json",                                 // 当前目录（相对）
 	}
 
 	var config *Config
@@ -122,10 +123,30 @@ func (c *Config) GetProviderByID(id string) *ProviderConfig {
 
 // IsPlatformSupported 检查平台是否支持
 func (p *ProviderConfig) IsPlatformSupported(platform string) bool {
-	for _, p := range p.Platforms {
-		if p == platform {
+	for _, platform := range p.Platforms {
+		if platform == platform {
 			return true
 		}
 	}
 	return false
+}
+
+// GetAllPaths 获取所有路径（包括 IDEs 和 CleanItems 的路径）
+func (p *ProviderConfig) GetAllPaths() []PathConfig {
+	var allPaths []PathConfig
+	
+	// 添加主路径
+	allPaths = append(allPaths, p.Paths...)
+	
+	// 添加 IDEs 的路径
+	for _, ide := range p.IDEs {
+		allPaths = append(allPaths, ide.Paths...)
+	}
+	
+	// 添加 CleanItems 的路径
+	for _, item := range p.CleanItems {
+		allPaths = append(allPaths, item.Paths...)
+	}
+	
+	return allPaths
 }

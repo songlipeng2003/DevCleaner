@@ -62,10 +62,14 @@ type ConfigProvider struct {
 // NewConfigProviderFromConfig 从配置创建 Provider
 func NewConfigProviderFromConfig(providerConfig config.ProviderConfig) *ConfigProvider {
 	paths := make([]PathConfig, 0)
+
+	// 转换主路径配置
 	for _, pathConfig := range providerConfig.Paths {
 		strategy := StrategyDirect
 		if pathConfig.Strategy == "command" {
 			strategy = StrategyCommand
+		} else if pathConfig.Strategy == "safe" {
+			strategy = StrategySafe
 		}
 		paths = append(paths, PathConfig{
 			Path:        pathConfig.Path,
@@ -73,6 +77,42 @@ func NewConfigProviderFromConfig(providerConfig config.ProviderConfig) *ConfigPr
 			Strategy:    strategy,
 			Command:     pathConfig.Command,
 		})
+	}
+
+	// 转换 IDEs 的路径配置
+	for _, ide := range providerConfig.IDEs {
+		for _, pathConfig := range ide.Paths {
+			strategy := StrategyDirect
+			if pathConfig.Strategy == "command" {
+				strategy = StrategyCommand
+			} else if pathConfig.Strategy == "safe" {
+				strategy = StrategySafe
+			}
+			paths = append(paths, PathConfig{
+				Path:        pathConfig.Path,
+				Description: ide.Name + " " + pathConfig.Description,
+				Strategy:    strategy,
+				Command:     pathConfig.Command,
+			})
+		}
+	}
+
+	// 转换 CleanItems 的路径配置
+	for _, item := range providerConfig.CleanItems {
+		for _, pathConfig := range item.Paths {
+			strategy := StrategyDirect
+			if pathConfig.Strategy == "command" {
+				strategy = StrategyCommand
+			} else if pathConfig.Strategy == "safe" {
+				strategy = StrategySafe
+			}
+			paths = append(paths, PathConfig{
+				Path:        pathConfig.Path,
+				Description: item.Name + " " + pathConfig.Description,
+				Strategy:    strategy,
+				Command:     pathConfig.Command,
+			})
+		}
 	}
 
 	return &ConfigProvider{

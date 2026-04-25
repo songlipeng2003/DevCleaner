@@ -283,3 +283,13 @@ func ExpandPath(path string) string {
 func ReloadTools() {
 	LoadToolsFromConfig()
 }
+
+// InitTools 初始化工具列表
+func InitTools() {
+	LoadToolsFromConfig()
+}
+
+// GetAllTools 获取所有工具
+func GetAllTools() []Tool {
+	return AllTools
+}
