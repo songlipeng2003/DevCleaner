@@ -434,8 +434,20 @@ func GetProvider(id string) Provider {
 		return NewNPMProvider()
 	case "yarn":
 		return NewYarnProvider()
+	case "pnpm":
+		return NewNPMProvider() // pnpm 使用 npm provider
 	case "docker":
 		return NewDockerProvider()
+	case "xcode":
+		return NewXcodeProvider()
+	case "homebrew":
+		return NewHomebrewProvider()
+	case "python":
+		return NewPythonProvider()
+	case "go":
+		return NewGoProvider()
+	case "ruby":
+		return NewRubyProvider()
 	default:
 		return nil
 	}
@@ -447,5 +459,10 @@ func GetAllProviders() []Provider {
 		NewNPMProvider(),
 		NewYarnProvider(),
 		NewDockerProvider(),
+		NewXcodeProvider(),
+		NewHomebrewProvider(),
+		NewPythonProvider(),
+		NewGoProvider(),
+		NewRubyProvider(),
 	}
 }
