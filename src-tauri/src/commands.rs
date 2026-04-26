@@ -3,6 +3,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 use std::time::SystemTime;
+use tauri::Emitter;
 use walkdir::WalkDir;
 
 // ============== 数据结构 ==============
