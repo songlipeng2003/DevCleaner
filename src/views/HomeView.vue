@@ -36,11 +36,10 @@
               </div>
             </a-col>
             <a-col :span="4">
-              <a-statistic 
-                title="可用空间" 
-                :value="diskUsage.free" 
-                :formatter="formatSize" 
-              />
+              <div class="free-space">
+                <div class="free-space-label">可用空间</div>
+                <div class="free-space-value">{{ formatSize(diskUsage.free) }}</div>
+              </div>
             </a-col>
           </a-row>
         </a-card>
@@ -482,6 +481,22 @@ onUnmounted(() => {
 .disk-info {
   font-size: 14px;
   color: var(--nature-text-secondary);
+}
+
+.free-space {
+  text-align: right;
+}
+
+.free-space-label {
+  font-size: 12px;
+  color: var(--nature-text-tertiary);
+  margin-bottom: 4px;
+}
+
+.free-space-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--nature-text-primary);
 }
 
 .scan-actions {
