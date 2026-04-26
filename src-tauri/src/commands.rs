@@ -75,7 +75,7 @@ pub struct ScanProgress {
     pub tool_id: String,
     #[serde(rename = "toolName")]
     pub tool_name: String,
-    pub progress: f32,      // 0.0 - 1.0
+    pub progress: f32, // 0.0 - 1.0
     #[serde(rename = "currentPath")]
     pub current_path: String,
     #[serde(rename = "pathsScanned")]
@@ -133,7 +133,11 @@ struct PathConfig {
     command: String,
     /// 支持的平台，null/缺省表示全平台通用
     /// 可以是单个平台字符串如 "darwin"，或数组如 ["darwin", "linux"]
-    #[serde(rename = "platform", default, deserialize_with = "deserialize_platform")]
+    #[serde(
+        rename = "platform",
+        default,
+        deserialize_with = "deserialize_platform"
+    )]
     platform: Option<Vec<String>>,
 }
 
@@ -159,7 +163,9 @@ where
             }
             Ok(Some(result))
         }
-        _ => Err(de::Error::custom("platform must be a string or array of strings")),
+        _ => Err(de::Error::custom(
+            "platform must be a string or array of strings",
+        )),
     }
 }
 
@@ -276,8 +282,8 @@ fn is_path_whitelisted(path: &str, whitelist: &[String]) -> bool {
 #[tauri::command]
 pub async fn get_tool_list() -> Result<Vec<ToolInfo>, String> {
     let config_path = get_config_path();
-    let config_content = fs::read_to_string(&config_path)
-        .map_err(|e| format!("Failed to read config: {}", e))?;
+    let config_content =
+        fs::read_to_string(&config_path).map_err(|e| format!("Failed to read config: {}", e))?;
 
     let config: Config = serde_json::from_str(&config_content)
         .map_err(|e| format!("Failed to parse config: {}", e))?;
@@ -291,7 +297,9 @@ pub async fn get_tool_list() -> Result<Vec<ToolInfo>, String> {
             continue;
         }
 
-        let paths: Vec<String> = provider.paths.iter()
+        let paths: Vec<String> = provider
+            .paths
+            .iter()
             .filter(|p| p.matches_platform(current_platform))
             .map(|p| p.path.clone())
             .collect();
@@ -317,17 +325,21 @@ pub async fn get_tool_info(tool_id: String) -> Result<Option<ToolInfo>, String> 
 #[tauri::command]
 pub async fn scan_tool(tool_id: String) -> Result<Vec<ScanResult>, String> {
     let tools = get_tool_list().await?;
-    let tool = tools.into_iter().find(|t| t.id == tool_id)
+    let _tool = tools
+        .into_iter()
+        .find(|t| t.id == tool_id)
         .ok_or_else(|| format!("Tool not found: {}", tool_id))?;
 
     let config_path = get_config_path();
-    let config_content = fs::read_to_string(&config_path)
-        .map_err(|e| format!("Failed to read config: {}", e))?;
+    let config_content =
+        fs::read_to_string(&config_path).map_err(|e| format!("Failed to read config: {}", e))?;
 
     let config: Config = serde_json::from_str(&config_content)
         .map_err(|e| format!("Failed to parse config: {}", e))?;
 
-    let provider = config.providers.iter()
+    let provider = config
+        .providers
+        .iter()
         .find(|p| p.id == tool_id)
         .ok_or_else(|| format!("Provider not found: {}", tool_id))?;
 
@@ -336,22 +348,22 @@ pub async fn scan_tool(tool_id: String) -> Result<Vec<ScanResult>, String> {
     let current_platform = get_current_platform();
 
     // 收集所有路径配置（按平台过滤）
-    let all_paths: Vec<(&PathConfig, String)> = provider.paths.iter()
+    let all_paths: Vec<(&PathConfig, String)> = provider
+        .paths
+        .iter()
         .filter(|p| p.matches_platform(current_platform))
         .map(|p| (p, p.description.clone()))
         .chain(provider.ides.iter().flat_map(|ide| {
-            ide.paths.iter()
+            ide.paths
+                .iter()
                 .filter(|p| p.matches_platform(current_platform))
-                .map(|p| {
-                    (p, format!("{} {}", ide.name, p.description))
-                })
+                .map(|p| (p, format!("{} {}", ide.name, p.description)))
         }))
         .chain(provider.clean_items.iter().flat_map(|item| {
-            item.paths.iter()
+            item.paths
+                .iter()
                 .filter(|p| p.matches_platform(current_platform))
-                .map(|p| {
-                    (p, format!("{} {}", item.name, p.description))
-                })
+                .map(|p| (p, format!("{} {}", item.name, p.description)))
         }))
         .collect();
 
@@ -476,13 +488,15 @@ pub async fn scan_all_tools(app: tauri::AppHandle) -> Result<Vec<ScanResult>, St
 #[tauri::command]
 pub async fn clean_tool(tool_id: String, paths: Vec<String>) -> Result<CleanResult, String> {
     let config_path = get_config_path();
-    let config_content = fs::read_to_string(&config_path)
-        .map_err(|e| format!("Failed to read config: {}", e))?;
+    let config_content =
+        fs::read_to_string(&config_path).map_err(|e| format!("Failed to read config: {}", e))?;
 
     let config: Config = serde_json::from_str(&config_content)
         .map_err(|e| format!("Failed to parse config: {}", e))?;
 
-    let provider = config.providers.iter()
+    let provider = config
+        .providers
+        .iter()
         .find(|p| p.id == tool_id)
         .ok_or_else(|| format!("Provider not found: {}", tool_id))?;
 
@@ -500,10 +514,24 @@ pub async fn clean_tool(tool_id: String, paths: Vec<String>) -> Result<CleanResu
         }
 
         // 查找对应的路径配置（按平台过滤）
-        let path_config = provider.paths.iter()
+        let path_config = provider
+            .paths
+            .iter()
             .filter(|p| p.matches_platform(current_platform))
-            .chain(provider.ides.iter().flat_map(|i| i.paths.iter()).filter(|p| p.matches_platform(current_platform)))
-            .chain(provider.clean_items.iter().flat_map(|i| i.paths.iter()).filter(|p| p.matches_platform(current_platform)))
+            .chain(
+                provider
+                    .ides
+                    .iter()
+                    .flat_map(|i| i.paths.iter())
+                    .filter(|p| p.matches_platform(current_platform)),
+            )
+            .chain(
+                provider
+                    .clean_items
+                    .iter()
+                    .flat_map(|i| i.paths.iter())
+                    .filter(|p| p.matches_platform(current_platform)),
+            )
             .find(|p| expand_path(&p.path) == *path);
 
         // 如果是 command 策略，先执行命令
@@ -512,9 +540,7 @@ pub async fn clean_tool(tool_id: String, paths: Vec<String>) -> Result<CleanResu
                 let expanded_cmd = expand_path(&config.command);
                 let parts: Vec<&str> = expanded_cmd.split_whitespace().collect();
                 if !parts.is_empty() {
-                    let output = Command::new(parts[0])
-                        .args(&parts[1..])
-                        .output();
+                    let output = Command::new(parts[0]).args(&parts[1..]).output();
 
                     if output.is_ok() {
                         // 命令执行成功，尝试删除目录
@@ -562,18 +588,21 @@ pub async fn clean_tool(tool_id: String, paths: Vec<String>) -> Result<CleanResu
 #[tauri::command]
 pub async fn preview_tool(tool_id: String, paths: Vec<String>) -> Result<Vec<PreviewItem>, String> {
     let config_path = get_config_path();
-    let config_content = fs::read_to_string(&config_path)
-        .map_err(|e| format!("Failed to read config: {}", e))?;
+    let config_content =
+        fs::read_to_string(&config_path).map_err(|e| format!("Failed to read config: {}", e))?;
 
     let config: Config = serde_json::from_str(&config_content)
         .map_err(|e| format!("Failed to parse config: {}", e))?;
 
-    let provider = config.providers.iter()
+    // 验证工具存在
+    let _provider = config
+        .providers
+        .iter()
         .find(|p| p.id == tool_id)
         .ok_or_else(|| format!("Provider not found: {}", tool_id))?;
 
     let settings = get_settings_internal().unwrap_or_default();
-    let current_platform = get_current_platform();
+    let _current_platform = get_current_platform();
     let mut results = Vec::new();
 
     for path in &paths {
@@ -596,7 +625,7 @@ pub async fn preview_tool(tool_id: String, paths: Vec<String>) -> Result<Vec<Pre
 
         for entry in WalkDir::new(&expanded_path)
             .follow_links(true)
-            .max_depth(5)  // 限制深度避免太多文件
+            .max_depth(5) // 限制深度避免太多文件
             .into_iter()
             .filter_map(|e| e.ok())
         {
@@ -641,8 +670,7 @@ pub async fn preview_tool(tool_id: String, paths: Vec<String>) -> Result<Vec<Pre
 
 #[tauri::command]
 pub async fn get_settings() -> Result<Settings, String> {
-    get_settings_internal()
-        .ok_or_else(|| "Failed to get settings".to_string())
+    get_settings_internal().ok_or_else(|| "Failed to get settings".to_string())
 }
 
 #[tauri::command]
@@ -658,8 +686,7 @@ pub async fn save_settings(settings: Settings) -> Result<(), String> {
     let json = serde_json::to_string_pretty(&settings)
         .map_err(|e| format!("Failed to serialize settings: {}", e))?;
 
-    fs::write(&settings_path, json)
-        .map_err(|e| format!("Failed to write settings: {}", e))?;
+    fs::write(&settings_path, json).map_err(|e| format!("Failed to write settings: {}", e))?;
 
     Ok(())
 }
@@ -692,11 +719,7 @@ pub async fn get_disk_usage() -> Result<DiskUsage, String> {
         let free = disk.available_space() as i64;
         let used = total.saturating_sub(free);
 
-        return Ok(DiskUsage {
-            total,
-            used,
-            free,
-        });
+        return Ok(DiskUsage { total, used, free });
     }
 
     // 后备方案：使用 df 命令
@@ -719,11 +742,7 @@ pub async fn get_disk_usage() -> Result<DiskUsage, String> {
                 let used = parts[2].parse::<i64>().unwrap_or(0) * 1024;
                 let free = parts[3].parse::<i64>().unwrap_or(0) * 1024;
 
-                return Ok(DiskUsage {
-                    total,
-                    used,
-                    free,
-                });
+                return Ok(DiskUsage { total, used, free });
             }
         }
     }
@@ -747,9 +766,7 @@ pub async fn open_path(path: String) -> Result<(), String> {
     #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
     let cmd = "echo";
 
-    let status = Command::new(cmd)
-        .arg(&path)
-        .status();
+    let status = Command::new(cmd).arg(&path).status();
 
     match status {
         Ok(_) => Ok(()),
@@ -803,15 +820,19 @@ pub async fn get_usage_stats() -> Result<UsageStats, String> {
         });
     }
 
-    let content = fs::read_to_string(&stats_path)
-        .map_err(|e| format!("Failed to read stats: {}", e))?;
+    let content =
+        fs::read_to_string(&stats_path).map_err(|e| format!("Failed to read stats: {}", e))?;
 
-    serde_json::from_str(&content)
-        .map_err(|e| format!("Failed to parse stats: {}", e))
+    serde_json::from_str(&content).map_err(|e| format!("Failed to parse stats: {}", e))
 }
 
 #[tauri::command]
-pub async fn record_clean(tool_id: String, tool_name: String, size: i64, file_num: i32) -> Result<(), String> {
+pub async fn record_clean(
+    tool_id: String,
+    tool_name: String,
+    size: i64,
+    file_num: i32,
+) -> Result<(), String> {
     let stats_path = get_stats_path();
 
     // 确保目录存在
@@ -847,15 +868,20 @@ pub async fn record_clean(tool_id: String, tool_name: String, size: i64, file_nu
 
     // 只保留最近 100 条记录
     if stats.clean_history.len() > 100 {
-        stats.clean_history = stats.clean_history.into_iter().rev().take(100).rev().collect();
+        stats.clean_history = stats
+            .clean_history
+            .into_iter()
+            .rev()
+            .take(100)
+            .rev()
+            .collect();
     }
 
     // 保存
     let json = serde_json::to_string_pretty(&stats)
         .map_err(|e| format!("Failed to serialize stats: {}", e))?;
 
-    fs::write(&stats_path, json)
-        .map_err(|e| format!("Failed to write stats: {}", e))?;
+    fs::write(&stats_path, json).map_err(|e| format!("Failed to write stats: {}", e))?;
 
     Ok(())
 }
@@ -872,10 +898,7 @@ mod tests {
 
     #[test]
     fn test_is_whitelisted() {
-        let whitelist = vec![
-            "/important/path".to_string(),
-            "/safe/directory".to_string(),
-        ];
+        let whitelist = vec!["/important/path".to_string(), "/safe/directory".to_string()];
 
         assert!(is_path_whitelisted("/important/path/subdir", &whitelist));
         assert!(is_path_whitelisted("/safe/directory/file.txt", &whitelist));
