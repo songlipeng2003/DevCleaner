@@ -35,13 +35,6 @@ check_deps() {
         exit 1
     fi
     echo -e "${GREEN}✓ Rust: $(rustc --version)${NC}"
-    
-    # Go
-    if ! command -v go &> /dev/null; then
-        echo -e "${RED}错误: Go 未安装${NC}"
-        exit 1
-    fi
-    echo -e "${GREEN}✓ Go: $(go version)${NC}"
 }
 
 # 安装依赖

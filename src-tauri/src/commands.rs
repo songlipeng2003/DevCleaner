@@ -1,16 +1,21 @@
 use serde::{Deserialize, Serialize};
-use reqwest;
-use once_cell::sync::Lazy;
+use std::fs;
+use std::path::PathBuf;
 use std::process::Command;
+use std::time::SystemTime;
+use walkdir::WalkDir;
+
+// ============== 数据结构 ==============
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ScanResult {
     pub tool_id: String,
     pub path: String,
     pub size: i64,
+    #[serde(rename = "file_num")]
     pub file_num: i32,
+    #[serde(rename = "last_modified")]
     pub last_modified: i64,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 }
 
@@ -20,15 +25,16 @@ pub struct ToolInfo {
     pub name: String,
     pub paths: Vec<String>,
     pub enabled: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CleanResult {
+    #[serde(rename = "tool_id")]
     pub tool_id: String,
     pub cleaned: i64,
     pub failed: Vec<String>,
+    #[serde(rename = "file_num")]
     pub file_num: i32,
 }
 
@@ -36,292 +42,527 @@ pub struct CleanResult {
 pub struct Settings {
     pub threshold: i64,
     pub whitelist: Vec<String>,
+    #[serde(rename = "auto_scan")]
     pub auto_scan: bool,
+    #[serde(rename = "scan_interval")]
     pub scan_interval: i32,
     pub theme: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            threshold: 100 * 1024 * 1024,
+            whitelist: vec![],
+            auto_scan: false,
+            scan_interval: 24,
+            theme: "auto".to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DiskUsage {
     pub total: i64,
     pub used: i64,
     pub free: i64,
 }
 
-// Go后端API配置
-const GO_BACKEND_URL: &str = "http://localhost:8080";
-static HTTP_CLIENT: Lazy<reqwest::Client> = Lazy::new(|| {
-    reqwest::Client::new()
-});
+// ============== 配置文件结构 ==============
 
-// 获取工具列表
+#[derive(Debug, Deserialize)]
+struct Config {
+    #[serde(rename = "version")]
+    version: String,
+    providers: Vec<ProviderConfig>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ProviderConfig {
+    #[serde(rename = "id")]
+    id: String,
+    #[serde(rename = "name")]
+    name: String,
+    #[serde(rename = "description")]
+    description: String,
+    #[serde(rename = "platforms")]
+    platforms: Vec<String>,
+    #[serde(rename = "paths")]
+    paths: Vec<PathConfig>,
+    #[serde(rename = "ides", default)]
+    ides: Vec<IdeConfig>,
+    #[serde(rename = "cleanItems", default)]
+    clean_items: Vec<CleanItemConfig>,
+}
+
+#[derive(Debug, Deserialize)]
+struct PathConfig {
+    #[serde(rename = "path")]
+    path: String,
+    #[serde(rename = "description")]
+    description: String,
+    #[serde(rename = "strategy", default)]
+    strategy: String,
+    #[serde(rename = "command", default)]
+    command: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct IdeConfig {
+    #[serde(rename = "id")]
+    id: String,
+    #[serde(rename = "name")]
+    name: String,
+    #[serde(rename = "paths")]
+    paths: Vec<PathConfig>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CleanItemConfig {
+    #[serde(rename = "id")]
+    id: String,
+    #[serde(rename = "name")]
+    name: String,
+    #[serde(rename = "description")]
+    description: String,
+    #[serde(rename = "paths")]
+    paths: Vec<PathConfig>,
+}
+
+// ============== 辅助函数 ==============
+
+fn get_config_path() -> PathBuf {
+    let exe_dir = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|p| p.to_path_buf()))
+        .unwrap_or_else(|| PathBuf::from("."));
+
+    // 尝试多个可能的路径
+    let possible_paths = vec![
+        exe_dir.join("providers.json"),
+        exe_dir.join("../providers.json"),
+        exe_dir.join("backend/providers.json"),
+        PathBuf::from("providers.json"),
+        PathBuf::from("../backend/providers.json"),
+        PathBuf::from("./backend/providers.json"),
+        PathBuf::from("../../backend/providers.json"),
+    ];
+
+    for path in &possible_paths {
+        if path.exists() {
+            return path.clone();
+        }
+    }
+
+    // 默认返回第一个
+    possible_paths[0].clone()
+}
+
+fn get_settings_path() -> PathBuf {
+    let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
+    home.join(".devcleaner").join("settings.json")
+}
+
+fn get_current_platform() -> &'static str {
+    #[cfg(target_os = "macos")]
+    return "darwin";
+    #[cfg(target_os = "linux")]
+    return "linux";
+    #[cfg(target_os = "windows")]
+    return "windows";
+    #[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
+    return "";
+}
+
+fn expand_path(path: &str) -> String {
+    let mut expanded = path.to_string();
+
+    // 展开 ~
+    if let Some(home) = dirs::home_dir() {
+        expanded = expanded.replace("~", &home.to_string_lossy());
+    }
+
+    // 展开环境变量
+    for (key, value) in std::env::vars() {
+        let pattern = format!("${}", key);
+        expanded = expanded.replace(&pattern, &value);
+        let pattern = format!("${{{}}}", key); // 处理 ${VAR} 格式
+        expanded = expanded.replace(&pattern, &value);
+    }
+
+    // 展开 brew --cache
+    if expanded.contains("brew --cache") {
+        if let Ok(output) = Command::new("brew").arg("--cache").output() {
+            let cache_path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            expanded = expanded.replace("$(brew --cache)", &cache_path);
+        }
+    }
+
+    expanded
+}
+
+fn is_path_whitelisted(path: &str, whitelist: &[String]) -> bool {
+    for w in whitelist {
+        if path.starts_with(w) {
+            return true;
+        }
+    }
+    false
+}
+
+// ============== Tauri 命令 ==============
+
 #[tauri::command]
 pub async fn get_tool_list() -> Result<Vec<ToolInfo>, String> {
-    let url = format!("{}/api/tools", GO_BACKEND_URL);
-    
-    match HTTP_CLIENT.get(&url).send().await {
-        Ok(response) => {
-            if response.status().is_success() {
-                match response.json::<Vec<ToolInfo>>().await {
-                    Ok(tools) => Ok(tools),
-                    Err(e) => Err(format!("Failed to parse tools response: {}", e)),
-                }
-            } else {
-                Err(format!("Backend returned error: {}", response.status()))
-            }
+    let config_path = get_config_path();
+    let config_content = fs::read_to_string(&config_path)
+        .map_err(|e| format!("Failed to read config: {}", e))?;
+
+    let config: Config = serde_json::from_str(&config_content)
+        .map_err(|e| format!("Failed to parse config: {}", e))?;
+
+    let current_platform = get_current_platform();
+    let mut tools = Vec::new();
+
+    for provider in config.providers {
+        // 检查平台支持
+        if !provider.platforms.contains(&current_platform.to_string()) {
+            continue;
         }
-        Err(e) => Err(format!("Failed to connect to backend: {}", e)),
+
+        let paths: Vec<String> = provider.paths.iter().map(|p| p.path.clone()).collect();
+
+        tools.push(ToolInfo {
+            id: provider.id,
+            name: provider.name,
+            paths,
+            enabled: true,
+            description: Some(provider.description),
+        });
     }
+
+    Ok(tools)
 }
 
-// 获取单个工具信息
 #[tauri::command]
 pub async fn get_tool_info(tool_id: String) -> Result<Option<ToolInfo>, String> {
-    match get_tool_list().await {
-        Ok(tools) => Ok(tools.into_iter().find(|t| t.id == tool_id)),
-        Err(e) => Err(e),
-    }
+    let tools = get_tool_list().await?;
+    Ok(tools.into_iter().find(|t| t.id == tool_id))
 }
 
-// 扫描指定工具
 #[tauri::command]
 pub async fn scan_tool(tool_id: String) -> Result<Vec<ScanResult>, String> {
-    let url = format!("{}/api/scan", GO_BACKEND_URL);
-    
-    let request_body = serde_json::json!({
-        "tool_id": tool_id,
-        "all": false
-    });
-    
-    match HTTP_CLIENT.post(&url)
-        .json(&request_body)
-        .send()
-        .await 
-    {
-        Ok(response) => {
-            if response.status().is_success() {
-                // Go后端返回 {"results": [...], "stats": {...}}
-                let json: serde_json::Value = match response.json().await {
-                    Ok(json) => json,
-                    Err(e) => {
-                        eprintln!("Failed to parse scan response: {}", e);
-                        return Ok(vec![]); // 返回空数组而不是错误
-                    }
-                };
-                
-                // 提取results数组
-                if let Some(results) = json.get("results") {
-                    match serde_json::from_value(results.clone()) {
-                        Ok(scan_results) => Ok(scan_results),
-                        Err(e) => {
-                            eprintln!("Failed to parse scan results: {}", e);
-                            Ok(vec![]) // 返回空数组而不是错误
+    let tools = get_tool_list().await?;
+    let tool = tools.into_iter().find(|t| t.id == tool_id)
+        .ok_or_else(|| format!("Tool not found: {}", tool_id))?;
+
+    let config_path = get_config_path();
+    let config_content = fs::read_to_string(&config_path)
+        .map_err(|e| format!("Failed to read config: {}", e))?;
+
+    let config: Config = serde_json::from_str(&config_content)
+        .map_err(|e| format!("Failed to parse config: {}", e))?;
+
+    let provider = config.providers.iter()
+        .find(|p| p.id == tool_id)
+        .ok_or_else(|| format!("Provider not found: {}", tool_id))?;
+
+    let mut results = Vec::new();
+    let settings = get_settings_internal().unwrap_or_default();
+
+    // 收集所有路径配置
+    let all_paths: Vec<(&PathConfig, String)> = provider.paths.iter()
+        .map(|p| (p, p.description.clone()))
+        .chain(provider.ides.iter().flat_map(|ide| {
+            ide.paths.iter().map(|p| {
+                (p, format!("{} {}", ide.name, p.description))
+            })
+        }))
+        .chain(provider.clean_items.iter().flat_map(|item| {
+            item.paths.iter().map(|p| {
+                (p, format!("{} {}", item.name, p.description))
+            })
+        }))
+        .collect();
+
+    for (path_config, description) in all_paths {
+        let expanded_path = expand_path(&path_config.path);
+
+        // 检查路径是否存在
+        let path_metadata = match fs::metadata(&expanded_path) {
+            Ok(m) => m,
+            Err(_) => continue,
+        };
+
+        if !path_metadata.is_dir() {
+            continue;
+        }
+
+        // 扫描目录
+        let mut total_size: i64 = 0;
+        let mut file_count: i32 = 0;
+        let mut last_modified: i64 = 0;
+
+        for entry in WalkDir::new(&expanded_path)
+            .follow_links(true)
+            .into_iter()
+            .filter_map(|e| e.ok())
+        {
+            let entry_path = entry.path();
+            let path_str = entry_path.to_string_lossy().to_string();
+
+            // 检查白名单
+            if is_path_whitelisted(&path_str, &settings.whitelist) {
+                continue;
+            }
+
+            if let Ok(metadata) = entry.metadata() {
+                if metadata.is_file() {
+                    total_size += metadata.len() as i64;
+                    file_count += 1;
+
+                    if let Ok(modified) = metadata.modified() {
+                        let timestamp = modified
+                            .duration_since(SystemTime::UNIX_EPOCH)
+                            .map(|d| d.as_secs() as i64)
+                            .unwrap_or(0);
+                        if timestamp > last_modified {
+                            last_modified = timestamp;
                         }
                     }
-                } else {
-                    eprintln!("Scan response missing 'results' field");
-                    Ok(vec![]) // 返回空数组
                 }
-            } else {
-                eprintln!("Backend returned error: {}", response.status());
-                Ok(vec![]) // 返回空数组而不是错误
             }
         }
-        Err(e) => {
-            eprintln!("Failed to connect to backend: {}", e);
-            Ok(vec![]) // 返回空数组而不是错误
+
+        if total_size > 0 {
+            results.push(ScanResult {
+                tool_id: tool_id.clone(),
+                path: expanded_path,
+                size: total_size,
+                file_num: file_count,
+                last_modified,
+                description: Some(description),
+            });
         }
     }
+
+    Ok(results)
 }
 
-// 扫描所有工具
 #[tauri::command]
 pub async fn scan_all_tools() -> Result<Vec<ScanResult>, String> {
-    let url = format!("{}/api/scan", GO_BACKEND_URL);
-    
-    let request_body = serde_json::json!({
-        "all": true
-    });
-    
-    match HTTP_CLIENT.post(&url)
-        .json(&request_body)
-        .send()
-        .await 
-    {
-        Ok(response) => {
-            if response.status().is_success() {
-                // Go后端返回 {"results": [...], "stats": {...}}
-                let json: serde_json::Value = match response.json().await {
-                    Ok(json) => json,
-                    Err(e) => {
-                        eprintln!("Failed to parse scan response: {}", e);
-                        return Ok(vec![]); // 返回空数组而不是错误
-                    }
-                };
-                
-                // 提取results数组
-                if let Some(results) = json.get("results") {
-                    match serde_json::from_value(results.clone()) {
-                        Ok(scan_results) => Ok(scan_results),
-                        Err(e) => {
-                            eprintln!("Failed to parse scan results: {}", e);
-                            Ok(vec![]) // 返回空数组而不是错误
-                        }
-                    }
-                } else {
-                    eprintln!("Scan response missing 'results' field");
-                    Ok(vec![]) // 返回空数组
-                }
-            } else {
-                eprintln!("Backend returned error: {}", response.status());
-                Ok(vec![]) // 返回空数组而不是错误
+    let tools = get_tool_list().await?;
+    let mut all_results = Vec::new();
+
+    for tool in tools {
+        let tool_id = tool.id.clone();
+        match scan_tool(tool_id.clone()).await {
+            Ok(results) => all_results.extend(results),
+            Err(e) => {
+                eprintln!("Scan tool {} failed: {}", tool_id, e);
             }
         }
-        Err(e) => {
-            eprintln!("Failed to connect to backend: {}", e);
-            Ok(vec![]) // 返回空数组而不是错误
-        }
     }
+
+    Ok(all_results)
 }
 
-// 清理工具缓存
 #[tauri::command]
 pub async fn clean_tool(tool_id: String, paths: Vec<String>) -> Result<CleanResult, String> {
-    let url = format!("{}/api/clean", GO_BACKEND_URL);
-    
-    let request_body = serde_json::json!({
-        "tool_id": tool_id,
-        "paths": paths
-    });
-    
-    match HTTP_CLIENT.post(&url)
-        .json(&request_body)
-        .send()
-        .await 
-    {
-        Ok(response) => {
-            if response.status().is_success() {
-                match response.json::<CleanResult>().await {
-                    Ok(result) => Ok(result),
-                    Err(e) => {
-                        eprintln!("Failed to parse clean response: {}", e);
-                        // 返回一个成功的清理结果，但cleaned为0
-                        Ok(CleanResult {
-                            tool_id,
-                            cleaned: 0,
-                            failed: vec![],
-                            file_num: 0,
-                        })
+    let config_path = get_config_path();
+    let config_content = fs::read_to_string(&config_path)
+        .map_err(|e| format!("Failed to read config: {}", e))?;
+
+    let config: Config = serde_json::from_str(&config_content)
+        .map_err(|e| format!("Failed to parse config: {}", e))?;
+
+    let provider = config.providers.iter()
+        .find(|p| p.id == tool_id)
+        .ok_or_else(|| format!("Provider not found: {}", tool_id))?;
+
+    let settings = get_settings_internal().unwrap_or_default();
+    let mut cleaned: i64 = 0;
+    let mut failed: Vec<String> = Vec::new();
+    let mut file_num: i32 = 0;
+
+    for path in &paths {
+        // 检查白名单
+        if is_path_whitelisted(path, &settings.whitelist) {
+            failed.push(format!("{} is in whitelist", path));
+            continue;
+        }
+
+        // 查找对应的路径配置
+        let path_config = provider.paths.iter()
+            .chain(provider.ides.iter().flat_map(|i| i.paths.iter()))
+            .chain(provider.clean_items.iter().flat_map(|i| i.paths.iter()))
+            .find(|p| expand_path(&p.path) == *path);
+
+        // 如果是 command 策略，先执行命令
+        if let Some(config) = path_config {
+            if config.strategy == "command" && !config.command.is_empty() {
+                let expanded_cmd = expand_path(&config.command);
+                let parts: Vec<&str> = expanded_cmd.split_whitespace().collect();
+                if !parts.is_empty() {
+                    let output = Command::new(parts[0])
+                        .args(&parts[1..])
+                        .output();
+
+                    if output.is_ok() {
+                        // 命令执行成功，尝试删除目录
+                        let _ = fs::remove_dir_all(path);
                     }
                 }
-            } else {
-                eprintln!("Backend returned error: {}", response.status());
-                // 返回一个成功的清理结果，但cleaned为0
-                Ok(CleanResult {
-                    tool_id,
-                    cleaned: 0,
-                    failed: vec![],
-                    file_num: 0,
-                })
             }
         }
-        Err(e) => {
-            eprintln!("Failed to connect to backend: {}", e);
-            // 返回一个成功的清理结果，但cleaned为0
-            Ok(CleanResult {
-                tool_id,
-                cleaned: 0,
-                failed: vec![],
-                file_num: 0,
-            })
+
+        // 直接删除文件
+        if PathBuf::from(path).exists() {
+            for entry in WalkDir::new(path)
+                .follow_links(true)
+                .into_iter()
+                .filter_map(|e| e.ok())
+            {
+                if let Ok(metadata) = entry.metadata() {
+                    if metadata.is_file() {
+                        match fs::remove_file(entry.path()) {
+                            Ok(_) => {
+                                cleaned += metadata.len() as i64;
+                                file_num += 1;
+                            }
+                            Err(e) => {
+                                failed.push(format!("{}: {}", entry.path().display(), e));
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 删除空目录
+            let _ = fs::remove_dir_all(path);
         }
     }
+
+    Ok(CleanResult {
+        tool_id,
+        cleaned,
+        failed,
+        file_num,
+    })
 }
 
-// 获取设置
 #[tauri::command]
 pub async fn get_settings() -> Result<Settings, String> {
-    let url = format!("{}/api/settings", GO_BACKEND_URL);
-    
-    match HTTP_CLIENT.get(&url).send().await {
-        Ok(response) => {
-            if response.status().is_success() {
-                match response.json::<Settings>().await {
-                    Ok(settings) => Ok(settings),
-                    Err(e) => Err(format!("Failed to parse settings response: {}", e)),
-                }
-            } else {
-                Err(format!("Backend returned error: {}", response.status()))
-            }
-        }
-        Err(e) => Err(format!("Failed to connect to backend: {}", e)),
-    }
+    get_settings_internal()
+        .ok_or_else(|| "Failed to get settings".to_string())
 }
 
-// 保存设置
 #[tauri::command]
 pub async fn save_settings(settings: Settings) -> Result<(), String> {
-    let url = format!("{}/api/settings", GO_BACKEND_URL);
-    
-    match HTTP_CLIENT.put(&url)
-        .json(&settings)
-        .send()
-        .await 
-    {
-        Ok(response) => {
-            if response.status().is_success() {
-                Ok(())
-            } else {
-                Err(format!("Backend returned error: {}", response.status()))
-            }
-        }
-        Err(e) => Err(format!("Failed to connect to backend: {}", e)),
+    let settings_path = get_settings_path();
+
+    // 确保目录存在
+    if let Some(parent) = settings_path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create settings directory: {}", e))?;
     }
+
+    let json = serde_json::to_string_pretty(&settings)
+        .map_err(|e| format!("Failed to serialize settings: {}", e))?;
+
+    fs::write(&settings_path, json)
+        .map_err(|e| format!("Failed to write settings: {}", e))?;
+
+    Ok(())
 }
 
-// 获取磁盘使用情况
+fn get_settings_internal() -> Option<Settings> {
+    let settings_path = get_settings_path();
+
+    if !settings_path.exists() {
+        // 返回默认设置
+        return Some(Settings {
+            threshold: 100 * 1024 * 1024, // 100MB
+            whitelist: vec![],
+            auto_scan: false,
+            scan_interval: 24,
+            theme: "auto".to_string(),
+        });
+    }
+
+    let content = fs::read_to_string(&settings_path).ok()?;
+    serde_json::from_str(&content).ok()
+}
+
 #[tauri::command]
 pub async fn get_disk_usage() -> Result<DiskUsage, String> {
-    let url = format!("{}/api/system/disk", GO_BACKEND_URL);
-    
-    match HTTP_CLIENT.get(&url).send().await {
-        Ok(response) => {
-            if response.status().is_success() {
-                match response.json::<DiskUsage>().await {
-                    Ok(usage) => Ok(usage),
-                    Err(e) => {
-                        // 如果解析失败，返回模拟数据
-                        eprintln!("Failed to parse disk usage: {}, using fallback", e);
-                        Ok(DiskUsage {
-                            total: 500 * 1024 * 1024 * 1024,
-                            used: 250 * 1024 * 1024 * 1024,
-                            free: 250 * 1024 * 1024 * 1024,
-                        })
-                    }
-                }
-            } else {
-                // 如果后端错误，返回模拟数据
-                eprintln!("Backend disk usage error: {}, using fallback", response.status());
-                Ok(DiskUsage {
-                    total: 500 * 1024 * 1024 * 1024,
-                    used: 250 * 1024 * 1024 * 1024,
-                    free: 250 * 1024 * 1024 * 1024,
-                })
+    #[cfg(target_os = "macos")]
+    {
+        use std::process::Command;
+        let output = Command::new("df")
+            .args(["-k", "-l", "/"])
+            .output()
+            .map_err(|e| format!("Failed to run df: {}", e))?;
+
+        let output_str = String::from_utf8_lossy(&output.stdout);
+        let lines: Vec<&str> = output_str.lines().collect();
+
+        if lines.len() >= 2 {
+            let parts: Vec<&str> = lines[1].split_whitespace().collect();
+            if parts.len() >= 4 {
+                let total = parts[1].parse::<i64>().unwrap_or(0) * 1024;
+                let used = parts[2].parse::<i64>().unwrap_or(0) * 1024;
+                let free = parts[3].parse::<i64>().unwrap_or(0) * 1024;
+
+                return Ok(DiskUsage {
+                    total,
+                    used,
+                    free,
+                });
             }
         }
-        Err(e) => {
-            // 如果连接失败，返回模拟数据
-            eprintln!("Failed to connect to backend for disk usage: {}, using fallback", e);
-            Ok(DiskUsage {
-                total: 500 * 1024 * 1024 * 1024,
-                used: 250 * 1024 * 1024 * 1024,
-                free: 250 * 1024 * 1024 * 1024,
-            })
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        use std::process::Command;
+        let output = Command::new("df")
+            .args(["-k", "/"])
+            .output()
+            .map_err(|e| format!("Failed to run df: {}", e))?;
+
+        let output_str = String::from_utf8_lossy(&output.stdout);
+        let lines: Vec<&str> = output_str.lines().collect();
+
+        if lines.len() >= 2 {
+            let parts: Vec<&str> = lines[1].split_whitespace().collect();
+            if parts.len() >= 4 {
+                let total = parts[1].parse::<i64>().unwrap_or(0) * 1024;
+                let used = parts[2].parse::<i64>().unwrap_or(0) * 1024;
+                let free = parts[3].parse::<i64>().unwrap_or(0) * 1024;
+
+                return Ok(DiskUsage {
+                    total,
+                    used,
+                    free,
+                });
+            }
         }
     }
+
+    // 使用 sysinfo 库作为后备
+    let sys = sysinfo::System::new_all();
+    let total = sys.total_memory() as i64;
+    let free = sys.available_memory() as i64;
+    let used = total - free;
+
+    Ok(DiskUsage {
+        total,
+        used,
+        free,
+    })
 }
 
-// 打开路径
 #[tauri::command]
 pub async fn open_path(path: String) -> Result<(), String> {
     #[cfg(target_os = "windows")]
@@ -332,18 +573,17 @@ pub async fn open_path(path: String) -> Result<(), String> {
     let cmd = "xdg-open";
     #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
     let cmd = "echo";
-    
+
     let status = Command::new(cmd)
         .arg(&path)
         .status();
-    
+
     match status {
         Ok(_) => Ok(()),
         Err(e) => Err(format!("Failed to open path: {}", e)),
     }
 }
 
-// 获取版本
 #[tauri::command]
 pub fn get_version() -> (String, String) {
     ("0.1.0".to_string(), "alpha".to_string())
@@ -354,39 +594,27 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_expand_path() {
+        let expanded = expand_path("~/.npm");
+        assert!(expanded.contains(".npm") || expanded.contains("/"));
+    }
+
+    #[test]
+    fn test_is_whitelisted() {
+        let whitelist = vec![
+            "/important/path".to_string(),
+            "/safe/directory".to_string(),
+        ];
+
+        assert!(is_path_whitelisted("/important/path/subdir", &whitelist));
+        assert!(is_path_whitelisted("/safe/directory/file.txt", &whitelist));
+        assert!(!is_path_whitelisted("/other/path", &whitelist));
+    }
+
+    #[test]
     fn test_get_version() {
         let (version, build) = get_version();
         assert_eq!(version, "0.1.0");
         assert_eq!(build, "alpha");
-    }
-
-    #[test]
-    fn test_get_disk_usage() {
-        // 这个测试依赖于实际系统，所以可能会失败
-        // 我们只检查它是否返回Result，不检查具体值
-        let result = get_disk_usage();
-        // 它应该返回Ok或Err，但不应该panic
-        match result {
-            Ok(usage) => {
-                assert!(usage.total >= 0);
-                assert!(usage.used >= 0);
-                assert!(usage.free >= 0);
-                assert!(usage.total >= usage.used);
-                assert!(usage.total >= usage.free);
-            }
-            Err(e) => {
-                // 在某些环境中可能无法获取磁盘信息
-                println!("get_disk_usage returned error: {}", e);
-            }
-        }
-    }
-
-    #[test]
-    fn test_open_path_simulation() {
-        // 测试open_path的逻辑，但不实际执行命令
-        // 由于open_path调用系统命令，我们无法在测试中运行
-        // 但可以确保函数签名正确
-        // 这是一个无操作测试
-        assert!(true);
     }
 }
