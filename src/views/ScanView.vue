@@ -5,7 +5,7 @@
         <a-button @click="goBack">
           返回
         </a-button>
-        <h2>{{ isScanning ? '扫描中...' : '扫描完成' }}</h2>
+        <h2>{{ isScanning ? '扫描中...' : '扫描结果' }}</h2>
         <div>
           <a-button
             v-if="!isScanning"
@@ -28,81 +28,18 @@
           @close="error = null"
         />
         
-        <!-- 总体进度 -->
-        <a-card
-          title="扫描进度"
-          :bordered="false"
-          style="margin-bottom: 24px"
-        >
-          <a-progress 
-            :percent="overallProgress" 
-            :status="isScanning ? 'active' : (error ? 'exception' : 'success')"
-            :stroke-color="progressColor"
-          />
-          <div class="progress-stats">
-            <span>已扫描: {{ completedToolsCount }} / {{ totalToolsCount }} 个工具</span>
-            <span>发现缓存: {{ totalCacheSizeFormatted }}</span>
-          </div>
-        </a-card>
-        
-        <!-- 工具扫描列表 -->
-        <a-card
-          title="工具扫描详情"
-          :bordered="false"
-        >
-          <a-list 
-            class="scan-list" 
-            :data-source="scanningTools"
-            :loading="isScanning && scanningTools.length === 0"
-          >
-            <template #renderItem="{ item }">
-              <a-list-item>
-                <template #actions>
-                  <a-tag :color="getStatusColor(item.status)">
-                    {{ getStatusText(item.status) }}
-                  </a-tag>
-                  <span>{{ item.sizeFormatted }}</span>
-                </template>
-                <a-list-item-meta
-                  :title="item.name"
-                  :description="item.paths?.join(', ') || '无路径'"
-                >
-                  <template #avatar>
-                    <div class="tool-icon">
-                      {{ getToolIcon(item.id) }}
-                    </div>
-                  </template>
-                </a-list-item-meta>
-                <div
-                  v-if="item.status === 'scanning' && item.currentPath"
-                  class="current-path"
-                >
-                  正在扫描: {{ item.currentPath }}
-                </div>
-                <a-progress 
-                  v-if="item.status === 'scanning'"
-                  :percent="item.progress" 
-                  size="small"
-                  style="margin-top: 8px"
-                />
-              </a-list-item>
-            </template>
-          </a-list>
-        </a-card>
-        
         <!-- 扫描结果摘要 -->
         <a-card
-          v-if="!isScanning && scanResults.length > 0"
           title="扫描结果摘要"
           :bordered="false"
-          style="margin-top: 24px"
+          style="margin-bottom: 24px"
         >
           <a-descriptions
             :column="2"
             bordered
           >
             <a-descriptions-item label="扫描工具数">
-              {{ completedToolsCount }}
+              {{ enabledTools.length }}
             </a-descriptions-item>
             <a-descriptions-item label="发现缓存路径">
               {{ scanResults.length }}
@@ -114,153 +51,149 @@
               {{ totalCacheSizeFormatted }}
             </a-descriptions-item>
           </a-descriptions>
-          <div style="margin-top: 16px; text-align: center">
-            <a-space>
-              <a-button
-                type="primary"
-                @click="goBack"
-              >
-                返回主页
-              </a-button>
-              <a-button @click="startScan">
-                重新扫描
-              </a-button>
-            </a-space>
-          </div>
         </a-card>
+        
+        <!-- 扫描结果列表 -->
+        <a-card
+          v-if="scanResults.length > 0"
+          title="缓存详情"
+          :bordered="false"
+        >
+          <a-list 
+            class="scan-list" 
+            :data-source="scanResults"
+            :loading="isScanning"
+          >
+            <template #renderItem="{ item }">
+              <a-list-item>
+                <template #actions>
+                  <span class="cache-size">{{ formatSize(item.size) }}</span>
+                </template>
+                <a-list-item-meta
+                  :title="item.tool_id"
+                  :description="`${item.file_num} 个文件`"
+                >
+                  <template #avatar>
+                    <div class="tool-icon">
+                      <component :is="getToolIcon(item.tool_id)" :size="24" :stroke-width="1.5" />
+                    </div>
+                  </template>
+                </a-list-item-meta>
+              </a-list-item>
+            </template>
+          </a-list>
+        </a-card>
+        
+        <a-empty
+          v-else-if="!isScanning"
+          description="暂无缓存"
+          style="margin-top: 48px"
+        />
+        
+        <div style="margin-top: 24px; text-align: center">
+          <a-space>
+            <a-button
+              type="primary"
+              @click="goBack"
+            >
+              返回主页
+            </a-button>
+            <a-button @click="startScan">
+              {{ isScanning ? '扫描中...' : '重新扫描' }}
+            </a-button>
+          </a-space>
+        </div>
       </a-layout-content>
     </a-layout>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
+import {
+  Package,
+  Sparkles,
+  Folder,
+  Cookie,
+  Gem,
+  Box,
+  Wind,
+  Smartphone,
+  Bug,
+  Apple,
+  Beer,
+  CircleDot,
+  BookOpen,
+  Cog,
+  Gamepad2,
+  Code2,
+  Laptop,
+  HardDrive,
+} from 'lucide-vue-next'
 import { useToolStore } from '@/stores/tools'
-import type { ScanProgress } from '@/types'
 
 const router = useRouter()
 const toolStore = useToolStore()
 
 const error = ref<string | null>(null)
-const scanning = ref(false)
 
 const isScanning = computed(() => toolStore.isScanning)
 const scanResults = computed(() => toolStore.scanResults)
-const scanProgress = computed(() => toolStore.scanProgress)
 const enabledTools = computed(() => toolStore.enabledTools)
 const totalCacheSize = computed(() => toolStore.totalCacheSize)
 
-const totalToolsCount = computed(() => enabledTools.value.length)
-const completedToolsCount = computed(() => {
-  const progress = scanProgress.value
-  return Array.from(progress.values()).filter(p => 
-    p.status === 'completed' || p.status === 'error'
-  ).length
-})
-
-const overallProgress = computed(() => {
-  if (totalToolsCount.value === 0) return 0
-  return Math.round((completedToolsCount.value / totalToolsCount.value) * 100)
-})
-
-const progressColor = computed(() => {
-  if (error.value) return '#ff4d4f'
-  if (isScanning.value) return '#1890ff'
-  return '#52c41a'
-})
-
 const totalCacheSizeFormatted = computed(() => toolStore.formatSize(totalCacheSize.value))
 
-const scanningTools = computed(() => {
-  return enabledTools.value.map(tool => {
-    const progress = scanProgress.value.get(tool.id) || {
-      tool_id: tool.id,
-      status: 'pending' as const,
-      progress: 0,
-      current_path: undefined
-    }
-    
-    const toolResults = toolStore.getToolResults(tool.id)
-    const toolSize = toolResults.reduce((sum, r) => sum + r.size, 0)
-    
-    return {
-      id: tool.id,
-      name: tool.name,
-      paths: tool.paths,
-      status: progress.status,
-      progress: progress.progress,
-      currentPath: progress.current_path,
-      size: toolSize,
-      sizeFormatted: toolStore.formatSize(toolSize)
-    }
-  })
-})
-
-const toolIcons: Record<string, string> = {
-  npm: '📦',
-  yarn: '🧶',
-  pnpm: '📁',
-  docker: '🐳',
-  xcode: '🍎',
-  homebrew: '🍺',
-  python: '🐍',
-  go: '🔵',
-  ruby: '💎',
-  maven: '📚',
-  gradle: '⚙️',
-  cocoapods: '🫘',
-  carthage: '🐴',
-  unity: '🎮',
+// 工具图标映射
+const toolIcons: Record<string, any> = {
+  npm: Package,
+  yarn: Sparkles,
+  pnpm: Folder,
+  bun: Cookie,
+  composer: Gem,
+  cargo: Box,
+  flutter: Wind,
+  nuget: Package,
+  android_sdk: Smartphone,
+  docker: Bug,
+  xcode: Apple,
+  homebrew: Beer,
+  python: CircleDot,
+  go: CircleDot,
+  ruby: Gem,
+  maven: BookOpen,
+  gradle: Cog,
+  cocoapods: Box,
+  carthage: Gamepad2,
+  unity: Gamepad2,
+  jetbrains: Code2,
+  vscode: Laptop,
 }
 
-function getToolIcon(toolId: string): string {
-  return toolIcons[toolId] || '🔧'
+function getToolIcon(toolId: string) {
+  return toolIcons[toolId] || HardDrive
 }
 
-function getStatusColor(status: ScanProgress['status']): string {
-  switch (status) {
-    case 'completed': return 'success'
-    case 'scanning': return 'processing'
-    case 'error': return 'error'
-    case 'pending': return 'default'
-  }
-}
-
-function getStatusText(status: ScanProgress['status']): string {
-  switch (status) {
-    case 'completed': return '完成'
-    case 'scanning': return '扫描中'
-    case 'error': return '失败'
-    case 'pending': return '等待中'
-  }
+function formatSize(bytes: number): string {
+  return toolStore.formatSize(bytes)
 }
 
 async function startScan() {
   error.value = null
-  scanning.value = true
   try {
     await toolStore.scanAllTools()
     message.success('扫描完成')
   } catch (e) {
     error.value = e instanceof Error ? e.message : '扫描失败'
     message.error('扫描失败')
-  } finally {
-    scanning.value = false
   }
 }
 
 function goBack() {
   router.push('/')
 }
-
-onMounted(async () => {
-  // 如果还没有扫描结果，自动开始扫描
-  if (scanResults.value.length === 0 && !isScanning.value) {
-    await startScan()
-  }
-})
 </script>
 
 <style scoped>
@@ -291,16 +224,8 @@ onMounted(async () => {
   box-shadow: var(--nature-box-shadow);
 }
 
-.progress-stats {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 12px;
-  color: var(--nature-text-secondary);
-  font-size: 14px;
-}
-
 .tool-icon {
-  font-size: 24px;
+  color: var(--nature-primary-color);
   width: 40px;
   height: 40px;
   display: flex;
@@ -308,16 +233,11 @@ onMounted(async () => {
   justify-content: center;
   background: var(--nature-bg-hover);
   border-radius: var(--nature-border-radius-sm);
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
-.current-path {
-  font-size: 12px;
-  color: var(--nature-text-tertiary);
-  margin-top: 4px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.cache-size {
+  color: var(--nature-primary-color);
+  font-weight: 600;
 }
 
 .scan-list {
@@ -335,14 +255,5 @@ onMounted(async () => {
 
 :deep(.ant-card:hover) {
   box-shadow: var(--nature-box-shadow-hover);
-}
-
-/* 进度条颜色覆盖 */
-:deep(.ant-progress-inner) {
-  background-color: var(--nature-bg-container);
-}
-
-:deep(.ant-progress-bg) {
-  background-color: var(--nature-primary-color);
 }
 </style>

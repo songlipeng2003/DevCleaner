@@ -68,6 +68,31 @@ pub struct DiskUsage {
     pub free: i64,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ScanProgress {
+    #[serde(rename = "toolId")]
+    pub tool_id: String,
+    #[serde(rename = "toolName")]
+    pub tool_name: String,
+    pub progress: f32,      // 0.0 - 1.0
+    #[serde(rename = "currentPath")]
+    pub current_path: String,
+    #[serde(rename = "pathsScanned")]
+    pub paths_scanned: i32,
+    #[serde(rename = "totalPaths")]
+    pub total_paths: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct PreviewItem {
+    pub path: String,
+    pub size: i64,
+    #[serde(rename = "fileNum")]
+    pub file_num: i32,
+    #[serde(rename = "lastModified")]
+    pub last_modified: i64,
+}
+
 // ============== 配置文件结构 ==============
 
 #[derive(Debug, Deserialize)]
@@ -399,19 +424,55 @@ pub async fn scan_tool(tool_id: String) -> Result<Vec<ScanResult>, String> {
 }
 
 #[tauri::command]
-pub async fn scan_all_tools() -> Result<Vec<ScanResult>, String> {
+pub async fn scan_all_tools(app: tauri::AppHandle) -> Result<Vec<ScanResult>, String> {
     let tools = get_tool_list().await?;
     let mut all_results = Vec::new();
+    let total_tools = tools.len();
 
-    for tool in tools {
+    for (index, tool) in tools.into_iter().enumerate() {
+        // 发送进度开始事件
+        let progress = ScanProgress {
+            tool_id: tool.id.clone(),
+            tool_name: tool.name.clone(),
+            progress: (index as f32) / (total_tools as f32),
+            current_path: "Scanning...".to_string(),
+            paths_scanned: 0,
+            total_paths: 0,
+        };
+        let _ = app.emit("scan-progress", &progress);
+
         let tool_id = tool.id.clone();
-        match scan_tool(tool_id.clone()).await {
+        let tool_results = scan_tool(tool_id.clone()).await;
+
+        // 发送进度更新事件
+        let progress = ScanProgress {
+            tool_id: tool.id.clone(),
+            tool_name: tool.name.clone(),
+            progress: (index as f32 + 0.5) / (total_tools as f32),
+            current_path: "Completed".to_string(),
+            paths_scanned: 0,
+            total_paths: 0,
+        };
+        let _ = app.emit("scan-progress", &progress);
+
+        match tool_results {
             Ok(results) => all_results.extend(results),
             Err(e) => {
                 eprintln!("Scan tool {} failed: {}", tool_id, e);
             }
         }
     }
+
+    // 发送完成事件
+    let progress = ScanProgress {
+        tool_id: "all".to_string(),
+        tool_name: "All Tools".to_string(),
+        progress: 1.0,
+        current_path: "Completed".to_string(),
+        paths_scanned: 0,
+        total_paths: 0,
+    };
+    let _ = app.emit("scan-complete", &progress);
 
     Ok(all_results)
 }
@@ -500,6 +561,86 @@ pub async fn clean_tool(tool_id: String, paths: Vec<String>) -> Result<CleanResu
         failed,
         file_num,
     })
+}
+
+#[tauri::command]
+pub async fn preview_tool(tool_id: String, paths: Vec<String>) -> Result<Vec<PreviewItem>, String> {
+    let config_path = get_config_path();
+    let config_content = fs::read_to_string(&config_path)
+        .map_err(|e| format!("Failed to read config: {}", e))?;
+
+    let config: Config = serde_json::from_str(&config_content)
+        .map_err(|e| format!("Failed to parse config: {}", e))?;
+
+    let provider = config.providers.iter()
+        .find(|p| p.id == tool_id)
+        .ok_or_else(|| format!("Provider not found: {}", tool_id))?;
+
+    let settings = get_settings_internal().unwrap_or_default();
+    let current_platform = get_current_platform();
+    let mut results = Vec::new();
+
+    for path in &paths {
+        let expanded_path = expand_path(path);
+
+        // 检查路径是否存在
+        let path_metadata = match fs::metadata(&expanded_path) {
+            Ok(m) => m,
+            Err(_) => continue,
+        };
+
+        if !path_metadata.is_dir() {
+            continue;
+        }
+
+        // 收集文件信息
+        let mut total_size: i64 = 0;
+        let mut file_count: i32 = 0;
+        let mut last_modified: i64 = 0;
+
+        for entry in WalkDir::new(&expanded_path)
+            .follow_links(true)
+            .max_depth(5)  // 限制深度避免太多文件
+            .into_iter()
+            .filter_map(|e| e.ok())
+        {
+            let entry_path = entry.path();
+            let path_str = entry_path.to_string_lossy().to_string();
+
+            // 检查白名单
+            if is_path_whitelisted(&path_str, &settings.whitelist) {
+                continue;
+            }
+
+            if let Ok(metadata) = entry.metadata() {
+                if metadata.is_file() {
+                    total_size += metadata.len() as i64;
+                    file_count += 1;
+
+                    if let Ok(modified) = metadata.modified() {
+                        let timestamp = modified
+                            .duration_since(SystemTime::UNIX_EPOCH)
+                            .map(|d| d.as_secs() as i64)
+                            .unwrap_or(0);
+                        if timestamp > last_modified {
+                            last_modified = timestamp;
+                        }
+                    }
+                }
+            }
+        }
+
+        if total_size > 0 {
+            results.push(PreviewItem {
+                path: expanded_path,
+                size: total_size,
+                file_num: file_count,
+                last_modified,
+            });
+        }
+    }
+
+    Ok(results)
 }
 
 #[tauri::command]
@@ -623,6 +764,104 @@ pub async fn open_path(path: String) -> Result<(), String> {
 #[tauri::command]
 pub fn get_version() -> (String, String) {
     ("0.1.0".to_string(), "alpha".to_string())
+}
+
+// 使用统计
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct UsageStats {
+    #[serde(rename = "totalCleaned")]
+    pub total_cleaned: i64,
+    #[serde(rename = "cleanCount")]
+    pub clean_count: i32,
+    #[serde(rename = "lastClean")]
+    pub last_clean: i64,
+    #[serde(rename = "cleanHistory")]
+    pub clean_history: Vec<CleanHistoryItem>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CleanHistoryItem {
+    pub tool_id: String,
+    pub tool_name: String,
+    pub size: i64,
+    #[serde(rename = "fileNum")]
+    pub file_num: i32,
+    pub timestamp: i64,
+}
+
+fn get_stats_path() -> PathBuf {
+    let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
+    home.join(".devcleaner").join("stats.json")
+}
+
+#[tauri::command]
+pub async fn get_usage_stats() -> Result<UsageStats, String> {
+    let stats_path = get_stats_path();
+
+    if !stats_path.exists() {
+        return Ok(UsageStats {
+            total_cleaned: 0,
+            clean_count: 0,
+            last_clean: 0,
+            clean_history: vec![],
+        });
+    }
+
+    let content = fs::read_to_string(&stats_path)
+        .map_err(|e| format!("Failed to read stats: {}", e))?;
+
+    serde_json::from_str(&content)
+        .map_err(|e| format!("Failed to parse stats: {}", e))
+}
+
+#[tauri::command]
+pub async fn record_clean(tool_id: String, tool_name: String, size: i64, file_num: i32) -> Result<(), String> {
+    let stats_path = get_stats_path();
+
+    // 确保目录存在
+    if let Some(parent) = stats_path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create stats directory: {}", e))?;
+    }
+
+    // 读取现有统计
+    let mut stats = get_usage_stats().await.unwrap_or(UsageStats {
+        total_cleaned: 0,
+        clean_count: 0,
+        last_clean: 0,
+        clean_history: vec![],
+    });
+
+    // 更新统计
+    stats.total_cleaned += size;
+    stats.clean_count += 1;
+    stats.last_clean = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0);
+
+    // 添加历史记录
+    stats.clean_history.push(CleanHistoryItem {
+        tool_id,
+        tool_name,
+        size,
+        file_num,
+        timestamp: stats.last_clean,
+    });
+
+    // 只保留最近 100 条记录
+    if stats.clean_history.len() > 100 {
+        stats.clean_history = stats.clean_history.into_iter().rev().take(100).rev().collect();
+    }
+
+    // 保存
+    let json = serde_json::to_string_pretty(&stats)
+        .map_err(|e| format!("Failed to serialize stats: {}", e))?;
+
+    fs::write(&stats_path, json)
+        .map_err(|e| format!("Failed to write stats: {}", e))?;
+
+    Ok(())
 }
 
 #[cfg(test)]

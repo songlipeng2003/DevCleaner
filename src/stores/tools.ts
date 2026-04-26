@@ -1,13 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { ToolInfo, ScanResult, ScanProgress } from '@/types'
+import type { ToolInfo, ScanResult } from '@/types'
 import * as tauriApi from '@/services/tauri'
+import type { ScanProgress as TauriScanProgress } from '@/services/tauri'
 
 export const useToolStore = defineStore('tools', () => {
   // 状态
   const tools = ref<ToolInfo[]>([])
   const scanResults = ref<ScanResult[]>([])
-  const scanProgress = ref<Map<string, ScanProgress>>(new Map())
   const isScanning = ref(false)
   const isLoading = ref(false)
   const error = ref<string | null>(null)
@@ -33,47 +33,22 @@ export const useToolStore = defineStore('tools', () => {
 
   // 扫描单个工具
   async function scanTool(toolId: string) {
-    scanProgress.value.set(toolId, {
-      tool_id: toolId,
-      status: 'scanning',
-      progress: 0,
-    })
-
     try {
       const results = await tauriApi.scanTool(toolId)
       scanResults.value = [...scanResults.value.filter(r => r.tool_id !== toolId), ...results]
-      scanProgress.value.set(toolId, {
-        tool_id: toolId,
-        status: 'completed',
-        progress: 100,
-      })
       return results
     } catch (e) {
-      scanProgress.value.set(toolId, {
-        tool_id: toolId,
-        status: 'error',
-        progress: 0,
-      })
       throw e
     }
   }
 
-  // 扫描所有启用的工具
-  async function scanAllTools() {
+  // 扫描所有启用的工具（带进度回调）
+  async function scanAllTools(onProgress?: (progress: TauriScanProgress) => void) {
     isScanning.value = true
     error.value = null
 
-    // 初始化进度
-    for (const tool of enabledTools.value) {
-      scanProgress.value.set(tool.id, {
-        tool_id: tool.id,
-        status: 'pending',
-        progress: 0,
-      })
-    }
-
     try {
-      const results = await tauriApi.scanAllTools()
+      const results = await tauriApi.scanAllTools(onProgress)
       scanResults.value = results
       return results
     } catch (e) {
@@ -90,6 +65,13 @@ export const useToolStore = defineStore('tools', () => {
       const result = await tauriApi.cleanTool(toolId, paths)
       // 清理成功后，从扫描结果中移除
       scanResults.value = scanResults.value.filter(r => r.tool_id !== toolId)
+      
+      // 记录清理统计
+      const tool = tools.value.find(t => t.id === toolId)
+      if (tool && result.cleaned > 0) {
+        await tauriApi.recordClean(toolId, tool.name, result.cleaned, result.file_num)
+      }
+      
       return result
     } catch (e) {
       error.value = e instanceof Error ? e.message : '清理失败'
@@ -138,7 +120,6 @@ export const useToolStore = defineStore('tools', () => {
     // 状态
     tools,
     scanResults,
-    scanProgress,
     isScanning,
     isLoading,
     error,

@@ -12,12 +12,15 @@ fn main() {
             commands::get_tool_info,
             commands::scan_tool,
             commands::scan_all_tools,
+            commands::preview_tool,
             commands::clean_tool,
             commands::get_settings,
             commands::save_settings,
             commands::get_disk_usage,
             commands::open_path,
             commands::get_version,
+            commands::get_usage_stats,
+            commands::record_clean,
         ])
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
