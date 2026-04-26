@@ -2,10 +2,18 @@
   <div class="scan">
     <a-layout class="layout">
       <a-layout-header class="header">
-        <a-button @click="goBack">返回</a-button>
+        <a-button @click="goBack">
+          返回
+        </a-button>
         <h2>{{ isScanning ? '扫描中...' : '扫描完成' }}</h2>
         <div>
-          <a-button v-if="!isScanning" type="primary" @click="startScan">重新扫描</a-button>
+          <a-button
+            v-if="!isScanning"
+            type="primary"
+            @click="startScan"
+          >
+            重新扫描
+          </a-button>
         </div>
       </a-layout-header>
       
@@ -21,7 +29,11 @@
         />
         
         <!-- 总体进度 -->
-        <a-card title="扫描进度" :bordered="false" style="margin-bottom: 24px">
+        <a-card
+          title="扫描进度"
+          :bordered="false"
+          style="margin-bottom: 24px"
+        >
           <a-progress 
             :percent="overallProgress" 
             :status="isScanning ? 'active' : (error ? 'exception' : 'success')"
@@ -34,7 +46,10 @@
         </a-card>
         
         <!-- 工具扫描列表 -->
-        <a-card title="工具扫描详情" :bordered="false">
+        <a-card
+          title="工具扫描详情"
+          :bordered="false"
+        >
           <a-list 
             class="scan-list" 
             :data-source="scanningTools"
@@ -48,12 +63,20 @@
                   </a-tag>
                   <span>{{ item.sizeFormatted }}</span>
                 </template>
-                <a-list-item-meta :title="item.name" :description="item.paths?.join(', ') || '无路径'">
+                <a-list-item-meta
+                  :title="item.name"
+                  :description="item.paths?.join(', ') || '无路径'"
+                >
                   <template #avatar>
-                    <div class="tool-icon">{{ getToolIcon(item.id) }}</div>
+                    <div class="tool-icon">
+                      {{ getToolIcon(item.id) }}
+                    </div>
                   </template>
                 </a-list-item-meta>
-                <div v-if="item.status === 'scanning' && item.currentPath" class="current-path">
+                <div
+                  v-if="item.status === 'scanning' && item.currentPath"
+                  class="current-path"
+                >
                   正在扫描: {{ item.currentPath }}
                 </div>
                 <a-progress 
@@ -68,17 +91,40 @@
         </a-card>
         
         <!-- 扫描结果摘要 -->
-        <a-card v-if="!isScanning && scanResults.length > 0" title="扫描结果摘要" :bordered="false" style="margin-top: 24px">
-          <a-descriptions :column="2" bordered>
-            <a-descriptions-item label="扫描工具数">{{ completedToolsCount }}</a-descriptions-item>
-            <a-descriptions-item label="发现缓存路径">{{ scanResults.length }}</a-descriptions-item>
-            <a-descriptions-item label="总缓存大小">{{ totalCacheSizeFormatted }}</a-descriptions-item>
-            <a-descriptions-item label="可释放空间">{{ totalCacheSizeFormatted }}</a-descriptions-item>
+        <a-card
+          v-if="!isScanning && scanResults.length > 0"
+          title="扫描结果摘要"
+          :bordered="false"
+          style="margin-top: 24px"
+        >
+          <a-descriptions
+            :column="2"
+            bordered
+          >
+            <a-descriptions-item label="扫描工具数">
+              {{ completedToolsCount }}
+            </a-descriptions-item>
+            <a-descriptions-item label="发现缓存路径">
+              {{ scanResults.length }}
+            </a-descriptions-item>
+            <a-descriptions-item label="总缓存大小">
+              {{ totalCacheSizeFormatted }}
+            </a-descriptions-item>
+            <a-descriptions-item label="可释放空间">
+              {{ totalCacheSizeFormatted }}
+            </a-descriptions-item>
           </a-descriptions>
           <div style="margin-top: 16px; text-align: center">
             <a-space>
-              <a-button type="primary" @click="goBack">返回主页</a-button>
-              <a-button @click="startScan">重新扫描</a-button>
+              <a-button
+                type="primary"
+                @click="goBack"
+              >
+                返回主页
+              </a-button>
+              <a-button @click="startScan">
+                重新扫描
+              </a-button>
             </a-space>
           </div>
         </a-card>

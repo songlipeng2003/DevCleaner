@@ -1,6 +1,9 @@
 <template>
-  <a-config-provider :locale="zhCN" :theme="themeConfig">
-    <div class="nature-bg-pattern"></div>
+  <a-config-provider
+    :locale="zhCN"
+    :theme="themeConfig"
+  >
+    <div class="nature-bg-pattern" />
     <router-view />
   </a-config-provider>
 </template>

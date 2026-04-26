@@ -2,10 +2,18 @@
   <div class="settings">
     <a-layout class="layout">
       <a-layout-header class="header">
-        <a-button @click="goBack">返回</a-button>
+        <a-button @click="goBack">
+          返回
+        </a-button>
         <h2>设置</h2>
         <div>
-          <a-button type="primary" :loading="isSaving" @click="saveSettings">保存</a-button>
+          <a-button
+            type="primary"
+            :loading="isSaving"
+            @click="saveSettings"
+          >
+            保存
+          </a-button>
         </div>
       </a-layout-header>
       
@@ -23,24 +31,52 @@
         <a-spin :spinning="isLoading">
           <a-form layout="vertical">
             <a-form-item label="磁盘空间阈值 (GB)">
-              <a-slider v-model:value="settings.threshold" :min="10" :max="500" />
+              <a-slider
+                v-model:value="settings.threshold"
+                :min="10"
+                :max="500"
+              />
               <span>{{ settings.threshold }} GB</span>
             </a-form-item>
             
             <a-form-item label="白名单（排除的路径）">
-              <a-list size="small" :data-source="settings.whitelist" bordered>
+              <a-list
+                size="small"
+                :data-source="settings.whitelist"
+                bordered
+              >
                 <template #renderItem="{ item }">
                   <a-list-item>
                     {{ item }}
                     <template #actions>
-                      <a-button type="link" danger size="small" @click="removeWhitelist(item)">删除</a-button>
+                      <a-button
+                        type="link"
+                        danger
+                        size="small"
+                        @click="removeWhitelist(item)"
+                      >
+                        删除
+                      </a-button>
                     </template>
                   </a-list-item>
                 </template>
               </a-list>
-              <a-input-group compact style="margin-top: 8px">
-                <a-input v-model:value="newWhitelist" style="width: calc(100% - 80px)" placeholder="添加排除路径" />
-                <a-button type="primary" @click="addWhitelist" :disabled="!newWhitelist.trim()">添加</a-button>
+              <a-input-group
+                compact
+                style="margin-top: 8px"
+              >
+                <a-input
+                  v-model:value="newWhitelist"
+                  style="width: calc(100% - 80px)"
+                  placeholder="添加排除路径"
+                />
+                <a-button
+                  type="primary"
+                  :disabled="!newWhitelist.trim()"
+                  @click="addWhitelist"
+                >
+                  添加
+                </a-button>
               </a-input-group>
             </a-form-item>
             
@@ -48,15 +84,28 @@
               <a-switch v-model:checked="settings.autoScan" />
             </a-form-item>
             
-            <a-form-item label="扫描间隔（天）" v-if="settings.autoScan">
-              <a-input-number v-model:value="settings.scanInterval" :min="1" :max="30" />
+            <a-form-item
+              v-if="settings.autoScan"
+              label="扫描间隔（天）"
+            >
+              <a-input-number
+                v-model:value="settings.scanInterval"
+                :min="1"
+                :max="30"
+              />
             </a-form-item>
 
             <a-form-item label="主题">
               <a-radio-group v-model:value="settings.theme">
-                <a-radio value="light">浅色</a-radio>
-                <a-radio value="dark">深色</a-radio>
-                <a-radio value="auto">跟随系统</a-radio>
+                <a-radio value="light">
+                  浅色
+                </a-radio>
+                <a-radio value="dark">
+                  深色
+                </a-radio>
+                <a-radio value="auto">
+                  跟随系统
+                </a-radio>
               </a-radio-group>
             </a-form-item>
           </a-form>
@@ -71,8 +120,6 @@ import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { useSettingsStore } from '@/stores/settings'
-import type { Settings } from '@/types'
-
 const router = useRouter()
 const settingsStore = useSettingsStore()
 

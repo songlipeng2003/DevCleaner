@@ -8,7 +8,9 @@
         </div>
         <div class="header-right">
           <a-button @click="openSettings">
-            <template #icon><SettingOutlined /></template>
+            <template #icon>
+              <SettingOutlined />
+            </template>
             设置
           </a-button>
         </div>
@@ -16,8 +18,14 @@
       
       <a-layout-content class="content">
         <!-- 磁盘使用情况 -->
-        <a-card class="disk-card" :bordered="false">
-          <a-row :gutter="16" align="middle">
+        <a-card
+          class="disk-card"
+          :bordered="false"
+        >
+          <a-row
+            :gutter="16"
+            align="middle"
+          >
             <a-col :span="20">
               <div class="disk-info">
                 <span>磁盘使用: {{ formatSize(diskUsage.used) }} / {{ formatSize(diskUsage.total) }}</span>
@@ -40,16 +48,28 @@
         <!-- 扫描控制 -->
         <div class="scan-actions">
           <a-space>
-            <a-button type="primary" size="large" @click="startScan" :loading="isScanning">
-              <template #icon><ScanOutlined /></template>
+            <a-button
+              type="primary"
+              size="large"
+              :loading="isScanning"
+              @click="startScan"
+            >
+              <template #icon>
+                <ScanOutlined />
+              </template>
               {{ isScanning ? '扫描中...' : '开始扫描' }}
             </a-button>
             <a-button @click="refreshTools">
-              <template #icon><ReloadOutlined /></template>
+              <template #icon>
+                <ReloadOutlined />
+              </template>
               刷新
             </a-button>
           </a-space>
-          <div class="scan-summary" v-if="scanResults.length > 0">
+          <div
+            v-if="scanResults.length > 0"
+            class="scan-summary"
+          >
             <span>发现 {{ scanResults.length }} 处缓存，共 {{ formatSize(totalCacheSize) }}</span>
           </div>
         </div>
@@ -66,8 +86,19 @@
         />
         
         <a-spin :spinning="toolStore.isLoading">
-          <a-row :gutter="[16, 16]" class="tools-grid" v-if="enabledTools.length > 0">
-            <a-col :xs="24" :sm="12" :md="8" :lg="6" v-for="tool in enabledTools" :key="tool.id">
+          <a-row
+            v-if="enabledTools.length > 0"
+            :gutter="[16, 16]"
+            class="tools-grid"
+          >
+            <a-col
+              v-for="tool in enabledTools"
+              :key="tool.id"
+              :xs="24"
+              :sm="12"
+              :md="8"
+              :lg="6"
+            >
               <a-card 
                 class="tool-card" 
                 :class="{ 'has-cache': getToolSize(tool.id) > 0 }"
@@ -75,7 +106,9 @@
                 @click="showToolDetail(tool)"
               >
                 <div class="tool-header">
-                  <div class="tool-icon">{{ getToolIcon(tool.id) }}</div>
+                  <div class="tool-icon">
+                    {{ getToolIcon(tool.id) }}
+                  </div>
                   <a-switch 
                     v-model:checked="tool.enabled" 
                     size="small" 
@@ -84,13 +117,23 @@
                   />
                 </div>
                 <div class="tool-info">
-                  <div class="tool-name">{{ tool.name }}</div>
-                  <div class="tool-size" :class="{ 'has-size': getToolSize(tool.id) > 0 }">
+                  <div class="tool-name">
+                    {{ tool.name }}
+                  </div>
+                  <div
+                    class="tool-size"
+                    :class="{ 'has-size': getToolSize(tool.id) > 0 }"
+                  >
                     {{ getToolSize(tool.id) > 0 ? formatSize(getToolSize(tool.id)) : '无缓存' }}
                   </div>
-                  <div class="tool-paths">{{ tool.paths.length }} 个路径</div>
+                  <div class="tool-paths">
+                    {{ tool.paths.length }} 个路径
+                  </div>
                 </div>
-                <div class="tool-actions" @click.stop>
+                <div
+                  class="tool-actions"
+                  @click.stop
+                >
                   <a-button 
                     type="text" 
                     size="small" 
@@ -99,7 +142,11 @@
                   >
                     清理
                   </a-button>
-                  <a-button type="text" size="small" @click="openToolPath(tool)">
+                  <a-button
+                    type="text"
+                    size="small"
+                    @click="openToolPath(tool)"
+                  >
                     打开
                   </a-button>
                 </div>
@@ -107,7 +154,10 @@
             </a-col>
           </a-row>
           
-          <a-empty v-else-if="!toolStore.isLoading" description="暂无启用的开发工具" />
+          <a-empty
+            v-else-if="!toolStore.isLoading"
+            description="暂无启用的开发工具"
+          />
         </a-spin>
       </a-layout-content>
       
@@ -115,7 +165,10 @@
         <a-space>
           <span>DevCleaner v0.1.0-alpha</span>
           <a-divider type="vertical" />
-          <a href="https://github.com/devcleaner/devcleaner" target="_blank">GitHub</a>
+          <a
+            href="https://github.com/devcleaner/devcleaner"
+            target="_blank"
+          >GitHub</a>
         </a-space>
       </a-layout-footer>
     </a-layout>
@@ -128,10 +181,19 @@
       placement="right"
     >
       <template v-if="selectedTool">
-        <a-descriptions :column="1" bordered>
-          <a-descriptions-item label="工具 ID">{{ selectedTool.id }}</a-descriptions-item>
-          <a-descriptions-item label="路径数量">{{ selectedTool.paths.length }}</a-descriptions-item>
-          <a-descriptions-item label="当前缓存">{{ formatSize(getToolSize(selectedTool.id)) }}</a-descriptions-item>
+        <a-descriptions
+          :column="1"
+          bordered
+        >
+          <a-descriptions-item label="工具 ID">
+            {{ selectedTool.id }}
+          </a-descriptions-item>
+          <a-descriptions-item label="路径数量">
+            {{ selectedTool.paths.length }}
+          </a-descriptions-item>
+          <a-descriptions-item label="当前缓存">
+            {{ formatSize(getToolSize(selectedTool.id)) }}
+          </a-descriptions-item>
         </a-descriptions>
 
         <a-divider>缓存路径</a-divider>
@@ -143,18 +205,33 @@
           <template #renderItem="{ item }">
             <a-list-item>
               <template #actions>
-                <a-button type="link" size="small" @click="openPath(item)">打开</a-button>
+                <a-button
+                  type="link"
+                  size="small"
+                  @click="openPath(item)"
+                >
+                  打开
+                </a-button>
               </template>
               <a-list-item-meta>
-                <template #title>{{ item }}</template>
+                <template #title>
+                  {{ item }}
+                </template>
               </a-list-item-meta>
             </a-list-item>
           </template>
         </a-list>
 
         <a-divider>操作</a-divider>
-        <a-space direction="vertical" style="width: 100%">
-          <a-button block type="primary" @click="scanTool(selectedTool)">
+        <a-space
+          direction="vertical"
+          style="width: 100%"
+        >
+          <a-button
+            block
+            type="primary"
+            @click="scanTool(selectedTool)"
+          >
             扫描此工具
           </a-button>
           <a-button 
@@ -190,7 +267,7 @@ const toolStore = useToolStore()
 const version = ref('0.1.0')
 const drawerVisible = ref(false)
 const selectedTool = ref<ToolInfo | null>(null)
-const diskRefreshTimer = ref<NodeJS.Timeout | null>(null)
+const diskRefreshTimer = ref<ReturnType<typeof setTimeout> | null>(null)
 
 const diskUsage = ref({
   total: 0,
