@@ -12,7 +12,8 @@
     "tauri:build": "tauri build",
     "lint": "eslint src --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
     "test:unit": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "prepare": "husky"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",
@@ -24,6 +25,8 @@
     "vue-router": "^4.2.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.5.2",
+    "@commitlint/config-conventional": "^20.5.0",
     "@playwright/test": "^1.41.0",
     "@tauri-apps/cli": "^2.0.0",
     "@types/node": "^20.0.0",
@@ -32,6 +35,7 @@
     "@vitejs/plugin-vue": "^5.0.0",
     "eslint": "^8.56.0",
     "eslint-plugin-vue": "^9.28.0",
+    "husky": "^9.1.7",
     "typescript": "^6.0.3",
     "vite": "^5.0.0",
     "vitest": "^1.2.0",
