@@ -203,7 +203,7 @@ fn get_config_path() -> PathBuf {
         .and_then(|p| p.parent().map(|p| p.to_path_buf()))
         .unwrap_or_else(|| PathBuf::from("."));
 
-    // 开发模式：相对于可执行文件的路径
+    // 开发模式：target/debug/ -> src-tauri/
     let dev_path = exe_dir.join("../providers.json");
     if dev_path.exists() {
         return dev_path;
