@@ -1,0 +1,15 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Default capabilities for DevCleaner",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    {
+      "identifier": "core:event:allow-listen",
+      "allow": [{ "event": "*" }]
+    },
+    "shell:default",
+    "shell:allow-open"
+  ]
+}

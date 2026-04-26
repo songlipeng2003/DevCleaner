@@ -203,25 +203,20 @@ fn get_config_path() -> PathBuf {
         .and_then(|p| p.parent().map(|p| p.to_path_buf()))
         .unwrap_or_else(|| PathBuf::from("."));
 
-    // 尝试多个可能的路径
-    let possible_paths = vec![
-        exe_dir.join("providers.json"),
-        exe_dir.join("../providers.json"),
-        exe_dir.join("backend/providers.json"),
-        PathBuf::from("providers.json"),
-        PathBuf::from("../backend/providers.json"),
-        PathBuf::from("./backend/providers.json"),
-        PathBuf::from("../../backend/providers.json"),
-    ];
-
-    for path in &possible_paths {
-        if path.exists() {
-            return path.clone();
-        }
+    // 开发模式：相对于可执行文件的路径
+    let dev_path = exe_dir.join("../providers.json");
+    if dev_path.exists() {
+        return dev_path;
     }
 
-    // 默认返回第一个
-    possible_paths[0].clone()
+    // 生产模式：可执行文件同目录
+    let prod_path = exe_dir.join("resources/providers.json");
+    if prod_path.exists() {
+        return prod_path;
+    }
+
+    // 回退到默认路径
+    exe_dir.join("providers.json")
 }
 
 fn get_settings_path() -> PathBuf {
