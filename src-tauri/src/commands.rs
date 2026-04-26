@@ -105,6 +105,46 @@ struct PathConfig {
     strategy: String,
     #[serde(rename = "command", default)]
     command: String,
+    /// 支持的平台，null/缺省表示全平台通用
+    /// 可以是单个平台字符串如 "darwin"，或数组如 ["darwin", "linux"]
+    #[serde(rename = "platform", default, deserialize_with = "deserialize_platform")]
+    platform: Option<Vec<String>>,
+}
+
+/// 自定义反序列化：支持 platform 字段为字符串或字符串数组
+fn deserialize_platform<'de, D>(deserializer: D) -> Result<Option<Vec<String>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    use serde::de;
+
+    let val: Option<serde_json::Value> = Option::deserialize(deserializer)?;
+    match val {
+        None => Ok(None),
+        Some(serde_json::Value::Null) => Ok(None),
+        Some(serde_json::Value::String(s)) => Ok(Some(vec![s])),
+        Some(serde_json::Value::Array(arr)) => {
+            let mut result = Vec::new();
+            for item in arr {
+                match item {
+                    serde_json::Value::String(s) => result.push(s),
+                    _ => return Err(de::Error::custom("platform array must contain strings")),
+                }
+            }
+            Ok(Some(result))
+        }
+        _ => Err(de::Error::custom("platform must be a string or array of strings")),
+    }
+}
+
+impl PathConfig {
+    /// 检查此路径配置是否匹配当前平台
+    fn matches_platform(&self, current_platform: &str) -> bool {
+        match &self.platform {
+            None => true,
+            Some(platforms) => platforms.iter().any(|p| p == current_platform),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -230,7 +270,10 @@ pub async fn get_tool_list() -> Result<Vec<ToolInfo>, String> {
             continue;
         }
 
-        let paths: Vec<String> = provider.paths.iter().map(|p| p.path.clone()).collect();
+        let paths: Vec<String> = provider.paths.iter()
+            .filter(|p| p.matches_platform(current_platform))
+            .map(|p| p.path.clone())
+            .collect();
 
         tools.push(ToolInfo {
             id: provider.id,
@@ -269,19 +312,25 @@ pub async fn scan_tool(tool_id: String) -> Result<Vec<ScanResult>, String> {
 
     let mut results = Vec::new();
     let settings = get_settings_internal().unwrap_or_default();
+    let current_platform = get_current_platform();
 
-    // 收集所有路径配置
+    // 收集所有路径配置（按平台过滤）
     let all_paths: Vec<(&PathConfig, String)> = provider.paths.iter()
+        .filter(|p| p.matches_platform(current_platform))
         .map(|p| (p, p.description.clone()))
         .chain(provider.ides.iter().flat_map(|ide| {
-            ide.paths.iter().map(|p| {
-                (p, format!("{} {}", ide.name, p.description))
-            })
+            ide.paths.iter()
+                .filter(|p| p.matches_platform(current_platform))
+                .map(|p| {
+                    (p, format!("{} {}", ide.name, p.description))
+                })
         }))
         .chain(provider.clean_items.iter().flat_map(|item| {
-            item.paths.iter().map(|p| {
-                (p, format!("{} {}", item.name, p.description))
-            })
+            item.paths.iter()
+                .filter(|p| p.matches_platform(current_platform))
+                .map(|p| {
+                    (p, format!("{} {}", item.name, p.description))
+                })
         }))
         .collect();
 
@@ -381,6 +430,7 @@ pub async fn clean_tool(tool_id: String, paths: Vec<String>) -> Result<CleanResu
         .ok_or_else(|| format!("Provider not found: {}", tool_id))?;
 
     let settings = get_settings_internal().unwrap_or_default();
+    let current_platform = get_current_platform();
     let mut cleaned: i64 = 0;
     let mut failed: Vec<String> = Vec::new();
     let mut file_num: i32 = 0;
@@ -392,10 +442,11 @@ pub async fn clean_tool(tool_id: String, paths: Vec<String>) -> Result<CleanResu
             continue;
         }
 
-        // 查找对应的路径配置
+        // 查找对应的路径配置（按平台过滤）
         let path_config = provider.paths.iter()
-            .chain(provider.ides.iter().flat_map(|i| i.paths.iter()))
-            .chain(provider.clean_items.iter().flat_map(|i| i.paths.iter()))
+            .filter(|p| p.matches_platform(current_platform))
+            .chain(provider.ides.iter().flat_map(|i| i.paths.iter()).filter(|p| p.matches_platform(current_platform)))
+            .chain(provider.clean_items.iter().flat_map(|i| i.paths.iter()).filter(|p| p.matches_platform(current_platform)))
             .find(|p| expand_path(&p.path) == *path);
 
         // 如果是 command 策略，先执行命令
