@@ -33,13 +33,9 @@ export const useToolStore = defineStore('tools', () => {
 
   // 扫描单个工具
   async function scanTool(toolId: string) {
-    try {
-      const results = await tauriApi.scanTool(toolId)
-      scanResults.value = [...scanResults.value.filter(r => r.tool_id !== toolId), ...results]
-      return results
-    } catch (e) {
-      throw e
-    }
+    const results = await tauriApi.scanTool(toolId)
+    scanResults.value = [...scanResults.value.filter(r => r.tool_id !== toolId), ...results]
+    return results
   }
 
   // 扫描所有启用的工具（带进度回调）

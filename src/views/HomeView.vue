@@ -37,8 +37,12 @@
             </a-col>
             <a-col :span="4">
               <div class="free-space">
-                <div class="free-space-label">可用空间</div>
-                <div class="free-space-value">{{ formatSize(diskUsage.free) }}</div>
+                <div class="free-space-label">
+                  可用空间
+                </div>
+                <div class="free-space-value">
+                  {{ formatSize(diskUsage.free) }}
+                </div>
               </div>
             </a-col>
           </a-row>
@@ -117,7 +121,12 @@
                 </template>
                 <a-list-item-meta>
                   <template #title>
-                    <component :is="getToolIcon(item.toolId)" :size="16" :stroke-width="1.5" style="margin-right: 8px" />
+                    <component
+                      :is="getToolIcon(item.toolId)"
+                      :size="16"
+                      :stroke-width="1.5"
+                      style="margin-right: 8px"
+                    />
                     {{ item.toolName }}
                   </template>
                   <template #description>
@@ -162,7 +171,11 @@
               >
                 <div class="tool-header">
                   <div class="tool-icon">
-                    <component :is="getToolIcon(tool.id)" :size="32" :stroke-width="1.5" />
+                    <component
+                      :is="getToolIcon(tool.id)"
+                      :size="32"
+                      :stroke-width="1.5"
+                    />
                   </div>
                   <a-switch 
                     v-model:checked="tool.enabled" 
@@ -386,7 +399,8 @@ const totalCacheSize = computed(() => toolStore.totalCacheSize)
 const isScanning = computed(() => toolStore.isScanning)
 
 // 工具图标映射
-const toolIcons: Record<string, any> = {
+import type { Component } from 'vue'
+const toolIcons: Record<string, Component> = {
   npm: Package,
   yarn: Sparkles,
   pnpm: Folder,
@@ -501,12 +515,16 @@ async function cleanTool(tool: ToolInfo) {
 
 function openToolPath(tool: ToolInfo) {
   if (tool.paths.length > 0) {
-    toolStore.openPath?.(tool.paths[0])
+    toolStore.openPath(tool.paths[0]).catch(() => {
+      message.error('无法打开路径')
+    })
   }
 }
 
 function openPath(path: string) {
-  toolStore.openPath?.(path)
+  toolStore.openPath(path).catch(() => {
+    message.error('无法打开路径')
+  })
 }
 
 function openSettings() {
@@ -518,7 +536,6 @@ async function fetchDiskUsage() {
     const usage = await getDiskUsage()
     diskUsage.value = usage
   } catch (error) {
-    console.error('获取磁盘使用情况失败:', error)
     message.error('获取磁盘使用情况失败')
   }
 }
@@ -538,17 +555,28 @@ onMounted(async () => {
 async function checkAutoScan() {
   const settings = settingsStore.settings
   if (!settings.autoScan) return
-  
-  // 从 localStorage 获取上次扫描时间
+
+  // 从 localStorage 获取上次扫描时间（添加错误处理）
   const lastScanKey = 'devcleaner:lastScan'
-  const lastScan = localStorage.getItem(lastScanKey)
+  let lastScan: string | null = null
+  try {
+    lastScan = localStorage.getItem(lastScanKey)
+  } catch (e) {
+    // localStorage 不可用（如隐私模式），跳过自动扫描检查
+    return
+  }
+
   const now = Date.now()
   const intervalMs = settings.scanInterval * 24 * 60 * 60 * 1000
-  
+
   if (!lastScan || (now - parseInt(lastScan)) > intervalMs) {
     message.info('自动扫描中...')
     await startScan()
-    localStorage.setItem(lastScanKey, now.toString())
+    try {
+      localStorage.setItem(lastScanKey, now.toString())
+    } catch (e) {
+      // localStorage 写入失败，不影响扫描功能
+    }
   }
 }
 
@@ -566,7 +594,7 @@ async function generateRecommendations() {
   const threshold = settingsStore.settings.threshold * 1024 * 1024 * 1024 // GB to bytes
   
   // 获取使用统计
-  let stats = { cleanHistory: [] as any[] }
+  let stats = { cleanHistory: [] }
   try {
     stats = await getUsageStats()
   } catch (e) {

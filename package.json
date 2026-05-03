@@ -44,5 +44,11 @@
     "vitest": "^1.2.0",
     "vue-eslint-parser": "^10.4.0",
     "vue-tsc": "^3.2.7"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-arm64-gnu": "^4.0.0",
+    "@rollup/rollup-linux-arm64-musl": "^4.0.0",
+    "@tauri-apps/cli-linux-arm64-gnu": "^2.0.0",
+    "@tauri-apps/cli-linux-arm64-musl": "^2.0.0"
   }
 }

@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
+use std::sync::{Mutex, OnceLock};
 use std::time::SystemTime;
 use tauri::Emitter;
 use walkdir::WalkDir;
@@ -96,14 +97,14 @@ pub struct PreviewItem {
 
 // ============== 配置文件结构 ==============
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 struct Config {
     #[serde(rename = "version")]
     version: String,
     providers: Vec<ProviderConfig>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 struct ProviderConfig {
     #[serde(rename = "id")]
     id: String,
@@ -121,7 +122,7 @@ struct ProviderConfig {
     clean_items: Vec<CleanItemConfig>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 struct PathConfig {
     #[serde(rename = "path")]
     path: String,
@@ -179,7 +180,7 @@ impl PathConfig {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 struct IdeConfig {
     #[serde(rename = "id")]
     id: String,
@@ -189,7 +190,7 @@ struct IdeConfig {
     paths: Vec<PathConfig>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 struct CleanItemConfig {
     #[serde(rename = "id")]
     id: String,
@@ -203,16 +204,52 @@ struct CleanItemConfig {
 
 // ============== 辅助函数 ==============
 
+// 配置缓存，避免重复读取
+static CONFIG_CACHE: Mutex<Option<Config>> = Mutex::new(None);
+
+fn get_config_cached() -> Result<Config, String> {
+    // 检查缓存
+    {
+        let cache = CONFIG_CACHE.lock().unwrap();
+        if let Some(ref config) = *cache {
+            // 使用缓存的配置的克隆
+            return Ok(config.clone());
+        }
+    }
+
+    // 缓存未命中，读取配置文件
+    let config_path = get_config_path();
+    let config_content = fs::read_to_string(&config_path)
+        .map_err(|e| format!("Failed to read config: {}", e))?;
+
+    let config: Config = serde_json::from_str(&config_content)
+        .map_err(|e| format!("Failed to parse config: {}", e))?;
+
+    // 更新缓存
+    {
+        let mut cache = CONFIG_CACHE.lock().unwrap();
+        *cache = Some(config.clone());
+    }
+
+    Ok(config)
+}
+
 fn get_config_path() -> PathBuf {
     let exe_dir = std::env::current_exe()
         .ok()
         .and_then(|p| p.parent().map(|p| p.to_path_buf()))
         .unwrap_or_else(|| PathBuf::from("."));
 
-    // 开发模式：target/debug/ -> src-tauri/
-    let dev_path = exe_dir.join("../providers.json");
+    // 开发模式：target/debug/ -> 项目根目录 -> src-tauri/
+    let dev_path = exe_dir.join("../../src-tauri/providers.json");
     if dev_path.exists() {
         return dev_path;
+    }
+
+    // 备选开发路径：target/debug/ -> target/ -> src-tauri/
+    let dev_path2 = exe_dir.join("../providers.json");
+    if dev_path2.exists() {
+        return dev_path2;
     }
 
     // 生产模式：可执行文件同目录
@@ -277,17 +314,56 @@ fn is_path_whitelisted(path: &str, whitelist: &[String]) -> bool {
     false
 }
 
+// 验证路径是否安全，防止路径遍历攻击
+fn is_path_safe(path: &str) -> bool {
+    // 检查路径是否包含路径遍历字符
+    if path.contains("..") {
+        return false;
+    }
+
+    // 确保路径是绝对路径
+    if !path.starts_with('/') && !path.starts_with('~') {
+        return false;
+    }
+
+    // 展开路径后再次检查
+    let expanded = expand_path(path);
+    let path_buf = PathBuf::from(&expanded);
+
+    // 检查路径是否规范（没有符号链接或相对路径）
+    if let Ok(canonical) = path_buf.canonicalize() {
+        // 确保展开后的路径仍然以用户主目录或系统路径开头
+        let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("/"));
+        let canonical_str = canonical.to_string_lossy().to_string();
+        let home_str = home.to_string_lossy().to_string();
+
+        // 允许的路径前缀
+        let allowed_prefixes = vec![
+            home_str,
+            "/Users".to_string(),      // macOS
+            "/home".to_string(),       // Linux
+            "/var".to_string(),        // 系统路径
+            "/tmp".to_string(),        // 临时路径
+        ];
+
+        for prefix in &allowed_prefixes {
+            if canonical_str.starts_with(prefix) {
+                return true;
+            }
+        }
+
+        false
+    } else {
+        // 无法解析路径，认为不安全
+        false
+    }
+}
+
 // ============== Tauri 命令 ==============
 
 #[tauri::command]
 pub async fn get_tool_list() -> Result<Vec<ToolInfo>, String> {
-    let config_path = get_config_path();
-    let config_content =
-        fs::read_to_string(&config_path).map_err(|e| format!("Failed to read config: {}", e))?;
-
-    let config: Config = serde_json::from_str(&config_content)
-        .map_err(|e| format!("Failed to parse config: {}", e))?;
-
+    let config = get_config_cached()?;
     let current_platform = get_current_platform();
     let mut tools = Vec::new();
 
@@ -330,12 +406,7 @@ pub async fn scan_tool(tool_id: String) -> Result<Vec<ScanResult>, String> {
         .find(|t| t.id == tool_id)
         .ok_or_else(|| format!("Tool not found: {}", tool_id))?;
 
-    let config_path = get_config_path();
-    let config_content =
-        fs::read_to_string(&config_path).map_err(|e| format!("Failed to read config: {}", e))?;
-
-    let config: Config = serde_json::from_str(&config_content)
-        .map_err(|e| format!("Failed to parse config: {}", e))?;
+    let config = get_config_cached()?;
 
     let provider = config
         .providers
@@ -466,7 +537,8 @@ pub async fn scan_all_tools(app: tauri::AppHandle) -> Result<Vec<ScanResult>, St
         match tool_results {
             Ok(results) => all_results.extend(results),
             Err(e) => {
-                eprintln!("Scan tool {} failed: {}", tool_id, e);
+                // 扫描失败时记录错误但继续扫描其他工具
+                // 错误信息通过 scan-progress 事件传递给前端
             }
         }
     }
@@ -487,12 +559,7 @@ pub async fn scan_all_tools(app: tauri::AppHandle) -> Result<Vec<ScanResult>, St
 
 #[tauri::command]
 pub async fn clean_tool(tool_id: String, paths: Vec<String>) -> Result<CleanResult, String> {
-    let config_path = get_config_path();
-    let config_content =
-        fs::read_to_string(&config_path).map_err(|e| format!("Failed to read config: {}", e))?;
-
-    let config: Config = serde_json::from_str(&config_content)
-        .map_err(|e| format!("Failed to parse config: {}", e))?;
+    let config = get_config_cached()?;
 
     let provider = config
         .providers
@@ -510,6 +577,12 @@ pub async fn clean_tool(tool_id: String, paths: Vec<String>) -> Result<CleanResu
         // 检查白名单
         if is_path_whitelisted(path, &settings.whitelist) {
             failed.push(format!("{} is in whitelist", path));
+            continue;
+        }
+
+        // 安全验证：防止路径遍历攻击
+        if !is_path_safe(path) {
+            failed.push(format!("{} is not a safe path", path));
             continue;
         }
 
@@ -565,7 +638,8 @@ pub async fn clean_tool(tool_id: String, paths: Vec<String>) -> Result<CleanResu
                                 file_num += 1;
                             }
                             Err(e) => {
-                                failed.push(format!("{}: {}", entry.path().display(), e));
+                                let error_msg = format!("{}: {}", entry.path().display(), e);
+                                failed.push(error_msg);
                             }
                         }
                     }
@@ -573,7 +647,15 @@ pub async fn clean_tool(tool_id: String, paths: Vec<String>) -> Result<CleanResu
             }
 
             // 删除空目录
-            let _ = fs::remove_dir_all(path);
+            match fs::remove_dir_all(path) {
+                Ok(_) => {},
+                Err(e) => {
+                    let error_msg = format!("Failed to remove directory {}: {}", path, e);
+                    failed.push(error_msg);
+                }
+            }
+        } else {
+            failed.push(format!("Path does not exist: {}", path));
         }
     }
 
@@ -587,12 +669,7 @@ pub async fn clean_tool(tool_id: String, paths: Vec<String>) -> Result<CleanResu
 
 #[tauri::command]
 pub async fn preview_tool(tool_id: String, paths: Vec<String>) -> Result<Vec<PreviewItem>, String> {
-    let config_path = get_config_path();
-    let config_content =
-        fs::read_to_string(&config_path).map_err(|e| format!("Failed to read config: {}", e))?;
-
-    let config: Config = serde_json::from_str(&config_content)
-        .map_err(|e| format!("Failed to parse config: {}", e))?;
+    let config = get_config_cached()?;
 
     // 验证工具存在
     let _provider = config

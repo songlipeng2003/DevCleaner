@@ -75,7 +75,11 @@
                 >
                   <template #avatar>
                     <div class="tool-icon">
-                      <component :is="getToolIcon(item.tool_id)" :size="24" :stroke-width="1.5" />
+                      <component
+                        :is="getToolIcon(item.tool_id)"
+                        :size="24"
+                        :stroke-width="1.5"
+                      />
                     </div>
                   </template>
                 </a-list-item-meta>
@@ -110,6 +114,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import type { Component } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import {
@@ -147,7 +152,7 @@ const totalCacheSize = computed(() => toolStore.totalCacheSize)
 const totalCacheSizeFormatted = computed(() => toolStore.formatSize(totalCacheSize.value))
 
 // 工具图标映射
-const toolIcons: Record<string, any> = {
+const toolIcons: Record<string, Component> = {
   npm: Package,
   yarn: Sparkles,
   pnpm: Folder,
