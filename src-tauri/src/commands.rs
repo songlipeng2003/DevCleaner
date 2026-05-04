@@ -589,14 +589,17 @@ pub async fn clean_tool(tool_id: String, paths: Vec<String>) -> Result<CleanResu
     let mut file_num: i32 = 0;
 
     for path in &paths {
+        // 展开路径中的 ~
+        let expanded_path = expand_path(path);
+
         // 检查白名单
-        if is_path_whitelisted(path, &settings.whitelist) {
+        if is_path_whitelisted(&expanded_path, &settings.whitelist) {
             failed.push(format!("{} is in whitelist", path));
             continue;
         }
 
         // 安全验证：防止路径遍历攻击
-        if !is_path_safe(path) {
+        if !is_path_safe(&expanded_path) {
             failed.push(format!("{} is not a safe path", path));
             continue;
         }
@@ -620,7 +623,7 @@ pub async fn clean_tool(tool_id: String, paths: Vec<String>) -> Result<CleanResu
                     .flat_map(|i| i.paths.iter())
                     .filter(|p| p.matches_platform(current_platform)),
             )
-            .find(|p| expand_path(&p.path) == *path);
+            .find(|p| expand_path(&p.path) == expanded_path);
 
         // 如果是 command 策略，先执行命令
         if let Some(config) = path_config {
@@ -632,15 +635,15 @@ pub async fn clean_tool(tool_id: String, paths: Vec<String>) -> Result<CleanResu
 
                     if output.is_ok() {
                         // 命令执行成功，尝试删除目录
-                        let _ = fs::remove_dir_all(path);
+                        let _ = fs::remove_dir_all(&expanded_path);
                     }
                 }
             }
         }
 
         // 直接删除文件
-        if PathBuf::from(path).exists() {
-            for entry in WalkDir::new(path)
+        if PathBuf::from(&expanded_path).exists() {
+            for entry in WalkDir::new(&expanded_path)
                 .follow_links(true)
                 .into_iter()
                 .filter_map(|e| e.ok())
@@ -662,7 +665,7 @@ pub async fn clean_tool(tool_id: String, paths: Vec<String>) -> Result<CleanResu
             }
 
             // 删除空目录
-            match fs::remove_dir_all(path) {
+            match fs::remove_dir_all(&expanded_path) {
                 Ok(_) => {},
                 Err(e) => {
                     let error_msg = format!("Failed to remove directory {}: {}", path, e);
