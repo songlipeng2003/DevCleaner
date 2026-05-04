@@ -348,7 +348,7 @@ import {
 } from 'lucide-vue-next'
 import { useToolStore } from '@/stores/tools'
 import { useSettingsStore } from '@/stores/settings'
-import { getDiskUsage, type ScanProgress, getUsageStats } from '@/services/tauri'
+import { getDiskUsage, type ScanProgress, getUsageStats, type UsageStats } from '@/services/tauri'
 import * as tauriApi from '@/services/tauri'
 import type { ToolInfo } from '@/types'
 
@@ -594,7 +594,7 @@ async function generateRecommendations() {
   const threshold = settingsStore.settings.threshold * 1024 * 1024 * 1024 // GB to bytes
   
   // 获取使用统计
-  let stats = { cleanHistory: [] }
+  let stats: UsageStats = { totalCleaned: 0, cleanCount: 0, lastClean: 0, cleanHistory: [] }
   try {
     stats = await getUsageStats()
   } catch (e) {
