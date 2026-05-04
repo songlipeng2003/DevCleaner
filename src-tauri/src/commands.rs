@@ -235,6 +235,14 @@ fn get_config_cached() -> Result<Config, String> {
 }
 
 fn get_config_path() -> PathBuf {
+    // 首先尝试使用 CARGO_MANIFEST_DIR（开发模式最可靠）
+    if let Ok(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR") {
+        let config_path = PathBuf::from(manifest_dir).join("providers.json");
+        if config_path.exists() {
+            return config_path;
+        }
+    }
+
     let exe_dir = std::env::current_exe()
         .ok()
         .and_then(|p| p.parent().map(|p| p.to_path_buf()))
@@ -244,6 +252,13 @@ fn get_config_path() -> PathBuf {
     let dev_path = exe_dir.join("../../src-tauri/providers.json");
     if dev_path.exists() {
         return dev_path;
+    }
+
+    // macOS 开发模式：.app 包内的路径结构
+    // DevCleaner.app/Contents/MacOS/DevCleaner -> ... -> src-tauri/providers.json
+    let dev_path_mac = exe_dir.join("../../../../src-tauri/providers.json");
+    if dev_path_mac.exists() {
+        return dev_path_mac;
     }
 
     // 备选开发路径：target/debug/ -> target/ -> src-tauri/
