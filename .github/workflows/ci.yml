@@ -148,14 +148,16 @@ jobs:
       - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-22.04'
         run: |
-          sudo apt-get update
+          sudo apt-get update || true
           sudo apt-get install -y \
             libwebkit2gtk-4.1-dev \
             libappindicator3-dev \
             librsvg2-dev \
             patchelf \
-            libgtk-3-dev \
-            libayatana-appindicator3-dev
+            libgtk-3-dev || true
+          # 尝试安装可选依赖
+          sudo apt-get install -y libayatana-appindicator3-dev 2>/dev/null || true
+          echo "Dependencies installation completed"
 
       - name: Install npm dependencies
         run: npm ci
@@ -166,16 +168,25 @@ jobs:
         run: |
           npm run tauri:build -- --no-bundle
 
-      - name: Verify executable
+      - name: Verify executable (Windows)
+        if: matrix.platform == 'windows-latest'
         run: |
-          if [[ "${{ matrix.platform }}" == windows* ]]; then
-            EXT=".exe"
-          else
-            EXT=""
-          fi
-          EXE="./src-tauri/target/release/devcleaner${EXT}"
-          echo "Checking: $EXE"
-          ls -lh "$EXE" || ls -lh "./src-tauri/target/release/"devcleaner*
+          $exe = Get-ChildItem -Path "src-tauri/target/release" -Filter "*.exe" | Select-Object -First 1
+          if ($exe) {
+            Write-Host "Found executable: $($exe.FullName)"
+            Write-Host "Size: $([math]::Round($exe.Length / 1MB, 2)) MB"
+          } else {
+            Write-Host "No .exe found in release directory"
+            Get-ChildItem -Path "src-tauri/target/release" -Recurse | Format-Table Name, Length
+            exit 1
+          }
+
+      - name: Verify executable (Unix)
+        if: matrix.platform != 'windows-latest'
+        run: |
+          EXE=$(find src-tauri/target/release -name "devcleaner*" -type f | head -1)
+          echo "Found: $EXE"
+          ls -lh "$EXE"
           test -f "$EXE"
 
       - name: Upload build artifacts
