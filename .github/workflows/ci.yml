@@ -17,10 +17,38 @@ env:
   NODE_VERSION: '20'
 
 jobs:
+  # ==================== Commit Lint ====================
+  commit-lint:
+    name: Commit Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate current commit (last commit) with commitlint
+        if: github.event_name == 'push'
+        run: npx commitlint --last --verbose
+
+      - name: Validate PR commits with commitlint
+        if: github.event_name == 'pull_request'
+        run: npx commitlint --from HEAD~1 --to HEAD --verbose
+
   # ==================== 代码验证 ====================
   lint:
     name: Lint & Type Check
     runs-on: ubuntu-latest
+    needs: [commit-lint]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,6 +71,7 @@ jobs:
   # ==================== 单元测试 ====================
   unit-test:
     name: Unit Tests
+    needs: [commit-lint]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -71,6 +100,7 @@ jobs:
   # ==================== 前端构建 ====================
   frontend-build:
     name: Frontend Build
+    needs: [commit-lint]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -98,6 +128,7 @@ jobs:
   # ==================== E2E 测试 ====================
   e2e-test:
     name: E2E Tests
+    needs: [commit-lint]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -121,7 +152,7 @@ jobs:
   # ==================== 多平台构建测试 ====================
   build-matrix:
     name: Build Test - ${{ matrix.platform }}
-    needs: [lint, unit-test, frontend-build]
+    needs: [commit-lint, lint, unit-test, frontend-build]
     runs-on: ${{ matrix.platform }}
     strategy:
       fail-fast: false
@@ -202,7 +233,7 @@ jobs:
   # ==================== 成功通知 ====================
   success:
     name: CI Complete
-    needs: [lint, unit-test, frontend-build, e2e-test, build-matrix]
+    needs: [commit-lint, lint, unit-test, frontend-build, e2e-test, build-matrix]
     runs-on: ubuntu-latest
     if: always()
     steps:
