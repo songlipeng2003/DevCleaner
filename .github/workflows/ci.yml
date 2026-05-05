@@ -95,6 +95,29 @@ jobs:
           path: dist/
           retention-days: 7
 
+  # ==================== E2E 测试 ====================
+  e2e-test:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
   # ==================== 多平台构建测试 ====================
   build-matrix:
     name: Build Test - ${{ matrix.platform }}
@@ -169,7 +192,7 @@ jobs:
   # ==================== 成功通知 ====================
   success:
     name: CI Complete
-    needs: [lint, unit-test, frontend-build, build-matrix]
+    needs: [lint, unit-test, frontend-build, e2e-test, build-matrix]
     runs-on: ubuntu-latest
     if: always()
     steps:

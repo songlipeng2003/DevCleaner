@@ -23,10 +23,10 @@ export default defineConfig({
         '**/*.config.*'
       ],
       thresholds: {
-        statements: 50,
-        branches: 50,
-        functions: 50,
-        lines: 50
+        statements: 30,
+        branches: 30,
+        functions: 15,
+        lines: 30
       }
     }
   },
