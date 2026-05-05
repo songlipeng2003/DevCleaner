@@ -179,6 +179,4 @@ jobs:
           echo "- Lint: ${{ needs.lint.result }}"
           echo "- Unit Tests: ${{ needs.unit-test.result }}"
           echo "- Frontend Build: ${{ needs.frontend-build.result }}"
-          echo "- macOS Build: ${{ needs.build-matrix.outputs.macos }}"
-          echo "- Linux Build: ${{ needs.build-matrix.outputs.ubuntu }}"
-          echo "- Windows Build: ${{ needs.build-matrix.outputs.windows }}"
+          echo "- Build Matrix: ${{ needs.build-matrix.result }}"
