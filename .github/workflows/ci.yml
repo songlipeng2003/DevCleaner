@@ -71,7 +71,7 @@ jobs:
   # ==================== 单元测试 ====================
   unit-test:
     name: Unit Tests
-    needs: [commit-lint]
+    needs: [lint]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -100,7 +100,7 @@ jobs:
   # ==================== 前端构建 ====================
   frontend-build:
     name: Frontend Build
-    needs: [commit-lint]
+    needs: [e2e-test]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -128,7 +128,7 @@ jobs:
   # ==================== E2E 测试 ====================
   e2e-test:
     name: E2E Tests
-    needs: [commit-lint]
+    needs: [unit-test]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -152,7 +152,7 @@ jobs:
   # ==================== 多平台构建测试 ====================
   build-matrix:
     name: Build Test - ${{ matrix.platform }}
-    needs: [commit-lint, lint, unit-test, frontend-build]
+    needs: [frontend-build]
     runs-on: ${{ matrix.platform }}
     strategy:
       fail-fast: false
@@ -233,14 +233,16 @@ jobs:
   # ==================== 成功通知 ====================
   success:
     name: CI Complete
-    needs: [commit-lint, lint, unit-test, frontend-build, e2e-test, build-matrix]
+    needs: [build-matrix]
     runs-on: ubuntu-latest
     if: always()
     steps:
       - name: Summary
         run: |
           echo "## CI Verification Complete"
+          echo "- Commit Lint: ${{ needs.commit-lint.result }}"
           echo "- Lint: ${{ needs.lint.result }}"
           echo "- Unit Tests: ${{ needs.unit-test.result }}"
+          echo "- E2E Tests: ${{ needs.e2e-test.result }}"
           echo "- Frontend Build: ${{ needs.frontend-build.result }}"
           echo "- Build Matrix: ${{ needs.build-matrix.result }}"
