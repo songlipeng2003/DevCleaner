@@ -11,7 +11,7 @@
             <Zap :size="20" />
           </div>
           <h1>DevCleaner</h1>
-          <span class="version">v{{ version }}</span>
+          <span class="version">v{{ version }}{{ buildType ? '-' + buildType : '' }}</span>
         </div>
         <div class="header-right">
           <button
@@ -436,7 +436,7 @@ import {
 } from 'lucide-vue-next'
 import { useToolStore } from '@/stores/tools'
 import { useSettingsStore } from '@/stores/settings'
-import { getDiskUsage, type ScanProgress, getUsageStats, type UsageStats } from '@/services/tauri'
+import { getDiskUsage, type ScanProgress, getUsageStats, type UsageStats, getVersion } from '@/services/tauri'
 import * as tauriApi from '@/services/tauri'
 import type { ToolInfo } from '@/types'
 import type { Component } from 'vue'
@@ -453,7 +453,8 @@ const router = useRouter()
 const toolStore = useToolStore()
 const settingsStore = useSettingsStore()
 
-const version = ref('0.1.0')
+const version = ref('')
+const buildType = ref('')
 const drawerVisible = ref(false)
 const selectedTool = ref<ToolInfo | null>(null)
 const diskRefreshTimer = ref<ReturnType<typeof setTimeout> | null>(null)
@@ -645,10 +646,21 @@ async function fetchDiskUsage() {
 }
 
 onMounted(async () => {
+  // 获取版本信息
+  try {
+    const [ver, build] = await getVersion()
+    version.value = ver
+    buildType.value = build
+  } catch (error) {
+    version.value = '0.1.0'
+    // eslint-disable-next-line no-console
+    console.warn('获取版本失败:', error)
+  }
+
   await toolStore.fetchTools()
   await fetchDiskUsage()
   await checkAutoScan()
-  
+
   diskRefreshTimer.value = setInterval(async () => {
     await fetchDiskUsage()
   }, 30000)

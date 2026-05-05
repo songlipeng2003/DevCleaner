@@ -870,8 +870,10 @@ pub async fn open_path(path: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn get_version() -> (String, String) {
-    ("0.1.0".to_string(), "alpha".to_string())
+pub fn get_version(app: tauri::AppHandle) -> (String, String) {
+    let version = app.config().version.clone().unwrap_or_else(|| "0.0.0".to_string());
+    let build = if cfg!(debug_assertions) { "debug" } else { "release" }.to_string();
+    (version, build)
 }
 
 // 使用统计
@@ -998,12 +1000,5 @@ mod tests {
         assert!(is_path_whitelisted("/important/path/subdir", &whitelist));
         assert!(is_path_whitelisted("/safe/directory/file.txt", &whitelist));
         assert!(!is_path_whitelisted("/other/path", &whitelist));
-    }
-
-    #[test]
-    fn test_get_version() {
-        let (version, build) = get_version();
-        assert_eq!(version, "0.1.0");
-        assert_eq!(build, "alpha");
     }
 }
