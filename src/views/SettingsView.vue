@@ -327,12 +327,16 @@ onMounted(async () => {
   align-items: center;
   background: var(--aurora-bg-glass);
   backdrop-filter: blur(20px);
-  padding: 0 24px;
+  padding: 0 16px;
   border-bottom: 1px solid var(--aurora-border);
+  gap: 12px;
+  flex-shrink: 0;
+  min-height: 48px;
+  height: 48px;
 }
 
 .header-center h2 {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
   margin: 0;
 }
@@ -340,13 +344,13 @@ onMounted(async () => {
 .back-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
+  gap: 6px;
+  padding: 6px 12px;
   background: var(--aurora-bg-glass);
   border: 1px solid var(--aurora-border);
   border-radius: var(--aurora-radius-md);
   color: var(--aurora-text-secondary);
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
   transition: all var(--aurora-transition-fast);
 }
@@ -357,32 +361,32 @@ onMounted(async () => {
 }
 
 .content {
-  padding: 32px;
+  padding: 16px 12px;
   overflow-y: auto;
-  max-height: calc(100vh - 64px);
-  max-width: 800px;
-  margin: 0 auto;
+  max-height: calc(100vh - 48px);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* 设置区块 */
 .settings-section {
-  margin-bottom: 40px;
+  margin-bottom: 24px;
 }
 
 .section-title {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 18px;
+  gap: 6px;
+  font-size: 15px;
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   color: var(--aurora-primary);
 }
 
 .section-description {
   color: var(--aurora-text-tertiary);
-  font-size: 14px;
-  margin-bottom: 16px;
+  font-size: 13px;
+  margin-bottom: 12px;
 }
 
 /* 主题选择器 */
@@ -397,8 +401,8 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 24px;
+  gap: 8px;
+  padding: 16px;
   background: var(--aurora-bg-card);
   border: 2px solid var(--aurora-border);
   border-radius: var(--aurora-radius-lg);
@@ -417,8 +421,8 @@ onMounted(async () => {
 }
 
 .theme-icon {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -464,18 +468,18 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 12px 16px;
 }
 
 .setting-info {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
 .setting-icon {
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -514,7 +518,7 @@ onMounted(async () => {
 
 /* 白名单 */
 .whitelist-card {
-  padding: 20px;
+  padding: 16px;
 }
 
 .whitelist-empty {
@@ -522,22 +526,22 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 24px;
+  padding: 16px;
   color: var(--aurora-text-tertiary);
 }
 
 .whitelist-items {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 6px;
+  margin-bottom: 12px;
 }
 
 .whitelist-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
+  gap: 10px;
+  padding: 6px 10px;
   background: var(--aurora-bg-glass);
   border-radius: var(--aurora-radius-sm);
 }

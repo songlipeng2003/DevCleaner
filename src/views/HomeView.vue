@@ -800,19 +800,21 @@ onUnmounted(() => {
   align-items: center;
   background: var(--aurora-bg-glass);
   backdrop-filter: blur(20px);
-  padding: 0 24px;
+  padding: 0 16px;
   border-bottom: 1px solid var(--aurora-border);
+  height: 56px;
+  min-height: 56px;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .logo-icon {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -822,7 +824,7 @@ onUnmounted(() => {
 }
 
 .header h1 {
-  font-size: 20px;
+  font-size: 18px;
   margin: 0;
   font-weight: 700;
   background: var(--aurora-text-gradient);
@@ -832,10 +834,10 @@ onUnmounted(() => {
 }
 
 .version {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--aurora-text-tertiary);
   background: var(--aurora-bg-glass);
-  padding: 2px 8px;
+  padding: 2px 6px;
   border-radius: var(--aurora-radius-sm);
   font-weight: 500;
 }
@@ -843,12 +845,12 @@ onUnmounted(() => {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .theme-toggle-btn {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -866,22 +868,28 @@ onUnmounted(() => {
 }
 
 .content {
-  padding: 24px 32px;
+  padding: 16px 24px;
   overflow-y: auto;
-  max-height: calc(100vh - 120px);
+  max-height: calc(100vh - 56px);
 }
 
 /* 英雄区域 */
 .hero-section {
-  display: grid;
-  grid-template-columns: 1fr 360px;
-  gap: 48px;
+  display: flex;
+  flex-direction: row;
+  gap: 32px;
   align-items: center;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
   overflow: hidden;
 }
 
+.hero-content {
+  flex: 1;
+  min-width: 0;
+}
+
 .hero-visual {
+  flex-shrink: 0;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -890,36 +898,36 @@ onUnmounted(() => {
 .hero-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
+  gap: 6px;
+  padding: 6px 12px;
   background: var(--aurora-bg-glass);
   border: 1px solid var(--aurora-border-light);
   border-radius: var(--aurora-radius-full);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--aurora-secondary);
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .hero-title {
-  font-size: 42px;
+  font-size: 28px;
   font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: -1px;
-  margin-bottom: 16px;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  margin-bottom: 10px;
 }
 
 .hero-description {
-  font-size: 16px;
+  font-size: 14px;
   color: var(--aurora-text-secondary);
-  line-height: 1.7;
-  max-width: 480px;
-  margin-bottom: 24px;
+  line-height: 1.5;
+  max-width: 380px;
+  margin-bottom: 16px;
 }
 
 .hero-actions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 
 /* 磁盘图表 */
@@ -928,16 +936,15 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
+  padding: 16px;
   overflow: hidden;
-  width: 100%;
-  max-width: 320px;
+  width: 180px;
 }
 
 .disk-chart-wrapper {
   position: relative;
-  width: 160px;
-  height: 160px;
+  width: 120px;
+  height: 120px;
 }
 
 .disk-chart {
@@ -966,20 +973,20 @@ onUnmounted(() => {
 }
 
 .disk-percentage {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 700;
 }
 
 .disk-label {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--aurora-text-tertiary);
 }
 
 .disk-stats {
   display: flex;
-  gap: 32px;
-  margin-top: 16px;
-  padding-top: 16px;
+  gap: 20px;
+  margin-top: 10px;
+  padding-top: 10px;
   border-top: 1px solid var(--aurora-border);
 }
 
@@ -991,12 +998,12 @@ onUnmounted(() => {
 }
 
 .disk-stat-value {
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .disk-stat-label {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--aurora-text-tertiary);
 }
 
@@ -1191,38 +1198,38 @@ onUnmounted(() => {
 }
 
 /* 响应式 */
-@media (max-width: 1024px) {
-  .hero-section {
-    grid-template-columns: 1fr;
-    text-align: center;
-  }
-  
-  .hero-description {
-    max-width: none;
-  }
-  
-  .hero-actions {
-    justify-content: center;
-  }
-  
-  .hero-visual {
-    order: -1;
-  }
-  
-  .hero-title {
-    font-size: 32px;
-  }
-}
-
 @media (max-width: 768px) {
   .content {
-    padding: 16px;
+    padding: 12px;
   }
-  
+
+  .hero-section {
+    gap: 16px;
+  }
+
   .hero-title {
-    font-size: 28px;
+    font-size: 22px;
   }
-  
+
+  .hero-description {
+    font-size: 13px;
+    max-width: 280px;
+  }
+
+  .disk-chart-container {
+    width: 140px;
+    padding: 12px;
+  }
+
+  .disk-chart-wrapper {
+    width: 100px;
+    height: 100px;
+  }
+
+  .disk-percentage {
+    font-size: 16px;
+  }
+
   .tools-grid {
     grid-template-columns: 1fr;
   }

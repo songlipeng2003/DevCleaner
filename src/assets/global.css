@@ -370,8 +370,9 @@ body {
 .ant-btn {
   border-radius: var(--aurora-radius-md) !important;
   font-weight: 500 !important;
-  height: 40px !important;
-  padding: 0 24px !important;
+  height: 32px !important;
+  padding: 0 16px !important;
+  font-size: 13px !important;
 }
 
 .ant-btn-primary {
@@ -411,6 +412,7 @@ body {
   border-color: var(--aurora-border) !important;
   border-radius: var(--aurora-radius-md) !important;
   color: var(--aurora-text-primary) !important;
+  height: 32px !important;
 }
 
 .ant-input:focus,
