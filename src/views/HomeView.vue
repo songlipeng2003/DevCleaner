@@ -319,7 +319,7 @@
           <span>DevCleaner v{{ version }}{{ buildType ? '-' + buildType : '' }}</span>
           <a-divider type="vertical" />
           <a
-            href="https://github.com/son/devcleaner"
+            href="https://github.com/songlipeng2003/DevCleaner"
             target="_blank"
           >GitHub</a>
         </a-space>

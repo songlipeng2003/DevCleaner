@@ -570,7 +570,7 @@ dependencies = [
 
 [[package]]
 name = "devcleaner"
-version = "0.1.0-alpha"
+version = "0.1.0"
 dependencies = [
  "dirs 5.0.1",
  "once_cell",
