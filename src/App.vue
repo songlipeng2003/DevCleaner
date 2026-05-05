@@ -1,15 +1,12 @@
 <template>
-  <a-config-provider
-    :locale="zhCN"
-    :theme="themeConfig"
-  >
-    <div class="nature-bg-pattern" />
+  <a-config-provider :theme="themeConfig">
+    <div class="aurora-bg" />
     <router-view />
     <!-- 快捷键提示 -->
     <a-float-button
       ref="floatButtonRef"
       shape="square"
-      style="position: fixed; bottom: 80px; right: 24px; background: rgba(0,0,0,0.6);"
+      style="position: fixed; bottom: 80px; right: 24px; background: var(--aurora-bg-glass); backdrop-filter: blur(20px);"
       @click="showShortcuts"
     >
       <template #icon>
@@ -20,7 +17,6 @@
 </template>
 
 <script setup lang="ts">
-import zhCN from 'ant-design-vue/es/locale/zh_CN'
 import { computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { message, Modal } from 'ant-design-vue'
@@ -54,13 +50,13 @@ const themeConfig = computed(() => {
   
   return {
     token: {
-      colorPrimary: isDark ? '#66BB6A' : '#388E3C',
-      colorSuccess: '#4CAF50',
-      colorWarning: '#FF9800',
-      colorError: '#F44336',
-      colorInfo: '#2196F3',
-      colorBgBase: isDark ? '#1A1A1A' : '#F5F5DC',
-      colorTextBase: isDark ? '#E0E0E0' : '#3E2723',
+      colorPrimary: '#667eea',
+      colorSuccess: '#00ff88',
+      colorWarning: '#ffb347',
+      colorError: '#ff6b6b',
+      colorInfo: '#00d9ff',
+      colorBgBase: isDark ? '#050510' : '#f8fafc',
+      colorTextBase: isDark ? '#ffffff' : '#1e293b',
       borderRadius: 12,
       fontSize: 14,
       lineHeight: 1.6,
@@ -71,17 +67,16 @@ const themeConfig = computed(() => {
       },
       Card: {
         borderRadius: 12,
-        boxShadow: '0 4px 12px rgba(56, 142, 60, 0.1)',
       },
       Input: {
         borderRadius: 8,
       },
       Slider: {
-        trackBg: isDark ? '#66BB6A' : '#388E3C',
-        trackHoverBg: isDark ? '#81C784' : '#2E7D32',
+        trackBg: '#667eea',
+        trackHoverBg: '#818cf8',
       },
       Switch: {
-        colorPrimary: isDark ? '#66BB6A' : '#388E3C',
+        colorPrimary: '#667eea',
       },
     }
   }
@@ -94,7 +89,6 @@ watch(() => settingsStore.settings.theme, (newTheme) => {
 
 onMounted(() => {
   updateThemeAttribute(settingsStore.settings.theme)
-  // 添加全局快捷键监听
   window.addEventListener('keydown', handleKeydown)
 })
 
@@ -117,24 +111,20 @@ function handleKeydown(e: KeyboardEvent) {
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0
   const modifier = isMac ? e.metaKey : e.ctrlKey
   
-  // Cmd/Ctrl + S: 开始扫描 (仅在首页)
   if (modifier && e.key === 's') {
     e.preventDefault()
     if (route.path === '/') {
-      // 触发扫描 - 通过自定义事件
       window.dispatchEvent(new CustomEvent('devcleaner:scan'))
       message.info('开始扫描...')
     }
   }
   
-  // Cmd/Ctrl + R: 刷新
   if (modifier && e.key === 'r') {
     e.preventDefault()
     window.dispatchEvent(new CustomEvent('devcleaner:refresh'))
     message.info('刷新中...')
   }
   
-  // Cmd/Ctrl + ,: 打开设置
   if (modifier && e.key === ',') {
     e.preventDefault()
     if (route.path !== '/settings') {
@@ -142,7 +132,6 @@ function handleKeydown(e: KeyboardEvent) {
     }
   }
   
-  // Esc: 关闭弹窗 (使用 Ant Design 的 Modal)
   if (e.key === 'Escape') {
     Modal.destroyAll()
   }

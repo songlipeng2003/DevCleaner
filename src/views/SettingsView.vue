@@ -1,12 +1,22 @@
 <template>
   <div class="settings">
+    <!-- 极光背景装饰 -->
+    <div class="hero-glow hero-glow-1" />
+    
     <a-layout class="layout">
       <a-layout-header class="header">
-        <a-button @click="goBack">
-          返回
-        </a-button>
-        <h2>设置</h2>
-        <div>
+        <div class="header-left">
+          <button class="back-btn" @click="goBack">
+            <ArrowLeft :size="18" />
+            <span>返回</span>
+          </button>
+        </div>
+        
+        <div class="header-center">
+          <h2 class="gradient-text">设置</h2>
+        </div>
+        
+        <div class="header-right">
           <a-button
             type="primary"
             :loading="isSaving"
@@ -24,51 +34,140 @@
           :message="error"
           show-icon
           closable
-          style="margin-bottom: 16px"
+          style="margin-bottom: 24px"
           @close="error = null"
         />
         
         <a-spin :spinning="isLoading">
-          <a-form layout="vertical">
-            <a-form-item label="磁盘空间阈值 (GB)">
-              <a-slider
-                v-model:value="settings.threshold"
-                :min="10"
-                :max="500"
-              />
-              <span>{{ settings.threshold }} GB</span>
-            </a-form-item>
+          <!-- 主题设置 -->
+          <section class="settings-section">
+            <h3 class="section-title">
+              <Palette :size="20" />
+              外观
+            </h3>
+            <p class="section-description">自定义应用的外观和配色</p>
             
-            <a-form-item label="白名单（排除的路径）">
-              <a-list
-                size="small"
-                :data-source="settings.whitelist"
-                bordered
+            <div class="theme-selector">
+              <button
+                v-for="option in themeOptions"
+                :key="option.value"
+                class="theme-option"
+                :class="{ active: settings.theme === option.value }"
+                @click="settings.theme = option.value"
               >
-                <template #renderItem="{ item }">
-                  <a-list-item>
-                    {{ item }}
-                    <template #actions>
-                      <a-button
-                        type="link"
-                        danger
-                        size="small"
-                        @click="removeWhitelist(item)"
-                      >
-                        删除
-                      </a-button>
-                    </template>
-                  </a-list-item>
-                </template>
-              </a-list>
-              <a-input-group
-                compact
-                style="margin-top: 8px"
-              >
+                <div class="theme-icon">
+                  <component :is="option.icon" :size="24" />
+                </div>
+                <span class="theme-label">{{ option.label }}</span>
+                <div class="theme-check" v-if="settings.theme === option.value">
+                  <CheckOutlined />
+                </div>
+              </button>
+            </div>
+          </section>
+          
+          <!-- 扫描设置 -->
+          <section class="settings-section">
+            <h3 class="section-title">
+              <ScanOutlined :size="20" />
+              扫描设置
+            </h3>
+            <p class="section-description">配置自动扫描和清理规则</p>
+            
+            <div class="settings-list">
+              <div class="setting-item glass-card">
+                <div class="setting-info">
+                  <div class="setting-icon">
+                    <BellOutlined :size="20" />
+                  </div>
+                  <div class="setting-text">
+                    <span class="setting-label">自动扫描</span>
+                    <span class="setting-value">开启后自动定期扫描</span>
+                  </div>
+                </div>
+                <a-switch v-model:checked="settings.autoScan" />
+              </div>
+              
+              <div class="setting-item glass-card" v-if="settings.autoScan">
+                <div class="setting-info">
+                  <div class="setting-icon">
+                    <ClockCircleOutlined :size="20" />
+                  </div>
+                  <div class="setting-text">
+                    <span class="setting-label">扫描间隔（天）</span>
+                    <span class="setting-value">自动扫描的频率</span>
+                  </div>
+                </div>
+                <a-input-number
+                  v-model:value="settings.scanInterval"
+                  :min="1"
+                  :max="30"
+                  style="width: 100px"
+                />
+              </div>
+              
+              <div class="setting-item glass-card">
+                <div class="setting-info">
+                  <div class="setting-icon">
+                    <DatabaseOutlined :size="20" />
+                  </div>
+                  <div class="setting-text">
+                    <span class="setting-label">清理阈值</span>
+                    <span class="setting-value">当可用空间低于此值时提醒</span>
+                  </div>
+                </div>
+                <div class="threshold-control">
+                  <a-slider
+                    v-model:value="settings.threshold"
+                    :min="10"
+                    :max="500"
+                    :step="5"
+                    style="width: 200px"
+                  />
+                  <span class="threshold-value gradient-text">{{ settings.threshold }} GB</span>
+                </div>
+              </div>
+            </div>
+          </section>
+          
+          <!-- 白名单设置 -->
+          <section class="settings-section">
+            <h3 class="section-title">
+              <Shield :size="20" />
+              白名单
+            </h3>
+            <p class="section-description">设置永远不会清理的文件或文件夹</p>
+            
+            <div class="whitelist-card glass-card">
+              <div class="whitelist-empty" v-if="settings.whitelist.length === 0">
+                <InfoCircleOutlined :size="20" />
+                <p>暂无白名单项</p>
+              </div>
+              
+              <div class="whitelist-items" v-else>
+                <div 
+                  v-for="(item, index) in settings.whitelist" 
+                  :key="index"
+                  class="whitelist-item"
+                >
+                  <FolderOpen :size="16" class="whitelist-icon" />
+                  <span class="whitelist-path">{{ item }}</span>
+                  <a-button
+                    type="text"
+                    danger
+                    size="small"
+                    @click="removeWhitelist(item)"
+                  >
+                    删除
+                  </a-button>
+                </div>
+              </div>
+              
+              <div class="add-whitelist">
                 <a-input
                   v-model:value="newWhitelist"
-                  style="width: calc(100% - 80px)"
                   placeholder="添加排除路径"
+                  style="flex: 1"
                 />
                 <a-button
                   type="primary"
@@ -77,38 +176,9 @@
                 >
                   添加
                 </a-button>
-              </a-input-group>
-            </a-form-item>
-            
-            <a-form-item label="自动扫描">
-              <a-switch v-model:checked="settings.autoScan" />
-            </a-form-item>
-            
-            <a-form-item
-              v-if="settings.autoScan"
-              label="扫描间隔（天）"
-            >
-              <a-input-number
-                v-model:value="settings.scanInterval"
-                :min="1"
-                :max="30"
-              />
-            </a-form-item>
-
-            <a-form-item label="主题">
-              <a-radio-group v-model:value="settings.theme">
-                <a-radio value="light">
-                  浅色
-                </a-radio>
-                <a-radio value="dark">
-                  深色
-                </a-radio>
-                <a-radio value="auto">
-                  跟随系统
-                </a-radio>
-              </a-radio-group>
-            </a-form-item>
-          </a-form>
+              </div>
+            </div>
+          </section>
         </a-spin>
       </a-layout-content>
     </a-layout>
@@ -119,7 +189,25 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
+import {
+  CheckOutlined,
+  ScanOutlined,
+  BellOutlined,
+  ClockCircleOutlined,
+  DatabaseOutlined,
+  InfoCircleOutlined,
+} from '@ant-design/icons-vue'
+import {
+  ArrowLeft,
+  Sun,
+  Moon,
+  Monitor,
+  Palette,
+  Shield,
+  FolderOpen,
+} from 'lucide-vue-next'
 import { useSettingsStore } from '@/stores/settings'
+
 const router = useRouter()
 const settingsStore = useSettingsStore()
 
@@ -129,6 +217,12 @@ const error = ref<string | null>(null)
 const settings = computed(() => settingsStore.settings)
 const isLoading = computed(() => settingsStore.isLoading)
 const isSaving = computed(() => settingsStore.isSaving)
+
+const themeOptions = [
+  { value: 'dark' as const, label: '深色', icon: Moon },
+  { value: 'light' as const, label: '浅色', icon: Sun },
+  { value: 'auto' as const, label: '跟随系统', icon: Monitor }
+]
 
 const goBack = () => {
   router.push('/')
@@ -169,46 +263,292 @@ onMounted(async () => {
 <style scoped>
 .settings {
   height: 100vh;
-  background: var(--nature-bg-body);
   position: relative;
+  overflow: hidden;
+}
+
+.hero-glow {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-glow-1 {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--aurora-primary);
+}
+
+.layout {
+  height: 100%;
+  background: transparent;
+  position: relative;
+  z-index: 1;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--nature-bg-surface);
+  background: var(--aurora-bg-glass);
+  backdrop-filter: blur(20px);
   padding: 0 24px;
-  box-shadow: var(--nature-box-shadow);
-  border-bottom: 1px solid var(--nature-border-color);
-  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--aurora-border);
+}
+
+.header-center h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--aurora-bg-glass);
+  border: 1px solid var(--aurora-border);
+  border-radius: var(--aurora-radius-md);
+  color: var(--aurora-text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--aurora-transition-fast);
+}
+
+.back-btn:hover {
+  border-color: var(--aurora-border-light);
+  color: var(--aurora-text-primary);
 }
 
 .content {
-  padding: 24px;
-  margin: 24px;
-  background: var(--nature-bg-surface);
-  border-radius: var(--nature-border-radius-base);
-  max-width: 600px;
-  border: 1px solid var(--nature-border-color);
-  box-shadow: var(--nature-box-shadow);
+  padding: 32px;
+  overflow-y: auto;
+  max-height: calc(100vh - 64px);
+  max-width: 800px;
+  margin: 0 auto;
 }
 
-/* 表单样式 */
-:deep(.ant-form-item-label) {
-  color: var(--nature-text-primary);
+/* 设置区块 */
+.settings-section {
+  margin-bottom: 40px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--aurora-primary);
+}
+
+.section-description {
+  color: var(--aurora-text-tertiary);
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+/* 主题选择器 */
+.theme-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.theme-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+  background: var(--aurora-bg-card);
+  border: 2px solid var(--aurora-border);
+  border-radius: var(--aurora-radius-lg);
+  cursor: pointer;
+  transition: all var(--aurora-transition-normal);
+}
+
+.theme-option:hover {
+  border-color: var(--aurora-border-light);
+  background: var(--aurora-bg-glass);
+}
+
+.theme-option.active {
+  border-color: var(--aurora-primary);
+  box-shadow: 0 0 30px var(--aurora-primary-glow);
+}
+
+.theme-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--aurora-bg-glass);
+  border-radius: var(--aurora-radius-md);
+  color: var(--aurora-text-secondary);
+  transition: all var(--aurora-transition-normal);
+}
+
+.theme-option.active .theme-icon {
+  background: var(--aurora-gradient-hero);
+  color: white;
+}
+
+.theme-label {
+  font-size: 14px;
   font-weight: 500;
 }
 
-:deep(.ant-slider-track) {
-  background-color: var(--nature-primary-color);
+.theme-check {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--aurora-gradient-hero);
+  border-radius: 50%;
+  color: white;
+  font-size: 12px;
 }
 
-:deep(.ant-slider:hover .ant-slider-track) {
-  background-color: var(--nature-primary-hover);
+/* 设置列表 */
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-:deep(.ant-switch-checked) {
-  background-color: var(--nature-primary-color);
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+}
+
+.setting-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.setting-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--aurora-bg-glass);
+  border-radius: var(--aurora-radius-md);
+  color: var(--aurora-primary);
+}
+
+.setting-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.setting-label {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.setting-value {
+  font-size: 13px;
+  color: var(--aurora-text-tertiary);
+}
+
+.threshold-control {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.threshold-value {
+  font-size: 16px;
+  font-weight: 600;
+  min-width: 70px;
+}
+
+/* 白名单 */
+.whitelist-card {
+  padding: 20px;
+}
+
+.whitelist-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--aurora-text-tertiary);
+}
+
+.whitelist-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.whitelist-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--aurora-bg-glass);
+  border-radius: var(--aurora-radius-sm);
+}
+
+.whitelist-icon {
+  color: var(--aurora-text-tertiary);
+}
+
+.whitelist-path {
+  flex: 1;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--aurora-text-secondary);
+}
+
+.add-whitelist {
+  display: flex;
+  gap: 12px;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .content {
+    padding: 16px;
+  }
+  
+  .theme-selector {
+    grid-template-columns: 1fr;
+  }
+  
+  .setting-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .threshold-control {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 </style>

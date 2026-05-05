@@ -4,8 +4,8 @@ import Antd from 'ant-design-vue'
 import App from './App.vue'
 import router from './router'
 import 'ant-design-vue/dist/reset.css'
-import './assets/main.css'
-import './assets/theme-nature.css'
+import './assets/theme-aurora.css'
+import './assets/global.css'
 
 const app = createApp(App)
 

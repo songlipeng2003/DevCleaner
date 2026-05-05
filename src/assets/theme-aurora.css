@@ -1,0 +1,98 @@
+/* DevCleaner - Aurora Obsidian Design System
+ * 深邃极光主题 - 玻璃拟态 + 极光渐变 + 精致动效
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ========== 深色模式 (默认) ========== */
+  --aurora-bg-primary: #050510;
+  --aurora-bg-secondary: #0a0a1a;
+  --aurora-bg-tertiary: #0f0f25;
+  --aurora-bg-card: rgba(15, 15, 35, 0.6);
+  --aurora-bg-glass: rgba(20, 20, 50, 0.4);
+  
+  /* 极光渐变色 */
+  --aurora-gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  --aurora-gradient-2: linear-gradient(135deg, #00d9ff 0%, #00ff88 50%, #667eea 100%);
+  --aurora-gradient-3: linear-gradient(135deg, #f093fb 0%, #f5576c 50%, #ff9a9e 100%);
+  --aurora-gradient-hero: linear-gradient(135deg, #667eea 0%, #764ba2 40%, #f093fb 70%, #00d9ff 100%);
+  
+  /* 主题色 */
+  --aurora-primary: #667eea;
+  --aurora-primary-light: #818cf8;
+  --aurora-primary-glow: rgba(102, 126, 234, 0.4);
+  --aurora-secondary: #00d9ff;
+  --aurora-secondary-glow: rgba(0, 217, 255, 0.4);
+  --aurora-accent: #f093fb;
+  --aurora-accent-glow: rgba(240, 147, 251, 0.4);
+  
+  /* 语义色 */
+  --aurora-success: #00ff88;
+  --aurora-warning: #ffb347;
+  --aurora-danger: #ff6b6b;
+  --aurora-info: #00d9ff;
+  
+  /* 文字色 */
+  --aurora-text-primary: #ffffff;
+  --aurora-text-secondary: rgba(255, 255, 255, 0.7);
+  --aurora-text-tertiary: rgba(255, 255, 255, 0.5);
+  --aurora-text-gradient: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+  
+  /* 边框 */
+  --aurora-border: rgba(255, 255, 255, 0.08);
+  --aurora-border-light: rgba(255, 255, 255, 0.15);
+  --aurora-border-glow: rgba(102, 126, 234, 0.3);
+  
+  /* 阴影 */
+  --aurora-shadow-sm: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --aurora-shadow-md: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --aurora-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+  --aurora-shadow-glow: 0 0 40px var(--aurora-primary-glow);
+  --aurora-shadow-card: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  
+  /* 圆角 */
+  --aurora-radius-sm: 8px;
+  --aurora-radius-md: 12px;
+  --aurora-radius-lg: 20px;
+  --aurora-radius-xl: 28px;
+  --aurora-radius-full: 9999px;
+  
+  /* 间距 */
+  --aurora-space-xs: 4px;
+  --aurora-space-sm: 8px;
+  --aurora-space-md: 16px;
+  --aurora-space-lg: 24px;
+  --aurora-space-xl: 32px;
+  --aurora-space-2xl: 48px;
+  --aurora-space-3xl: 64px;
+  
+  /* 动画 */
+  --aurora-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --aurora-transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --aurora-transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  --aurora-transition-spring: 600ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* ========== 亮色模式 ========== */
+[data-theme="light"] {
+  --aurora-bg-primary: #f8fafc;
+  --aurora-bg-secondary: #ffffff;
+  --aurora-bg-tertiary: #f1f5f9;
+  --aurora-bg-card: rgba(255, 255, 255, 0.8);
+  --aurora-bg-glass: rgba(255, 255, 255, 0.6);
+  
+  --aurora-text-primary: #1e293b;
+  --aurora-text-secondary: rgba(30, 41, 59, 0.7);
+  --aurora-text-tertiary: rgba(30, 41, 59, 0.5);
+  --aurora-text-gradient: linear-gradient(135deg, #1e293b 0%, #667eea 100%);
+  
+  --aurora-border: rgba(0, 0, 0, 0.06);
+  --aurora-border-light: rgba(0, 0, 0, 0.1);
+  --aurora-border-glow: rgba(102, 126, 234, 0.2);
+  
+  --aurora-shadow-sm: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --aurora-shadow-md: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --aurora-shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.1);
+  --aurora-shadow-card: 0 8px 32px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
