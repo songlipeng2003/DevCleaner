@@ -234,7 +234,6 @@ cd src-tauri && cargo test
 ## 📞 支持与反馈
 
 - **GitHub Issues**: [报告问题或请求功能](https://github.com/songlipeng2003/devcleaner/issues)
-- **讨论区**: [加入讨论](https://github.com/songlipeng2003/devcleaner/discussions)
 - **电子邮件**: songlipeng2003@gmail.com
 
 ---
