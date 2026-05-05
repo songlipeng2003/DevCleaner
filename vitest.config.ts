@@ -20,7 +20,8 @@ export default defineConfig({
         '**/src-tauri/**',
         '**/tests/**',
         '**/scripts/**',
-        '**/*.config.*'
+        '**/*.config.*',
+        '.eslintrc.cjs'
       ],
       thresholds: {
         statements: 30,
