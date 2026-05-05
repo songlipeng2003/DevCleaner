@@ -7,7 +7,10 @@
     <a-layout class="layout">
       <a-layout-header class="header">
         <div class="header-left">
-          <button class="back-btn" @click="goBack">
+          <button
+            class="back-btn"
+            @click="goBack"
+          >
             <ArrowLeft :size="18" />
             <span>返回</span>
           </button>
@@ -30,7 +33,10 @@
             </template>
             重新扫描
           </a-button>
-          <a-button v-else loading>
+          <a-button
+            v-else
+            loading
+          >
             扫描中...
           </a-button>
         </div>
@@ -48,19 +54,26 @@
         />
         
         <!-- 扫描中动画 -->
-        <div v-if="isScanning" class="scanning-container">
+        <div
+          v-if="isScanning"
+          class="scanning-container"
+        >
           <div class="scanning-visual glass-card">
             <div class="scanning-ring">
               <svg viewBox="0 0 160 160">
                 <circle
-                  cx="80" cy="80" r="70"
+                  cx="80"
+                  cy="80"
+                  r="70"
                   fill="none"
                   stroke="var(--aurora-border)"
                   stroke-width="8"
                 />
                 <circle
                   class="scan-progress"
-                  cx="80" cy="80" r="70"
+                  cx="80"
+                  cy="80"
+                  r="70"
                   fill="none"
                   stroke="url(#scanGradient)"
                   stroke-width="8"
@@ -68,18 +81,37 @@
                   :stroke-dashoffset="progressOffset"
                 />
                 <defs>
-                  <linearGradient id="scanGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#667eea" />
-                    <stop offset="100%" stop-color="#00d9ff" />
+                  <linearGradient
+                    id="scanGradient"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="100%"
+                  >
+                    <stop
+                      offset="0%"
+                      stop-color="#667eea"
+                    />
+                    <stop
+                      offset="100%"
+                      stop-color="#00d9ff"
+                    />
                   </linearGradient>
                 </defs>
               </svg>
               <div class="scan-center">
-                <ScanOutlined :size="36" class="scan-icon spinning" />
+                <ScanOutlined
+                  :size="36"
+                  class="scan-icon spinning"
+                />
               </div>
             </div>
-            <h3 class="scanning-title">正在扫描</h3>
-            <p class="scanning-tool">{{ currentToolName }}</p>
+            <h3 class="scanning-title">
+              正在扫描
+            </h3>
+            <p class="scanning-tool">
+              {{ currentToolName }}
+            </p>
           </div>
         </div>
         
@@ -162,7 +194,10 @@
             <a-button @click="goBack">
               返回主页
             </a-button>
-            <a-button type="primary" @click="startScan">
+            <a-button
+              type="primary"
+              @click="startScan"
+            >
               重新扫描
             </a-button>
           </div>

@@ -14,9 +14,18 @@
           <span class="version">v{{ version }}</span>
         </div>
         <div class="header-right">
-          <button class="theme-toggle-btn" @click="toggleTheme">
-            <Moon v-if="isDark" :size="18" />
-            <Sun v-else :size="18" />
+          <button
+            class="theme-toggle-btn"
+            @click="toggleTheme"
+          >
+            <Moon
+              v-if="isDark"
+              :size="18"
+            />
+            <Sun
+              v-else
+              :size="18"
+            />
           </button>
           <a-button @click="openSettings">
             <template #icon>
@@ -37,7 +46,7 @@
             </div>
             
             <h1 class="hero-title fade-in-up fade-in-up-delay-1">
-              释放磁盘空间<br />
+              释放磁盘空间<br>
               <span class="gradient-text">让开发更流畅</span>
             </h1>
             
@@ -58,7 +67,10 @@
                 </template>
                 {{ isScanning ? '扫描中...' : '开始扫描' }}
               </a-button>
-              <a-button size="large" @click="refreshTools">
+              <a-button
+                size="large"
+                @click="refreshTools"
+              >
                 <template #icon>
                   <ReloadOutlined />
                 </template>
@@ -71,16 +83,23 @@
           <div class="hero-visual fade-in-up fade-in-up-delay-2">
             <div class="disk-chart-container glass-card">
               <div class="disk-chart-wrapper">
-                <svg class="disk-chart" viewBox="0 0 200 200">
+                <svg
+                  class="disk-chart"
+                  viewBox="0 0 200 200"
+                >
                   <circle
-                    cx="100" cy="100" r="70"
+                    cx="100"
+                    cy="100"
+                    r="70"
                     fill="none"
                     stroke="var(--aurora-border)"
                     stroke-width="10"
                   />
                   <circle
                     class="progress-ring__circle"
-                    cx="100" cy="100" r="70"
+                    cx="100"
+                    cy="100"
+                    r="70"
                     fill="none"
                     stroke="url(#diskGradient)"
                     stroke-width="10"
@@ -88,17 +107,36 @@
                     :stroke-dashoffset="circumference - (diskPercent / 100) * circumference"
                   />
                   <defs>
-                    <linearGradient id="diskGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stop-color="#667eea" />
-                      <stop offset="100%" stop-color="#00d9ff" />
+                    <linearGradient
+                      id="diskGradient"
+                      x1="0%"
+                      y1="0%"
+                      x2="100%"
+                      y2="100%"
+                    >
+                      <stop
+                        offset="0%"
+                        stop-color="#667eea"
+                      />
+                      <stop
+                        offset="100%"
+                        stop-color="#00d9ff"
+                      />
                     </linearGradient>
                   </defs>
                 </svg>
                 
                 <div class="disk-chart-center">
-                  <HardDrive :size="24" class="disk-icon" />
-                  <div class="disk-percentage gradient-text">{{ diskPercent }}%</div>
-                  <div class="disk-label">已使用</div>
+                  <HardDrive
+                    :size="24"
+                    class="disk-icon"
+                  />
+                  <div class="disk-percentage gradient-text">
+                    {{ diskPercent }}%
+                  </div>
+                  <div class="disk-label">
+                    已使用
+                  </div>
                 </div>
               </div>
               
@@ -199,13 +237,20 @@
         
         <div class="section-header">
           <div class="section-title-group">
-            <h2 class="section-title">开发工具</h2>
-            <p class="section-subtitle">点击工具卡片查看详情</p>
+            <h2 class="section-title">
+              开发工具
+            </h2>
+            <p class="section-subtitle">
+              点击工具卡片查看详情
+            </p>
           </div>
         </div>
         
         <a-spin :spinning="toolStore.isLoading">
-          <div class="tools-grid" v-if="enabledTools.length > 0">
+          <div
+            v-if="enabledTools.length > 0"
+            class="tools-grid"
+          >
             <div
               v-for="tool in enabledTools"
               :key="tool.id"
@@ -229,14 +274,18 @@
                 />
               </div>
               <div class="tool-info">
-                <div class="tool-name">{{ tool.name }}</div>
+                <div class="tool-name">
+                  {{ tool.name }}
+                </div>
                 <div
                   class="tool-size"
                   :class="{ 'has-size': getToolSize(tool.id) > 0 }"
                 >
                   {{ getToolSize(tool.id) > 0 ? formatSize(getToolSize(tool.id)) : '无缓存' }}
                 </div>
-                <div class="tool-paths">{{ tool.paths.length }} 个路径</div>
+                <div class="tool-paths">
+                  {{ tool.paths.length }} 个路径
+                </div>
               </div>
               <div class="tool-footer">
                 <a-button 
@@ -590,7 +639,8 @@ async function fetchDiskUsage() {
     const usage = await getDiskUsage()
     diskUsage.value = usage
   } catch (error) {
-    console.error('获取磁盘使用情况失败', error)
+    // eslint-disable-next-line no-console
+    console.warn('获取磁盘使用情况失败:', error)
   }
 }
 

@@ -6,14 +6,19 @@
     <a-layout class="layout">
       <a-layout-header class="header">
         <div class="header-left">
-          <button class="back-btn" @click="goBack">
+          <button
+            class="back-btn"
+            @click="goBack"
+          >
             <ArrowLeft :size="18" />
             <span>返回</span>
           </button>
         </div>
         
         <div class="header-center">
-          <h2 class="gradient-text">设置</h2>
+          <h2 class="gradient-text">
+            设置
+          </h2>
         </div>
         
         <div class="header-right">
@@ -45,7 +50,9 @@
               <Palette :size="20" />
               外观
             </h3>
-            <p class="section-description">自定义应用的外观和配色</p>
+            <p class="section-description">
+              自定义应用的外观和配色
+            </p>
             
             <div class="theme-selector">
               <button
@@ -56,10 +63,16 @@
                 @click="settings.theme = option.value"
               >
                 <div class="theme-icon">
-                  <component :is="option.icon" :size="24" />
+                  <component
+                    :is="option.icon"
+                    :size="24"
+                  />
                 </div>
                 <span class="theme-label">{{ option.label }}</span>
-                <div class="theme-check" v-if="settings.theme === option.value">
+                <div
+                  v-if="settings.theme === option.value"
+                  class="theme-check"
+                >
                   <CheckOutlined />
                 </div>
               </button>
@@ -72,7 +85,9 @@
               <ScanOutlined :size="20" />
               扫描设置
             </h3>
-            <p class="section-description">配置自动扫描和清理规则</p>
+            <p class="section-description">
+              配置自动扫描和清理规则
+            </p>
             
             <div class="settings-list">
               <div class="setting-item glass-card">
@@ -88,7 +103,10 @@
                 <a-switch v-model:checked="settings.autoScan" />
               </div>
               
-              <div class="setting-item glass-card" v-if="settings.autoScan">
+              <div
+                v-if="settings.autoScan"
+                class="setting-item glass-card"
+              >
                 <div class="setting-info">
                   <div class="setting-icon">
                     <ClockCircleOutlined :size="20" />
@@ -136,21 +154,32 @@
               <Shield :size="20" />
               白名单
             </h3>
-            <p class="section-description">设置永远不会清理的文件或文件夹</p>
+            <p class="section-description">
+              设置永远不会清理的文件或文件夹
+            </p>
             
             <div class="whitelist-card glass-card">
-              <div class="whitelist-empty" v-if="settings.whitelist.length === 0">
+              <div
+                v-if="settings.whitelist.length === 0"
+                class="whitelist-empty"
+              >
                 <InfoCircleOutlined :size="20" />
                 <p>暂无白名单项</p>
               </div>
               
-              <div class="whitelist-items" v-else>
+              <div
+                v-else
+                class="whitelist-items"
+              >
                 <div 
                   v-for="(item, index) in settings.whitelist" 
                   :key="index"
                   class="whitelist-item"
                 >
-                  <FolderOpen :size="16" class="whitelist-icon" />
+                  <FolderOpen
+                    :size="16"
+                    class="whitelist-icon"
+                  />
                   <span class="whitelist-path">{{ item }}</span>
                   <a-button
                     type="text"

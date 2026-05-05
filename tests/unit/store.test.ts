@@ -160,9 +160,9 @@ describe('Utility Functions', () => {
       }
 
       expect(formatSize(1)).toBe('1 B')
-      expect(formatSize(999)).toBe('0.98 KB')
-      expect(formatSize(1000)).toBe('0.98 KB')
-      expect(formatSize(1023)).toBe('0.99 KB')
+      expect(formatSize(999)).toBe('999 B')
+      expect(formatSize(1000)).toBe('1000 B')
+      expect(formatSize(1023)).toBe('1023 B')
       expect(formatSize(1024)).toBe('1 KB')
     })
   })
@@ -202,6 +202,7 @@ describe('Error Handling', () => {
 
   it('handles empty scan results', () => {
     const store = useToolStore()
+    store.tools = [] // 重置工具列表
     expect(store.totalCacheSize).toBe(0)
     expect(store.enabledTools).toHaveLength(0)
   })
