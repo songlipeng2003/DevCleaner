@@ -1,6 +1,6 @@
 [package]
 name = "devcleaner"
-version = "0.1.0-alpha"
+version = "0.1.0"
 description = "Developer Disk Cleaner Tool"
 authors = ["DevCleaner Team"]
 edition = "2021"
