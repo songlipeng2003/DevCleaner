@@ -11,6 +11,7 @@ src-tauri/gen
 backend/vendor
 backend/server
 backend/devcleaner-backend
+coverage/
 coverage.out
 playwright-report/
 test-results/
