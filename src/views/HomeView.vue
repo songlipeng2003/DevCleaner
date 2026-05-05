@@ -316,10 +316,10 @@
       
       <a-layout-footer class="footer">
         <a-space>
-          <span>DevCleaner v0.1.0-alpha</span>
+          <span>DevCleaner v{{ version }}{{ buildType ? '-' + buildType : '' }}</span>
           <a-divider type="vertical" />
           <a
-            href="https://github.com/devcleaner/devcleaner"
+            href="https://github.com/son/devcleaner"
             target="_blank"
           >GitHub</a>
         </a-space>
