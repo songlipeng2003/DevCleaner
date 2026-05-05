@@ -1,58 +1,77 @@
 # DevCleaner
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tauri](https://img.shields.io/badge/Tauri-2.0-FFC131?logo=tauri&logoColor=white)](https://tauri.app/)
-[![Vue.js](https://img.shields.io/badge/Vue.js-3.4-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org/)
-[![Rust](https://img.shields.io/badge/Rust-1.70-DE0000?logo=rust&logoColor=white)](https://rust-lang.org/)
+<p align="center">
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
+  <img src="https://img.shields.io/badge/Tauri-2.0-FFC131?logo=tauri&logoColor=white" alt="Tauri">
+  <img src="https://img.shields.io/badge/Vue.js-3.4-4FC08D?logo=vue.js&logoColor=white" alt="Vue.js">
+  <img src="https://img.shields.io/badge/Rust-1.70-DE0000?logo=rust&logoColor=white" alt="Rust">
+</p>
 
-专为开发者设计的跨平台磁盘清理工具，一站式扫描并清理各类开发工具缓存，释放宝贵的磁盘空间。
+<p align="center">
+  <strong>专为开发者设计的跨平台磁盘清理工具</strong><br>
+  一站式扫描并清理各类开发工具缓存，释放宝贵的磁盘空间
+</p>
+
+<p align="center">
+  <a href="#-特性">特性</a> •
+  <a href="#-支持的工具">支持工具</a> •
+  <a href="#-快速开始">快速开始</a> •
+  <a href="#-使用方法">使用方法</a> •
+  <a href="#-开发指南">开发指南</a> •
+  <a href="#-贡献">贡献</a>
+</p>
+
+---
 
 ## ✨ 特性
 
-- **🛠️ 开发者专属**：深度覆盖 15+ 开发工具，理解开发者工作流
-- **🌐 跨平台支持**：原生支持 macOS、Windows 11、Linux
-- **🔒 安全优先**：智能白名单策略 + 清理前确认，避免误删重要文件
-- **🤖 自动化**：定期扫描 + 阈值通知，保持系统整洁
-- **📊 可视化分析**：直观的图表展示磁盘使用情况
-- **⚡ 高性能**：Rust 后端，快速扫描和清理
-- **🎯 精准清理**：支持按工具、按时间、按大小筛选清理目标
+| 特性 | 说明 |
+|------|------|
+| 🛠️ **开发者专属** | 深度覆盖 15+ 开发工具缓存，理解开发者工作流 |
+| 🌐 **跨平台支持** | 原生支持 macOS、Windows 11、Linux |
+| 🔒 **安全优先** | 智能白名单策略 + 清理前确认，避免误删重要文件 |
+| 🤖 **自动化** | 定期扫描 + 阈值通知，保持系统整洁 |
+| 📊 **可视化分析** | 直观的图表展示磁盘使用情况 |
+| ⚡ **高性能** | Rust 后端驱动，快速扫描和清理 |
+| 🎯 **精准清理** | 支持按工具、按时间、按大小筛选清理目标 |
 
 ## 📋 支持的工具
 
 | 类别 | 工具 | 清理内容 |
 |------|------|----------|
-| **包管理器** | npm / yarn / pnpm | 全局缓存、_cacache、下载包 |
+| **包管理器** | npm / yarn / pnpm | 全局缓存、`_cacache`、下载包 |
 | **容器** | Docker | 镜像、容器、卷、构建缓存 |
-| **iOS/macOS** | Xcode | DerivedData、Archives、设备支持文件、SPM缓存 |
+| **iOS/macOS** | Xcode | DerivedData、Archives、设备支持文件、SPM 缓存 |
 | **包管理器** | Homebrew | 下载缓存、Cellar、日志 |
-| **Python** | pip / conda / venv | pip缓存、__pycache__、虚拟环境 |
-
-| **Ruby** | Ruby gems | gem缓存、Bundler缓存、Rails临时文件 |
-| **Java** | Maven / Gradle | 本地仓库、Wrapper发行版、构建缓存 |
-| **iOS依赖** | CocoaPods / Carthage | 本地仓库、构建缓存 |
+| **Python** | pip / conda / venv | pip 缓存、`__pycache__`、虚拟环境 |
+| **Ruby** | Ruby gems | gem 缓存、Bundler 缓存、Rails 临时文件 |
+| **Java** | Maven / Gradle | 本地仓库、Wrapper 发行版、构建缓存 |
+| **iOS 依赖** | CocoaPods / Carthage | 本地仓库、构建缓存 |
 | **游戏开发** | Unity | 编辑器缓存、日志、下载缓存 |
 
 ## 🚀 快速开始
 
 ### 系统要求
 
-- **macOS**: 10.15+ (Catalina 及以上)
-- **Windows**: Windows 11 或 Windows 10 (1809+)
-- **Linux**: 支持 GTK3 的发行版 (Ubuntu 20.04+, Fedora 33+, 等)
-- **内存**: 4GB RAM (推荐 8GB+)
-- **磁盘空间**: 200MB 可用空间
+| 系统 | 要求 |
+|------|------|
+| **macOS** | 10.15+ (Catalina 及以上) |
+| **Windows** | Windows 11 或 Windows 10 (1809+) |
+| **Linux** | 支持 GTK3 的发行版 (Ubuntu 20.04+, Fedora 33+ 等) |
+| **内存** | 4GB RAM (推荐 8GB+) |
+| **磁盘空间** | 200MB 可用空间 |
 
 ### 安装
 
 #### 下载预编译版本
 
-访问 [Releases 页面](https://github.com/yourusername/devcleaner/releases) 下载对应平台的安装包。
+访问 [Releases 页面](https://github.com/songlipeng2003/devcleaner/releases) 下载对应平台的安装包。
 
 #### 从源码构建
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/devcleaner.git
+git clone https://github.com/songlipeng2003/devcleaner.git
 cd devcleaner
 
 # 安装前端依赖
@@ -70,11 +89,11 @@ npm run tauri build
 
 ## 🖥️ 使用方法
 
-### 首次启动
+### 首次使用
 
 1. 启动 DevCleaner 应用
 2. 应用会自动检测系统中已安装的开发工具
-3. 点击"开始扫描"按钮，扫描所有支持的缓存目录
+3. 点击「开始扫描」按钮，扫描所有支持的缓存目录
 4. 查看扫描结果，按工具、大小、最后访问时间排序
 
 ### 扫描选项
@@ -99,9 +118,11 @@ npm run tauri build
 
 ### 配置文件位置
 
-- **macOS**: `~/Library/Application Support/devcleaner/config.json`
-- **Windows**: `%APPDATA%\devcleaner\config.json`
-- **Linux**: `~/.config/devcleaner/config.json`
+| 系统 | 路径 |
+|------|------|
+| **macOS** | `~/Library/Application Support/devcleaner/config.json` |
+| **Windows** | `%APPDATA%\devcleaner\config.json` |
+| **Linux** | `~/.config/devcleaner/config.json` |
 
 ### 配置示例
 
@@ -134,16 +155,16 @@ npm run tauri build
 ```
 devcleaner/
 ├── src/                    # 前端源码 (Vue 3 + TypeScript)
-│   ├── components/        # Vue 组件
-│   ├── views/            # 页面视图
-│   ├── stores/           # Pinia 状态管理
-│   └── assets/           # 静态资源
-├── src-tauri/            # Tauri 后端 (Rust)
-│   ├── src/              # Rust 源码
-│   ├── providers.json    # 工具提供者配置
-│   └── Cargo.toml        # Rust 依赖配置
-├── tests/                # 测试文件
-└── scripts/              # 构建和部署脚本
+│   ├── components/         # Vue 组件
+│   ├── views/             # 页面视图
+│   ├── stores/             # Pinia 状态管理
+│   └── assets/             # 静态资源
+├── src-tauri/              # Tauri 后端 (Rust)
+│   ├── src/                # Rust 源码
+│   ├── providers.json      # 工具提供者配置
+│   └── Cargo.toml          # Rust 依赖配置
+├── tests/                  # 测试文件
+└── scripts/                # 构建和部署脚本
 ```
 
 ### 开发环境设置
@@ -154,10 +175,10 @@ devcleaner/
 # 3. 安装 Tauri CLI
 npm install -g @tauri-apps/cli
 
-# 5. 安装项目依赖
+# 4. 安装项目依赖
 npm install
 
-# 6. 启动开发服务器
+# 5. 启动开发服务器
 npm run tauri dev
 ```
 
@@ -180,11 +201,11 @@ npm run test:e2e
 cd src-tauri && cargo test
 ```
 
-## 🤝 贡献指南
+## 🤝 贡献
 
-我们欢迎各种形式的贡献！请参考以下步骤：
+欢迎各种形式的贡献！
 
-1. **报告问题**：使用 [GitHub Issues](https://github.com/yourusername/devcleaner/issues) 报告 bug 或提出功能建议
+1. **报告问题**：通过 [GitHub Issues](https://github.com/songlipeng2003/devcleaner/issues) 报告 bug 或提出功能建议
 2. **提交 Pull Request**：
    - Fork 本仓库
    - 创建功能分支 (`git checkout -b feature/amazing-feature`)
@@ -201,20 +222,20 @@ cd src-tauri && cargo test
 
 ## 📄 许可证
 
-本项目基于 MIT 许可证开源 - 查看 [LICENSE](LICENSE) 文件了解详情。
+本项目基于 [MIT 许可证](./LICENSE) 开源。
 
 ## 🙏 致谢
 
-- [Tauri](https://tauri.app/) - 提供优秀的跨平台桌面应用框架
+- [Tauri](https://tauri.app/) - 优秀的跨平台桌面应用框架
 - [Vue.js](https://vuejs.org/) - 渐进式 JavaScript 框架
 - [Ant Design Vue](https://antdv.com/) - 企业级 UI 组件库
-- [Rust](https://www.rust-lang.org/) - 赋予每个人构建可靠高效软件的能力
+- [Rust](https://www.rust-lang.org/) - 安全可靠的系统编程语言
 
 ## 📞 支持与反馈
 
-- **GitHub Issues**: [报告问题或请求功能](https://github.com/yourusername/devcleaner/issues)
-- **讨论区**: [加入讨论](https://github.com/yourusername/devcleaner/discussions)
-- **电子邮件**: team@devcleaner.app (示例)
+- **GitHub Issues**: [报告问题或请求功能](https://github.com/songlipeng2003/devcleaner/issues)
+- **讨论区**: [加入讨论](https://github.com/songlipeng2003/devcleaner/discussions)
+- **电子邮件**: songlipeng2003@gmail.com
 
 ---
 
