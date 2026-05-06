@@ -16,6 +16,17 @@ const routes: RouteRecordRaw[] = [
     path: '/settings',
     name: 'settings',
     component: () => import('@/views/SettingsView.vue')
+  },
+  // v0.2.0 新增路由
+  {
+    path: '/projects',
+    name: 'projects',
+    component: () => import('@/views/ProjectCleanView.vue')
+  },
+  {
+    path: '/history',
+    name: 'history',
+    component: () => import('@/views/HistoryView.vue')
   }
 ]
 

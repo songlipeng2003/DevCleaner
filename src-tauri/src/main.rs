@@ -21,6 +21,13 @@ fn main() {
             commands::get_version,
             commands::get_usage_stats,
             commands::record_clean,
+            // v0.2.0 新增命令
+            commands::scan_projects,
+            commands::get_clean_preview,
+            commands::clean_paths,
+            commands::get_clean_history,
+            commands::record_clean_history,
+            commands::export_clean_report,
         ])
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();

@@ -119,3 +119,142 @@ export async function getUsageStats(): Promise<UsageStats> {
 export async function recordClean(toolId: string, toolName: string, size: number, fileNum: number): Promise<void> {
   return invoke('record_clean', { toolId, toolName, size, fileNum })
 }
+
+// ============== v0.2.0 新增 API ==============
+
+// 清理预览 - 文件信息
+export interface PreviewFile {
+  name: string
+  path: string
+  size: number
+  modified: number
+  isSafe: boolean
+  reason?: string
+}
+
+// 清理预览 - 路径信息
+export interface PreviewPath {
+  path: string
+  files: PreviewFile[]
+  size: number
+  oldestFile: number
+  newestFile: number
+}
+
+// 清理预览 - 完整预览
+export interface CleanPreview {
+  toolId: string
+  toolName: string
+  paths: PreviewPath[]
+  totalSize: number
+  riskLevel: 'safe' | 'moderate' | 'careful'
+  recommendations: string[]
+}
+
+// 清理策略
+export type CleanStrategy = 'time' | 'size' | 'selective' | 'safe' | 'deep'
+
+// 获取增强的清理预览
+export async function getCleanPreview(
+  toolId: string,
+  paths: string[],
+  strategy?: CleanStrategy,
+  timeThreshold?: number,
+  sizeThreshold?: number
+): Promise<CleanPreview> {
+  return invoke('get_clean_preview', {
+    toolId,
+    paths,
+    strategy,
+    timeThreshold,
+    sizeThreshold,
+  })
+}
+
+// 项目扫描结果
+export interface CleanableItem {
+  id: string
+  name: string
+  path: string
+  itemType: string
+  size: number
+  fileNum: number
+  lastModified: number
+  cleanable: boolean
+  reason: string
+}
+
+export interface ProjectScanResult {
+  name: string
+  path: string
+  projectType: string
+  size: number
+  fileNum: number
+  lastModified: number
+  cleanableItems: CleanableItem[]
+  riskLevel: 'safe' | 'moderate' | 'careful'
+}
+
+// 扫描项目目录
+export async function scanProjects(
+  scanPaths: string[],
+  maxDepth?: number
+): Promise<ProjectScanResult[]> {
+  return invoke('scan_projects', { scanPaths, maxDepth })
+}
+
+// 清理指定路径
+export async function cleanPaths(paths: string[]): Promise<CleanResult> {
+  return invoke('clean_paths', { paths })
+}
+
+// 清理历史 - 项目信息
+export interface CleanHistoryItemV2 {
+  id: string
+  toolId: string
+  toolName: string
+  size: number
+  fileNum: number
+  timestamp: number
+  paths: string[]
+}
+
+// 月度统计
+export interface MonthlyStat {
+  month: string
+  cleaned: number
+  count: number
+}
+
+// 清理历史
+export interface CleanHistory {
+  items: CleanHistoryItemV2[]
+  totalCleaned: number
+  totalCount: number
+  monthlyStats: MonthlyStat[]
+}
+
+// 获取清理历史
+export async function getCleanHistory(
+  filter?: 'day' | 'week' | 'month' | 'all'
+): Promise<CleanHistory> {
+  return invoke('get_clean_history', { filter })
+}
+
+// 记录清理历史
+export async function recordCleanHistory(
+  toolId: string,
+  toolName: string,
+  size: number,
+  fileNum: number,
+  paths: string[]
+): Promise<void> {
+  return invoke('record_clean_history', { toolId, toolName, size, fileNum, paths })
+}
+
+// 导出清理报告
+export async function exportCleanReport(
+  format: 'json' | 'csv'
+): Promise<string> {
+  return invoke('export_clean_report', { format })
+}

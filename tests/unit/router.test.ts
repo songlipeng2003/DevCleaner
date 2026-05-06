@@ -2,8 +2,9 @@ import { describe, it, expect } from 'vitest'
 import router from '@/router'
 
 describe('Router Configuration', () => {
-  it('has three routes defined', () => {
-    expect(router.getRoutes()).toHaveLength(3)
+  it('has five routes defined (v0.2.0)', () => {
+    // v0.2.0 新增 /projects 和 /history 路由
+    expect(router.getRoutes()).toHaveLength(5)
   })
 
   it('has a home route at /', () => {
@@ -24,6 +25,18 @@ describe('Router Configuration', () => {
     expect(settingsRoute?.name).toBe('settings')
   })
 
+  it('has a projects route at /projects (v0.2.0)', () => {
+    const projectsRoute = router.getRoutes().find(r => r.path === '/projects')
+    expect(projectsRoute).toBeDefined()
+    expect(projectsRoute?.name).toBe('projects')
+  })
+
+  it('has a history route at /history (v0.2.0)', () => {
+    const historyRoute = router.getRoutes().find(r => r.path === '/history')
+    expect(historyRoute).toBeDefined()
+    expect(historyRoute?.name).toBe('history')
+  })
+
   it('home route uses lazy-loaded component', () => {
     const homeRoute = router.getRoutes().find(r => r.path === '/')
     // Lazy loaded routes have a component function
@@ -38,6 +51,16 @@ describe('Router Configuration', () => {
   it('settings route uses lazy-loaded component', () => {
     const settingsRoute = router.getRoutes().find(r => r.path === '/settings')
     expect(typeof settingsRoute?.components?.default).toBe('function')
+  })
+
+  it('projects route uses lazy-loaded component (v0.2.0)', () => {
+    const projectsRoute = router.getRoutes().find(r => r.path === '/projects')
+    expect(typeof projectsRoute?.components?.default).toBe('function')
+  })
+
+  it('history route uses lazy-loaded component (v0.2.0)', () => {
+    const historyRoute = router.getRoutes().find(r => r.path === '/history')
+    expect(typeof historyRoute?.components?.default).toBe('function')
   })
 
   it('uses web history mode', () => {

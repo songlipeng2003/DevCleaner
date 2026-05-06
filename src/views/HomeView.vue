@@ -171,12 +171,72 @@
           />
         </div>
         
-        <!-- 扫描摘要 -->
+        <!-- 扫描摘要 & 统计卡片 -->
         <div
-          v-else-if="scanResults.length > 0"
-          class="scan-summary glass-card"
+          v-else-if="scanResults.length > 0 || stats.totalCleaned > 0"
+          class="summary-section"
         >
-          <span>发现 {{ scanResults.length }} 处缓存，共 {{ formatSize(totalCacheSize) }}</span>
+          <!-- 清理统计卡片 (v0.2.0 新增) -->
+          <div v-if="stats.totalCleaned > 0" class="stats-cards">
+            <div class="stat-card glass-card">
+              <div class="stat-icon-wrapper">
+                <DatabaseOutlined class="stat-icon" />
+              </div>
+              <div class="stat-info">
+                <div class="stat-value">{{ formatSize(stats.totalCleaned) }}</div>
+                <div class="stat-label">总计已清理</div>
+              </div>
+            </div>
+            <div class="stat-card glass-card">
+              <div class="stat-icon-wrapper">
+                <CheckCircleOutlined class="stat-icon" />
+              </div>
+              <div class="stat-info">
+                <div class="stat-value">{{ stats.cleanCount }}</div>
+                <div class="stat-label">清理次数</div>
+              </div>
+            </div>
+            <div class="stat-card glass-card">
+              <div class="stat-icon-wrapper">
+                <History class="stat-icon" />
+              </div>
+              <div class="stat-info">
+                <div class="stat-value">{{ formatSize(totalCacheSize) }}</div>
+                <div class="stat-label">当前缓存</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 扫描摘要 -->
+          <div v-if="scanResults.length > 0" class="scan-summary glass-card">
+            <span>发现 {{ scanResults.length }} 处缓存，共 {{ formatSize(totalCacheSize) }}</span>
+          </div>
+        </div>
+
+        <!-- 快速操作 (v0.2.0 新增) -->
+        <div class="quick-actions glass-card">
+          <div class="quick-actions-header">
+            <Zap :size="16" />
+            <span>快速操作</span>
+          </div>
+          <div class="quick-actions-grid">
+            <button class="quick-action-btn" @click="startScan" :disabled="isScanning">
+              <ScanOutlined :size="20" />
+              <span>开始扫描</span>
+            </button>
+            <button class="quick-action-btn" @click="quickCleanAll" :disabled="scanResults.length === 0">
+              <DeleteOutlined :size="20" />
+              <span>快速清理</span>
+            </button>
+            <button class="quick-action-btn" @click="goToProjects">
+              <FolderSearch :size="20" />
+              <span>项目清理</span>
+            </button>
+            <button class="quick-action-btn" @click="goToHistory">
+              <History :size="20" />
+              <span>清理历史</span>
+            </button>
+          </div>
         </div>
         
         <!-- 智能推荐 -->
@@ -409,12 +469,16 @@ import {
   SettingOutlined, 
   ScanOutlined, 
   ReloadOutlined,
-  BulbOutlined
+  BulbOutlined,
+  DatabaseOutlined,
+  CheckCircleOutlined,
+  DeleteOutlined,
 } from '@ant-design/icons-vue'
 import {
   Package,
   Sparkles,
   Folder,
+  FolderSearch,
   Cookie,
   Gem,
   Box,
@@ -433,6 +497,7 @@ import {
   Zap,
   Moon,
   Sun,
+  History,
 } from 'lucide-vue-next'
 import { useToolStore } from '@/stores/tools'
 import { useSettingsStore } from '@/stores/settings'
@@ -472,6 +537,12 @@ const scanProgress = ref<ScanProgress>({
 
 // 智能推荐
 const recommendations = ref<Recommendation[]>([])
+
+// 统计数据 (v0.2.0)
+const stats = ref({
+  totalCleaned: 0,
+  cleanCount: 0,
+})
 
 const diskUsage = ref({
   total: 0,
@@ -635,6 +706,56 @@ function openSettings() {
   router.push('/settings')
 }
 
+// v0.2.0 新增导航方法
+function goToProjects() {
+  router.push('/projects')
+}
+
+function goToHistory() {
+  router.push('/history')
+}
+
+// 快速清理所有
+async function quickCleanAll() {
+  const toolsWithCache = enabledTools.value.filter(t => getToolSize(t.id) > 0)
+  if (toolsWithCache.length === 0) {
+    message.warning('没有可清理的缓存')
+    return
+  }
+
+  Modal.confirm({
+    title: '确认清理',
+    content: `确定要清理 ${toolsWithCache.length} 个工具的缓存吗？这将释放约 ${formatSize(totalCacheSize.value)} 磁盘空间。`,
+    okText: '确认清理',
+    okType: 'danger',
+    cancelText: '取消',
+    async onOk() {
+      for (const tool of toolsWithCache) {
+        try {
+          await toolStore.cleanTool(tool.id, tool.paths)
+        } catch (e) {
+          // 忽略单个错误
+        }
+      }
+      message.success('清理完成')
+      recommendations.value = []
+    }
+  })
+}
+
+// 获取统计数据
+async function fetchStats() {
+  try {
+    const usageStats = await getUsageStats()
+    stats.value = {
+      totalCleaned: usageStats.totalCleaned,
+      cleanCount: usageStats.cleanCount,
+    }
+  } catch (e) {
+    // ignore
+  }
+}
+
 async function fetchDiskUsage() {
   try {
     const usage = await getDiskUsage()
@@ -659,6 +780,7 @@ onMounted(async () => {
 
   await toolStore.fetchTools()
   await fetchDiskUsage()
+  await fetchStats()
   await checkAutoScan()
 
   diskRefreshTimer.value = setInterval(async () => {
@@ -1079,6 +1201,107 @@ onUnmounted(() => {
   color: var(--aurora-text-primary);
 }
 
+/* 统计卡片 (v0.2.0 新增) */
+.summary-section {
+  margin-bottom: 16px;
+}
+
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+}
+
+.stat-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--aurora-bg-glass);
+  border-radius: var(--aurora-radius-md);
+}
+
+.stat-icon {
+  font-size: 20px;
+  color: var(--aurora-primary);
+}
+
+.stat-info {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--aurora-text-primary);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--aurora-text-tertiary);
+  margin-top: 2px;
+}
+
+/* 快速操作 (v0.2.0 新增) */
+.quick-actions {
+  margin-bottom: 24px;
+}
+
+.quick-actions-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: var(--aurora-primary);
+}
+
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.quick-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 12px;
+  background: var(--aurora-bg-card);
+  border: 1px solid var(--aurora-border);
+  border-radius: var(--aurora-radius-md);
+  color: var(--aurora-text-secondary);
+  cursor: pointer;
+  transition: all var(--aurora-transition-fast);
+}
+
+.quick-action-btn:hover:not(:disabled) {
+  background: var(--aurora-bg-glass);
+  border-color: var(--aurora-primary);
+  color: var(--aurora-primary);
+  transform: translateY(-2px);
+}
+
+.quick-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.quick-action-btn span {
+  font-size: 13px;
+  font-weight: 500;
+}
+
 /* 推荐卡片 */
 .recommendation-card {
   margin-bottom: 24px;
@@ -1263,6 +1486,14 @@ onUnmounted(() => {
 
   .tools-grid {
     grid-template-columns: 1fr;
+  }
+
+  .stats-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>
