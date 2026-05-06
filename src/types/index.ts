@@ -46,6 +46,7 @@ export interface Settings {
   autoScan: boolean
   scanInterval: number
   theme: 'light' | 'dark' | 'auto'
+  shortcutsEnabled: boolean
 }
 
 // API 响应类型

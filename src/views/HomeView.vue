@@ -664,7 +664,23 @@ onMounted(async () => {
   diskRefreshTimer.value = setInterval(async () => {
     await fetchDiskUsage()
   }, 30000)
+
+  // 监听快捷键事件
+  window.addEventListener('devcleaner:scan', handleShortcutScan as EventListener)
+  window.addEventListener('devcleaner:refresh', handleShortcutRefresh as EventListener)
 })
+
+// 快捷键处理：开始扫描
+function handleShortcutScan() {
+  if (!isScanning.value) {
+    startScan()
+  }
+}
+
+// 快捷键处理：刷新
+function handleShortcutRefresh() {
+  refreshTools()
+}
 
 async function checkAutoScan() {
   const settings = settingsStore.settings
@@ -765,6 +781,9 @@ onUnmounted(() => {
     clearInterval(diskRefreshTimer.value)
     diskRefreshTimer.value = null
   }
+  // 移除快捷键事件监听
+  window.removeEventListener('devcleaner:scan', handleShortcutScan as EventListener)
+  window.removeEventListener('devcleaner:refresh', handleShortcutRefresh as EventListener)
 })
 </script>
 

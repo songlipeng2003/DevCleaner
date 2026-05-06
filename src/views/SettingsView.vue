@@ -102,6 +102,19 @@
                 </div>
                 <a-switch v-model:checked="settings.autoScan" />
               </div>
+
+              <div class="setting-item glass-card">
+                <div class="setting-info">
+                  <div class="setting-icon">
+                    <Keyboard :size="20" />
+                  </div>
+                  <div class="setting-text">
+                    <span class="setting-label">启用快捷键</span>
+                    <span class="setting-value">Ctrl/Cmd+S 扫描, Ctrl/Cmd+R 刷新</span>
+                  </div>
+                </div>
+                <a-switch v-model:checked="settings.shortcutsEnabled" />
+              </div>
               
               <div
                 v-if="settings.autoScan"
@@ -234,6 +247,7 @@ import {
   Palette,
   Shield,
   FolderOpen,
+  Keyboard,
 } from 'lucide-vue-next'
 import { useSettingsStore } from '@/stores/settings'
 

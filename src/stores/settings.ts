@@ -11,6 +11,7 @@ export const useSettingsStore = defineStore('settings', () => {
     autoScan: false,
     scanInterval: 7,
     theme: 'auto',
+    shortcutsEnabled: true,
   }
 
   // 状态
