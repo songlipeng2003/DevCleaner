@@ -648,7 +648,7 @@ async function fetchDiskUsage() {
 onMounted(async () => {
   // 获取版本信息
   try {
-    const [ver, build] = await getVersion()
+    const { version: ver, build } = await getVersion()
     version.value = ver
     buildType.value = build
   } catch (error) {
