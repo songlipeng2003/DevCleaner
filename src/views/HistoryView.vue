@@ -288,6 +288,7 @@ async function fetchHistory() {
     stats.value.totalCount = result.totalCount
     stats.value.lastClean = result.items.length > 0 ? result.items[0].timestamp : 0
   } catch (error) {
+    console.error('获取历史记录失败:', error)
     message.error('获取历史记录失败')
   } finally {
     isLoading.value = false
@@ -331,7 +332,12 @@ function openSettings() {
 
 // 初始化
 onMounted(() => {
-  fetchHistory()
+  try {
+    fetchHistory()
+  } catch (error) {
+    console.error('HistoryView 初始化失败:', error)
+    message.error('页面加载失败')
+  }
 })
 </script>
 
