@@ -712,6 +712,7 @@ function goToProjects() {
 }
 
 function goToHistory() {
+  console.log('Navigating to history page...')
   router.push('/history')
 }
 

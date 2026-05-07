@@ -279,9 +279,12 @@ function getToolIcon(toolId: string) {
 
 // 获取历史数据
 async function fetchHistory() {
+  console.log('fetchHistory called, filter:', filterType.value)
   isLoading.value = true
   try {
+    console.log('Calling tauriApi.getCleanHistory...')
     const result: CleanHistory = await tauriApi.getCleanHistory(filterType.value as any)
+    console.log('getCleanHistory result:', result)
     historyItems.value = result.items
     monthlyStats.value = result.monthlyStats
     stats.value.totalCleaned = result.totalCleaned
@@ -332,6 +335,7 @@ function openSettings() {
 
 // 初始化
 onMounted(() => {
+  console.log('HistoryView mounted, fetching history...')
   try {
     fetchHistory()
   } catch (error) {
