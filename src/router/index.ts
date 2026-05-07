@@ -27,6 +27,12 @@ const routes: RouteRecordRaw[] = [
     path: '/history',
     name: 'history',
     component: () => import('@/views/HistoryView.vue')
+  },
+  // v0.3.0 新增路由
+  {
+    path: '/analysis',
+    name: 'analysis',
+    component: () => import('@/views/DiskAnalysisView.vue')
   }
 ]
 

@@ -269,3 +269,52 @@ export async function selectDirectory(): Promise<string | null> {
   })
   return selected as string | null
 }
+
+// ============== v0.3.0 磁盘分析功能 ==============
+
+// 磁盘分析项目
+export interface DiskAnalysisItem {
+  name: string
+  path: string
+  toolId?: string
+  size: number
+  percentage: number
+  fileCount: number
+  lastModified: number
+  isCleanable: boolean
+  cleanReason?: string
+}
+
+// 磁盘分析类别
+export interface DiskAnalysisCategory {
+  name: string
+  toolId?: string
+  items: DiskAnalysisItem[]
+  totalSize: number
+  itemCount: number
+}
+
+// 磁盘分析摘要
+export interface DiskAnalysisSummary {
+  totalSize: number
+  cleanableSize: number
+  analyzedPaths: number
+  analyzedAt: number
+  categories: DiskAnalysisCategory[]
+}
+
+// 缓存趋势数据
+export interface CacheTrend {
+  date: string
+  size: number
+}
+
+// 获取磁盘分析
+export async function getDiskAnalysis(): Promise<DiskAnalysisSummary> {
+  return invoke('get_disk_analysis')
+}
+
+// 获取缓存趋势数据
+export async function getCacheTrends(): Promise<CacheTrend[]> {
+  return invoke('get_cache_trends')
+}

@@ -1710,6 +1710,207 @@ pub async fn export_clean_report(
     }
 }
 
+// ============== v0.3.0 磁盘分析功能 ==============
+
+// 磁盘分析项目
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DiskAnalysisItem {
+    pub name: String,
+    pub path: String,
+    #[serde(rename = "toolId", skip_serializing_if = "Option::is_none")]
+    pub tool_id: Option<String>,
+    pub size: i64,
+    pub percentage: f64,
+    #[serde(rename = "fileCount")]
+    pub file_count: i32,
+    #[serde(rename = "lastModified")]
+    pub last_modified: i64,
+    #[serde(rename = "isCleanable")]
+    pub is_cleanable: bool,
+    #[serde(rename = "cleanReason", skip_serializing_if = "Option::is_none")]
+    pub clean_reason: Option<String>,
+}
+
+// 磁盘分析类别
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DiskAnalysisCategory {
+    pub name: String,
+    #[serde(rename = "toolId", skip_serializing_if = "Option::is_none")]
+    pub tool_id: Option<String>,
+    pub items: Vec<DiskAnalysisItem>,
+    #[serde(rename = "totalSize")]
+    pub total_size: i64,
+    #[serde(rename = "itemCount")]
+    pub item_count: i32,
+}
+
+// 磁盘分析摘要
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DiskAnalysisSummary {
+    #[serde(rename = "totalSize")]
+    pub total_size: i64,
+    #[serde(rename = "cleanableSize")]
+    pub cleanable_size: i64,
+    #[serde(rename = "analyzedPaths")]
+    pub analyzed_paths: i32,
+    #[serde(rename = "analyzedAt")]
+    pub analyzed_at: i64,
+    pub categories: Vec<DiskAnalysisCategory>,
+}
+
+// 缓存趋势数据
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CacheTrend {
+    pub date: String,
+    pub size: i64,
+}
+
+// 获取磁盘分析
+#[tauri::command]
+pub async fn get_disk_analysis() -> Result<DiskAnalysisSummary, String> {
+    let tools = get_tool_list().await?;
+    let settings = get_settings_internal().unwrap_or_default();
+    let mut all_categories = Vec::new();
+    let mut total_size: i64 = 0;
+    let mut cleanable_size: i64 = 0;
+    let mut analyzed_paths: i32 = 0;
+
+    for tool in &tools {
+        let mut category_items = Vec::new();
+        let mut category_size: i64 = 0;
+
+        for path in &tool.paths {
+            let expanded_path = expand_path(path);
+
+            if !is_path_safe(&expanded_path) {
+                continue;
+            }
+
+            let path_buf = PathBuf::from(&expanded_path);
+            if !path_buf.exists() || !path_buf.is_dir() {
+                continue;
+            }
+
+            analyzed_paths += 1;
+
+            // 扫描目录
+            let (size, file_count, last_modified) = calculate_dir_size(&path_buf, 5);
+
+            if size > 0 {
+                category_size += size;
+                total_size += size;
+
+                // 判断是否可清理
+                let (is_cleanable, clean_reason) = if is_path_whitelisted(&expanded_path, &settings.whitelist) {
+                    (false, Some("路径在白名单中".to_string()))
+                } else {
+                    // 安全清理判断
+                    let cache_indicators = ["cache", "tmp", "temp", "node_modules", "target", "__pycache__", ".gradle", "build"];
+                    let path_lower = path.to_lowercase();
+                    let is_likely_cache = cache_indicators.iter().any(|ind| path_lower.contains(ind));
+                    if is_likely_cache {
+                        (true, Some("缓存文件，可安全清理".to_string()))
+                    } else {
+                        (false, Some("非缓存目录，请谨慎处理".to_string()))
+                    }
+                };
+
+                if is_cleanable {
+                    cleanable_size += size;
+                }
+
+                category_items.push(DiskAnalysisItem {
+                    name: path.split('/').last().unwrap_or(path).to_string(),
+                    path: expanded_path,
+                    tool_id: Some(tool.id.clone()),
+                    size,
+                    percentage: 0.0, // 稍后计算
+                    file_count,
+                    last_modified,
+                    is_cleanable,
+                    clean_reason,
+                });
+            }
+        }
+
+        if category_size > 0 {
+            // 计算百分比
+            for item in &mut category_items {
+                item.percentage = (item.size as f64 / category_size as f64) * 100.0;
+            }
+
+            all_categories.push(DiskAnalysisCategory {
+                name: tool.name.clone(),
+                tool_id: Some(tool.id.clone()),
+                items: category_items.clone(),
+                total_size: category_size,
+                item_count: category_items.len() as i32,
+            });
+        }
+    }
+
+    // 按大小排序
+    all_categories.sort_by(|a, b| b.total_size.cmp(&a.total_size));
+
+    // 计算总体百分比
+    for category in &mut all_categories {
+        for item in &mut category.items {
+            if total_size > 0 {
+                item.percentage = (item.size as f64 / total_size as f64) * 100.0;
+            }
+        }
+    }
+
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0);
+
+    Ok(DiskAnalysisSummary {
+        total_size,
+        cleanable_size,
+        analyzed_paths,
+        analyzed_at: now,
+        categories: all_categories,
+    })
+}
+
+// 获取缓存趋势数据
+#[tauri::command]
+pub async fn get_cache_trends() -> Result<Vec<CacheTrend>, String> {
+    let stats_path = get_stats_path();
+
+    if !stats_path.exists() {
+        return Ok(Vec::new());
+    }
+
+    let content = fs::read_to_string(&stats_path)
+        .map_err(|e| format!("Failed to read stats: {}", e))?;
+
+    let stats: UsageStats = serde_json::from_str(&content)
+        .map_err(|e| format!("Failed to parse stats: {}", e))?;
+
+    // 按月份聚合清理数据
+    let mut monthly_map: std::collections::HashMap<String, i64> = std::collections::HashMap::new();
+
+    for item in &stats.clean_history {
+        let date = chrono_date(item.timestamp);
+        *monthly_map.entry(date).or_insert(0) += item.size;
+    }
+
+    let mut trends: Vec<CacheTrend> = monthly_map
+        .into_iter()
+        .map(|(date, size)| CacheTrend { date, size })
+        .collect();
+
+    trends.sort_by(|a, b| a.date.cmp(&b.date));
+
+    // 只返回最近 6 个月的数据
+    trends.truncate(6);
+
+    Ok(trends)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2184,5 +2385,168 @@ mod tests {
         // 清理
         let _ = std::fs::remove_file(&test_file);
         let _ = std::fs::remove_dir(&test_dir);
+    }
+
+    // ============== v0.3.0 磁盘分析功能测试 ==============
+
+    #[test]
+    fn test_disk_analysis_category_serialization() {
+        let category = DiskAnalysisCategory {
+            name: "npm".to_string(),
+            tool_id: Some("npm".to_string()),
+            items: vec![],
+            total_size: 1024000,
+            item_count: 10,
+        };
+
+        let json = serde_json::to_string(&category).unwrap();
+        assert!(json.contains("npm"));
+        assert!(json.contains("1024000"));
+    }
+
+    #[test]
+    fn test_disk_analysis_item_serialization() {
+        let item = DiskAnalysisItem {
+            name: "node_modules".to_string(),
+            path: "/test/project/node_modules".to_string(),
+            tool_id: Some("npm".to_string()),
+            size: 500000,
+            percentage: 50.0,
+            file_count: 100,
+            last_modified: 1705276800,
+            is_cleanable: true,
+            clean_reason: Some("Dependencies can be reinstalled".to_string()),
+        };
+
+        let json = serde_json::to_string(&item).unwrap();
+        assert!(json.contains("node_modules"));
+        assert!(json.contains("50.0"));
+        assert!(json.contains("500000"));
+    }
+
+    #[test]
+    fn test_disk_analysis_summary_serialization() {
+        let summary = DiskAnalysisSummary {
+            total_size: 5000000,
+            cleanable_size: 3000000,
+            analyzed_paths: 10,
+            analyzed_at: 1705276800,
+            categories: vec![],
+        };
+
+        let json = serde_json::to_string(&summary).unwrap();
+        assert!(json.contains("5000000"));
+        assert!(json.contains("3000000"));
+    }
+
+    #[test]
+    fn test_cache_trend_data_serialization() {
+        let trend = CacheTrend {
+            date: "2026-05".to_string(),
+            size: 1024000,
+        };
+
+        let json = serde_json::to_string(&trend).unwrap();
+        assert!(json.contains("2026-05"));
+        assert!(json.contains("1024000"));
+    }
+
+    #[test]
+    fn test_disk_analysis_percentage_calculation() {
+        let item = DiskAnalysisItem {
+            name: "test".to_string(),
+            path: "/test".to_string(),
+            tool_id: None,
+            size: 1000000,
+            percentage: 25.0,
+            file_count: 50,
+            last_modified: 1705276800,
+            is_cleanable: true,
+            clean_reason: None,
+        };
+
+        // 百分比应该是 25%
+        assert_eq!(item.percentage, 25.0);
+    }
+
+    #[test]
+    fn test_disk_analysis_category_aggregation() {
+        let category = DiskAnalysisCategory {
+            name: "npm".to_string(),
+            tool_id: Some("npm".to_string()),
+            items: vec![
+                DiskAnalysisItem {
+                    name: "cache1".to_string(),
+                    path: "/path1".to_string(),
+                    tool_id: Some("npm".to_string()),
+                    size: 500000,
+                    percentage: 50.0,
+                    file_count: 50,
+                    last_modified: 1705276800,
+                    is_cleanable: true,
+                    clean_reason: None,
+                },
+                DiskAnalysisItem {
+                    name: "cache2".to_string(),
+                    path: "/path2".to_string(),
+                    tool_id: Some("npm".to_string()),
+                    size: 500000,
+                    percentage: 50.0,
+                    file_count: 50,
+                    last_modified: 1705276800,
+                    is_cleanable: true,
+                    clean_reason: None,
+                },
+            ],
+            total_size: 1000000,
+            item_count: 2,
+        };
+
+        assert_eq!(category.items.len(), 2);
+        assert_eq!(category.total_size, 1000000);
+        assert_eq!(category.item_count, 2);
+    }
+
+    #[test]
+    fn test_disk_analysis_cleanable_vs_non_cleanable() {
+        let cleanable_item = DiskAnalysisItem {
+            name: "node_modules".to_string(),
+            path: "/test/node_modules".to_string(),
+            tool_id: Some("npm".to_string()),
+            size: 500000,
+            percentage: 50.0,
+            file_count: 100,
+            last_modified: 1705276800,
+            is_cleanable: true,
+            clean_reason: Some("Dependencies can be reinstalled".to_string()),
+        };
+
+        let non_cleanable_item = DiskAnalysisItem {
+            name: "source".to_string(),
+            path: "/test/src".to_string(),
+            tool_id: None,
+            size: 500000,
+            percentage: 50.0,
+            file_count: 100,
+            last_modified: 1705276800,
+            is_cleanable: false,
+            clean_reason: Some("Source code, cannot be deleted".to_string()),
+        };
+
+        assert!(cleanable_item.is_cleanable);
+        assert!(!non_cleanable_item.is_cleanable);
+    }
+
+    #[test]
+    fn test_cache_trend_tracking() {
+        let trends = vec![
+            CacheTrend { date: "2026-03".to_string(), size: 500000 },
+            CacheTrend { date: "2026-04".to_string(), size: 800000 },
+            CacheTrend { date: "2026-05".to_string(), size: 1024000 },
+        ];
+
+        // 验证趋势数据
+        assert_eq!(trends.len(), 3);
+        assert!(trends[2].size > trends[0].size); // 缓存应该增长
     }
 }

@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest'
 import router from '@/router'
 
 describe('Router Configuration', () => {
-  it('has five routes defined (v0.2.0)', () => {
-    // v0.2.0 新增 /projects 和 /history 路由
-    expect(router.getRoutes()).toHaveLength(5)
+  it('has six routes defined (v0.3.0)', () => {
+    // v0.3.0 新增 /analysis 路由
+    expect(router.getRoutes()).toHaveLength(6)
   })
 
   it('has a home route at /', () => {
