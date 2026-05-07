@@ -161,6 +161,11 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Run Clippy
+        run: cd src-tauri && cargo clippy -- -D warnings
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
