@@ -1178,94 +1178,102 @@ pub async fn scan_projects(
             continue;
         }
 
-        // 扫描子目录
-        if let Ok(entries) = fs::read_dir(&path_buf) {
-            for entry in entries.flatten() {
-                let entry_path = entry.path();
-                if !entry_path.is_dir() {
-                    continue;
-                }
+        // 使用 WalkDir 递归扫描目录，深度为 max_depth + 1（扫描路径本身算第0层）
+        for entry in WalkDir::new(&path_buf)
+            .max_depth(max_depth + 1)
+            .follow_links(false)
+            .into_iter()
+            .filter_map(|e| e.ok())
+        {
+            let entry_path = entry.path();
+            // 跳过根目录本身，只处理子目录
+            if entry_path == path_buf {
+                continue;
+            }
+            if !entry_path.is_dir() {
+                continue;
+            }
 
-                // 检查是否是白名单
-                let path_str = entry_path.to_string_lossy().to_string();
-                if is_path_whitelisted(&path_str, &settings.whitelist) {
-                    continue;
-                }
+            // 检查是否是白名单
+            let path_str = entry_path.to_string_lossy().to_string();
+            if is_path_whitelisted(&path_str, &settings.whitelist) {
+                continue;
+            }
 
-                // 检测项目类型
-                if let Some(project_type) = detect_project_type(&entry_path) {
-                    let mut project_size: i64 = 0;
-                    let mut project_file_num: i32 = 0;
-                    let mut project_last_modified: i64 = 0;
-                    let mut cleanable_items = Vec::new();
+            // 检测项目类型
+            let entry_path_buf = PathBuf::from(entry_path);
+            if let Some(project_type) = detect_project_type(&entry_path_buf) {
+                let mut project_size: i64 = 0;
+                let mut project_file_num: i32 = 0;
+                let mut project_last_modified: i64 = 0;
+                let mut cleanable_items = Vec::new();
 
-                    // 扫描可清理的目录
-                    if let Ok(sub_entries) = fs::read_dir(&entry_path) {
-                        for sub_entry in sub_entries.flatten() {
-                            let sub_name = sub_entry.file_name();
-                            let sub_name_str = sub_name.to_string_lossy();
+                // 扫描可清理的目录
+                if let Ok(sub_entries) = fs::read_dir(&entry_path_buf) {
+                    for sub_entry in sub_entries.flatten() {
+                        let sub_name = sub_entry.file_name();
+                        let sub_name_str = sub_name.to_string_lossy();
 
-                            if let Some(cleanable_dir) = project_type
-                                .cleanable_dirs
-                                .iter()
-                                .find(|&d| sub_name_str == *d)
-                            {
-                                let sub_path = entry_path.join(&sub_name);
-                                if sub_path.is_dir() {
-                                    let (size, file_num, last_modified) =
-                                        calculate_dir_size(&sub_path, max_depth);
+                        if let Some(cleanable_dir) = project_type
+                            .cleanable_dirs
+                            .iter()
+                            .find(|&d| sub_name_str == *d)
+                        {
+                            let sub_path = entry_path_buf.join(&sub_name);
+                            if sub_path.is_dir() {
+                                let (size, file_num, last_modified) =
+                                    calculate_dir_size(&sub_path, max_depth);
 
-                                    // 计算风险等级
-                                    let reason = if project_type.risk_level == "moderate" {
-                                        format!(
-                                            "{} 可能包含重要依赖，建议谨慎清理",
-                                            cleanable_dir
-                                        )
-                                    } else {
-                                        format!("{} 可安全清理", cleanable_dir)
-                                    };
+                                // 计算风险等级
+                                let reason = if project_type.risk_level == "moderate" {
+                                    format!(
+                                        "{} 可能包含重要依赖，建议谨慎清理",
+                                        cleanable_dir
+                                    )
+                                } else {
+                                    format!("{} 可安全清理", cleanable_dir)
+                                };
 
-                                    cleanable_items.push(CleanableItem {
-                                        id: format!(
-                                            "{}-{}-{}",
-                                            entry_path.to_string_lossy(),
-                                            project_type.name,
-                                            cleanable_dir
-                                        ),
-                                        name: cleanable_dir.to_string(),
-                                        path: sub_path.to_string_lossy().to_string(),
-                                        item_type: cleanable_dir.to_string(),
-                                        size,
-                                        file_num,
-                                        last_modified,
-                                        cleanable: true,
-                                        reason,
-                                    });
+                                cleanable_items.push(CleanableItem {
+                                    id: format!(
+                                        "{}-{}-{}",
+                                        entry_path_buf.to_string_lossy(),
+                                        project_type.name,
+                                        cleanable_dir
+                                    ),
+                                    name: cleanable_dir.to_string(),
+                                    path: sub_path.to_string_lossy().to_string(),
+                                    item_type: cleanable_dir.to_string(),
+                                    size,
+                                    file_num,
+                                    last_modified,
+                                    cleanable: true,
+                                    reason,
+                                });
 
-                                    project_size += size;
-                                    project_file_num += file_num;
-                                    if last_modified > project_last_modified {
-                                        project_last_modified = last_modified;
-                                    }
+                                project_size += size;
+                                project_file_num += file_num;
+                                if last_modified > project_last_modified {
+                                    project_last_modified = last_modified;
                                 }
                             }
                         }
                     }
+                }
 
-                    if project_size > 0 {
-                        results.push(ProjectScanResult {
-                            name: entry_path.file_name()
-                                .map(|n| n.to_string_lossy().to_string())
-                                .unwrap_or_default(),
-                            path: entry_path.to_string_lossy().to_string(),
-                            project_type: project_type.name.to_string(),
-                            size: project_size,
-                            file_num: project_file_num,
-                            last_modified: project_last_modified,
-                            cleanable_items,
-                            risk_level: project_type.risk_level.to_string(),
-                        });
-                    }
+                if project_size > 0 {
+                    results.push(ProjectScanResult {
+                        name: entry_path_buf.file_name()
+                            .map(|n| n.to_string_lossy().to_string())
+                            .unwrap_or_default(),
+                        path: entry_path_buf.to_string_lossy().to_string(),
+                        project_type: project_type.name.to_string(),
+                        size: project_size,
+                        file_num: project_file_num,
+                        last_modified: project_last_modified,
+                        cleanable_items,
+                        risk_level: project_type.risk_level.to_string(),
+                    });
                 }
             }
         }
