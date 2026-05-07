@@ -148,10 +148,10 @@
             <a-button
               type="primary"
               danger
-              :disabled="selectedItems.length === 0"
+              :disabled="selectedItems.size === 0"
               @click="cleanSelected"
             >
-              <DeleteOutlined /> 清理选中 ({{ selectedItems.length }})
+              <DeleteOutlined /> 清理选中 ({{ selectedItems.size }})
             </a-button>
           </div>
 
@@ -284,21 +284,21 @@ import { message, Modal } from 'ant-design-vue'
 import {
   SettingOutlined,
   ScanOutlined,
-  ArrowLeft,
-  FolderOpen,
   CheckOutlined,
   StopOutlined,
   DeleteOutlined,
   InfoCircleOutlined,
   CheckCircleOutlined,
   LoadingOutlined,
-  Folder,
 } from '@ant-design/icons-vue'
 import {
   FolderSearch,
   Box,
   Coffee,
   Cpu,
+  ArrowLeft,
+  FolderOpen,
+  Folder,
 } from 'lucide-vue-next'
 import * as tauriApi from '@/services/tauri'
 import type { ProjectScanResult } from '@/services/tauri'
@@ -504,7 +504,7 @@ function openSettings() {
 // 初始化
 onMounted(() => {
   // 如果用户有 Projects 目录，设置默认路径
-  const defaultPath = process.env.HOME ? `${process.env.HOME}/Projects` : ''
+  const defaultPath = import.meta.env.VITE_HOME ? `${import.meta.env.VITE_HOME}/Projects` : ''
   if (defaultPath) {
     scanPath.value = defaultPath
   }
