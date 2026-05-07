@@ -10,7 +10,7 @@
             class="back-btn"
             @click="goBack"
           >
-            <ArrowLeft :size="18" />
+            <ArrowLeft :size="16" />
             <span>返回</span>
           </button>
         </div>
@@ -358,13 +358,13 @@ onMounted(async () => {
 .back-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  gap: 4px;
+  padding: 4px 8px;
   background: var(--aurora-bg-glass);
   border: 1px solid var(--aurora-border);
   border-radius: var(--aurora-radius-md);
   color: var(--aurora-text-secondary);
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
   transition: all var(--aurora-transition-fast);
 }
