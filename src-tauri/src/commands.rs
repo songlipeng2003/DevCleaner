@@ -270,16 +270,16 @@ fn get_config_path() -> PathBuf {
         return dev_path2;
     }
 
-    // 生产模式：可执行文件同目录（小写 resources）
-    let prod_path = exe_dir.join("resources/providers.json");
-    if prod_path.exists() {
-        return prod_path;
-    }
-
-    // macOS 生产模式：Resources 目录（大写 R）
+    // macOS 生产模式：Resources 目录
     let prod_path_mac = exe_dir.join("Resources/providers.json");
     if prod_path_mac.exists() {
         return prod_path_mac;
+    }
+
+    // Linux/Windows 生产模式：resources 目录
+    let prod_path = exe_dir.join("resources/providers.json");
+    if prod_path.exists() {
+        return prod_path;
     }
 
     // 回退到默认路径

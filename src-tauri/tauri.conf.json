@@ -34,8 +34,10 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": {
-      "providers.json": "providers.json"
+    "macOS": {
+      "files": {
+        "providers.json": "providers.json"
+      }
     }
   }
 }
