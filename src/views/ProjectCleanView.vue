@@ -308,7 +308,7 @@ const router = useRouter()
 // 配置状态
 const scanPath = ref('')
 const selectedTypes = ref<string[]>(['nodejs', 'python', 'rust', 'java'])
-const maxDepth = ref(3)
+const maxDepth = ref(1)
 const depthMarks = { 1: '1层', 2: '2层', 3: '3层', 4: '4层', 5: '5层' }
 
 // 项目类型
