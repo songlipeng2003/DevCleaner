@@ -873,8 +873,9 @@ pub async fn open_path(path: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn get_version(app: tauri::AppHandle) -> (String, String) {
-    let version = app.config().version.clone().unwrap_or_else(|| "0.0.0".to_string());
+pub fn get_version(_app: tauri::AppHandle) -> (String, String) {
+    // Tauri 2.0 使用 env! 宏获取版本号
+    let version = env!("CARGO_PKG_VERSION").to_string();
     let build = if cfg!(debug_assertions) { "debug" } else { "release" }.to_string();
     (version, build)
 }
