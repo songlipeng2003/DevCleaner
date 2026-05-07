@@ -179,12 +179,11 @@ jobs:
           sudo apt-get update || true
           sudo apt-get install -y \
             libwebkit2gtk-4.1-dev \
-            libappindicator3-dev \
             librsvg2-dev \
             patchelf \
-            libgtk-3-dev || true
-          # 尝试安装可选依赖
-          sudo apt-get install -y libayatana-appindicator3-dev 2>/dev/null || true
+            libgtk-3-dev \
+            libayatana-appindicator3-dev || true
+          sudo apt-get install -y libappindicator3-dev || true
           echo "Dependencies installation completed"
 
       - name: Install npm dependencies
