@@ -7,7 +7,10 @@
     <a-layout class="layout">
       <a-layout-header class="header">
         <div class="header-left">
-          <button class="back-btn" @click="goBack">
+          <button
+            class="back-btn"
+            @click="goBack"
+          >
             <ArrowLeft :size="20" />
           </button>
           <div class="logo-icon">
@@ -25,8 +28,12 @@
             </a-button>
             <template #overlay>
               <a-menu @click="handleExport">
-                <a-menu-item key="json">JSON 格式</a-menu-item>
-                <a-menu-item key="csv">CSV 格式</a-menu-item>
+                <a-menu-item key="json">
+                  JSON 格式
+                </a-menu-item>
+                <a-menu-item key="csv">
+                  CSV 格式
+                </a-menu-item>
               </a-menu>
             </template>
           </a-dropdown>
@@ -47,8 +54,12 @@
               <DatabaseOutlined />
             </div>
             <div class="stat-content">
-              <div class="stat-value gradient-text">{{ formatSize(stats.totalCleaned) }}</div>
-              <div class="stat-label">总计已清理</div>
+              <div class="stat-value gradient-text">
+                {{ formatSize(stats.totalCleaned) }}
+              </div>
+              <div class="stat-label">
+                总计已清理
+              </div>
             </div>
           </a-card>
 
@@ -57,8 +68,12 @@
               <CheckCircleOutlined />
             </div>
             <div class="stat-content">
-              <div class="stat-value">{{ stats.totalCount }}</div>
-              <div class="stat-label">清理次数</div>
+              <div class="stat-value">
+                {{ stats.totalCount }}
+              </div>
+              <div class="stat-label">
+                清理次数
+              </div>
             </div>
           </a-card>
 
@@ -67,8 +82,12 @@
               <CalendarOutlined />
             </div>
             <div class="stat-content">
-              <div class="stat-value">{{ lastCleanDate }}</div>
-              <div class="stat-label">上次清理</div>
+              <div class="stat-value">
+                {{ lastCleanDate }}
+              </div>
+              <div class="stat-label">
+                上次清理
+              </div>
             </div>
           </a-card>
 
@@ -77,24 +96,43 @@
               <BarChartOutlined />
             </div>
             <div class="stat-content">
-              <div class="stat-value">{{ avgSizePerClean }}</div>
-              <div class="stat-label">平均每次清理</div>
+              <div class="stat-value">
+                {{ avgSizePerClean }}
+              </div>
+              <div class="stat-label">
+                平均每次清理
+              </div>
             </div>
           </a-card>
         </div>
 
         <!-- 筛选器 -->
         <a-card class="filter-card glass-card">
-          <a-radio-group v-model:value="filterType" button-style="solid" @change="handleFilterChange">
-            <a-radio-button value="all">全部</a-radio-button>
-            <a-radio-button value="day">今天</a-radio-button>
-            <a-radio-button value="week">本周</a-radio-button>
-            <a-radio-button value="month">本月</a-radio-button>
+          <a-radio-group
+            v-model:value="filterType"
+            button-style="solid"
+            @change="handleFilterChange"
+          >
+            <a-radio-button value="all">
+              全部
+            </a-radio-button>
+            <a-radio-button value="day">
+              今天
+            </a-radio-button>
+            <a-radio-button value="week">
+              本周
+            </a-radio-button>
+            <a-radio-button value="month">
+              本月
+            </a-radio-button>
           </a-radio-group>
         </a-card>
 
         <!-- 月度趋势图 -->
-        <a-card class="trend-card glass-card" v-if="monthlyStats.length > 0">
+        <a-card
+          v-if="monthlyStats.length > 0"
+          class="trend-card glass-card"
+        >
           <template #title>
             <div class="card-title">
               <LineChartOutlined />
@@ -111,8 +149,12 @@
                 class="trend-bar-fill"
                 :style="{ height: getBarHeight(stat.cleaned) + '%' }"
               />
-              <div class="trend-bar-label">{{ stat.month }}</div>
-              <div class="trend-bar-value">{{ formatSize(stat.cleaned) }}</div>
+              <div class="trend-bar-label">
+                {{ stat.month }}
+              </div>
+              <div class="trend-bar-value">
+                {{ formatSize(stat.cleaned) }}
+              </div>
             </div>
           </div>
         </a-card>
@@ -136,7 +178,11 @@
               <template #bodyCell="{ column, record }">
                 <template v-if="column.key === 'toolName'">
                   <div class="tool-cell">
-                    <component :is="getToolIcon(record.toolId)" :size="16" style="margin-right: 8px;" />
+                    <component
+                      :is="getToolIcon(record.toolId)"
+                      :size="16"
+                      style="margin-right: 8px;"
+                    />
                     {{ record.toolName }}
                   </div>
                 </template>
@@ -149,11 +195,18 @@
                 <template v-else-if="column.key === 'paths'">
                   <a-tooltip>
                     <template #title>
-                      <div v-for="(path, idx) in record.paths" :key="idx" class="path-item">
+                      <div
+                        v-for="(path, idx) in record.paths"
+                        :key="idx"
+                        class="path-item"
+                      >
                         {{ path }}
                       </div>
                     </template>
-                    <a-button type="link" size="small">
+                    <a-button
+                      type="link"
+                      size="small"
+                    >
                       {{ record.paths.length }} 个路径
                     </a-button>
                   </a-tooltip>
@@ -162,7 +215,10 @@
             </a-table>
           </a-spin>
 
-          <a-empty v-if="!isLoading && historyItems.length === 0" description="暂无清理记录" />
+          <a-empty
+            v-if="!isLoading && historyItems.length === 0"
+            description="暂无清理记录"
+          />
         </a-card>
       </a-layout-content>
     </a-layout>
@@ -279,19 +335,15 @@ function getToolIcon(toolId: string) {
 
 // 获取历史数据
 async function fetchHistory() {
-  console.log('fetchHistory called, filter:', filterType.value)
   isLoading.value = true
   try {
-    console.log('Calling tauriApi.getCleanHistory...')
-    const result: CleanHistory = await tauriApi.getCleanHistory(filterType.value as any)
-    console.log('getCleanHistory result:', result)
+    const result: CleanHistory = await tauriApi.getCleanHistory(filterType.value as 'day' | 'week' | 'month' | 'all')
     historyItems.value = result.items
     monthlyStats.value = result.monthlyStats
     stats.value.totalCleaned = result.totalCleaned
     stats.value.totalCount = result.totalCount
     stats.value.lastClean = result.items.length > 0 ? result.items[0].timestamp : 0
   } catch (error) {
-    console.error('获取历史记录失败:', error)
     message.error('获取历史记录失败')
   } finally {
     isLoading.value = false
@@ -335,13 +387,7 @@ function openSettings() {
 
 // 初始化
 onMounted(() => {
-  console.log('HistoryView mounted, fetching history...')
-  try {
-    fetchHistory()
-  } catch (error) {
-    console.error('HistoryView 初始化失败:', error)
-    message.error('页面加载失败')
-  }
+  fetchHistory()
 })
 </script>
 

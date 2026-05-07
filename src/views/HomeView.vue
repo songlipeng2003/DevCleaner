@@ -177,14 +177,21 @@
           class="summary-section"
         >
           <!-- 清理统计卡片 (v0.2.0 新增) -->
-          <div v-if="stats.totalCleaned > 0" class="stats-cards">
+          <div
+            v-if="stats.totalCleaned > 0"
+            class="stats-cards"
+          >
             <div class="stat-card glass-card">
               <div class="stat-icon-wrapper">
                 <DatabaseOutlined class="stat-icon" />
               </div>
               <div class="stat-info">
-                <div class="stat-value">{{ formatSize(stats.totalCleaned) }}</div>
-                <div class="stat-label">总计已清理</div>
+                <div class="stat-value">
+                  {{ formatSize(stats.totalCleaned) }}
+                </div>
+                <div class="stat-label">
+                  总计已清理
+                </div>
               </div>
             </div>
             <div class="stat-card glass-card">
@@ -192,8 +199,12 @@
                 <CheckCircleOutlined class="stat-icon" />
               </div>
               <div class="stat-info">
-                <div class="stat-value">{{ stats.cleanCount }}</div>
-                <div class="stat-label">清理次数</div>
+                <div class="stat-value">
+                  {{ stats.cleanCount }}
+                </div>
+                <div class="stat-label">
+                  清理次数
+                </div>
               </div>
             </div>
             <div class="stat-card glass-card">
@@ -201,14 +212,21 @@
                 <History class="stat-icon" />
               </div>
               <div class="stat-info">
-                <div class="stat-value">{{ formatSize(totalCacheSize) }}</div>
-                <div class="stat-label">当前缓存</div>
+                <div class="stat-value">
+                  {{ formatSize(totalCacheSize) }}
+                </div>
+                <div class="stat-label">
+                  当前缓存
+                </div>
               </div>
             </div>
           </div>
 
           <!-- 扫描摘要 -->
-          <div v-if="scanResults.length > 0" class="scan-summary glass-card">
+          <div
+            v-if="scanResults.length > 0"
+            class="scan-summary glass-card"
+          >
             <span>发现 {{ scanResults.length }} 处缓存，共 {{ formatSize(totalCacheSize) }}</span>
           </div>
         </div>
@@ -220,19 +238,33 @@
             <span>快速操作</span>
           </div>
           <div class="quick-actions-grid">
-            <button class="quick-action-btn" @click="startScan" :disabled="isScanning">
+            <button
+              class="quick-action-btn"
+              :disabled="isScanning"
+              @click="startScan"
+            >
               <ScanOutlined :size="20" />
               <span>开始扫描</span>
             </button>
-            <button class="quick-action-btn" @click="quickCleanAll" :disabled="scanResults.length === 0">
+            <button
+              class="quick-action-btn"
+              :disabled="scanResults.length === 0"
+              @click="quickCleanAll"
+            >
               <DeleteOutlined :size="20" />
               <span>快速清理</span>
             </button>
-            <button class="quick-action-btn" @click="goToProjects">
+            <button
+              class="quick-action-btn"
+              @click="goToProjects"
+            >
               <FolderSearch :size="20" />
               <span>项目清理</span>
             </button>
-            <button class="quick-action-btn" @click="goToHistory">
+            <button
+              class="quick-action-btn"
+              @click="goToHistory"
+            >
               <History :size="20" />
               <span>清理历史</span>
             </button>
@@ -712,7 +744,6 @@ function goToProjects() {
 }
 
 function goToHistory() {
-  console.log('Navigating to history page...')
   router.push('/history')
 }
 
@@ -789,8 +820,8 @@ onMounted(async () => {
   }, 30000)
 
   // 监听快捷键事件
-  window.addEventListener('devcleaner:scan', handleShortcutScan as EventListener)
-  window.addEventListener('devcleaner:refresh', handleShortcutRefresh as EventListener)
+  window.addEventListener('devcleaner:scan', handleShortcutScan as ShortcutHandler)
+  window.addEventListener('devcleaner:refresh', handleShortcutRefresh as ShortcutHandler)
 })
 
 // 快捷键处理：开始扫描
@@ -804,6 +835,8 @@ function handleShortcutScan() {
 function handleShortcutRefresh() {
   refreshTools()
 }
+
+type ShortcutHandler = (event: Event) => void
 
 async function checkAutoScan() {
   const settings = settingsStore.settings
@@ -905,8 +938,8 @@ onUnmounted(() => {
     diskRefreshTimer.value = null
   }
   // 移除快捷键事件监听
-  window.removeEventListener('devcleaner:scan', handleShortcutScan as EventListener)
-  window.removeEventListener('devcleaner:refresh', handleShortcutRefresh as EventListener)
+  window.removeEventListener('devcleaner:scan', handleShortcutScan as ShortcutHandler)
+  window.removeEventListener('devcleaner:refresh', handleShortcutRefresh as ShortcutHandler)
 })
 </script>
 

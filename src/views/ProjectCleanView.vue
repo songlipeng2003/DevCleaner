@@ -7,7 +7,10 @@
     <a-layout class="layout">
       <a-layout-header class="header">
         <div class="header-left">
-          <button class="back-btn" @click="goBack">
+          <button
+            class="back-btn"
+            @click="goBack"
+          >
             <ArrowLeft :size="20" />
           </button>
           <div class="logo-icon">
@@ -36,7 +39,10 @@
                   placeholder="输入项目目录路径，如 ~/Projects"
                   style="width: calc(100% - 100px)"
                 />
-                <a-button type="primary" @click="selectFolder">
+                <a-button
+                  type="primary"
+                  @click="selectFolder"
+                >
                   <FolderOpen :size="16" />
                   选择
                 </a-button>
@@ -51,8 +57,14 @@
                 <a-form-item label="项目类型">
                   <a-checkbox-group v-model:value="selectedTypes">
                     <a-row>
-                      <a-col :span="12" v-for="type in projectTypes" :key="type.value">
-                        <a-checkbox :value="type.value">{{ type.label }}</a-checkbox>
+                      <a-col
+                        v-for="type in projectTypes"
+                        :key="type.value"
+                        :span="12"
+                      >
+                        <a-checkbox :value="type.value">
+                          {{ type.label }}
+                        </a-checkbox>
                       </a-col>
                     </a-row>
                   </a-checkbox-group>
@@ -60,7 +72,12 @@
               </a-col>
               <a-col :span="12">
                 <a-form-item label="扫描深度">
-                  <a-slider v-model:value="maxDepth" :min="1" :max="5" :marks="depthMarks" />
+                  <a-slider
+                    v-model:value="maxDepth"
+                    :min="1"
+                    :max="5"
+                    :marks="depthMarks"
+                  />
                 </a-form-item>
               </a-col>
             </a-row>
@@ -82,16 +99,26 @@
         </a-card>
 
         <!-- 扫描进度 -->
-        <div v-if="isScanning" class="scan-progress-container glass-card">
+        <div
+          v-if="isScanning"
+          class="scan-progress-container glass-card"
+        >
           <div class="scan-progress-header">
             <LoadingOutlined class="scan-icon spinning" />
             <span class="scan-title">正在扫描项目...</span>
           </div>
-          <a-progress :percent="scanProgress" :show-info="false" :stroke-color="{ '0%': '#667eea', '100%': '#00d9ff' }" />
+          <a-progress
+            :percent="scanProgress"
+            :show-info="false"
+            :stroke-color="{ '0%': '#667eea', '100%': '#00d9ff' }"
+          />
         </div>
 
         <!-- 扫描结果 -->
-        <div v-if="!isScanning && projects.length > 0" class="results-section">
+        <div
+          v-if="!isScanning && projects.length > 0"
+          class="results-section"
+        >
           <div class="results-summary glass-card">
             <div class="summary-item">
               <span class="summary-label">发现项目</span>
@@ -103,7 +130,10 @@
             </div>
             <div class="summary-item">
               <span class="summary-label">高风险项目</span>
-              <span class="summary-value" :class="{ 'risk': riskyProjects > 0 }">{{ riskyProjects }} 个</span>
+              <span
+                class="summary-value"
+                :class="{ 'risk': riskyProjects > 0 }"
+              >{{ riskyProjects }} 个</span>
             </div>
           </div>
 
@@ -115,7 +145,12 @@
             <a-button @click="deselectAll">
               <StopOutlined /> 取消全选
             </a-button>
-            <a-button type="primary" danger :disabled="selectedItems.length === 0" @click="cleanSelected">
+            <a-button
+              type="primary"
+              danger
+              :disabled="selectedItems.length === 0"
+              @click="cleanSelected"
+            >
               <DeleteOutlined /> 清理选中 ({{ selectedItems.length }})
             </a-button>
           </div>
@@ -138,14 +173,22 @@
                 </template>
                 <a-list-item-meta>
                   <template #avatar>
-                    <div class="project-icon" :class="getProjectIconClass(item)">
-                      <component :is="getProjectIcon(item)" :size="24" />
+                    <div
+                      class="project-icon"
+                      :class="getProjectIconClass(item)"
+                    >
+                      <component
+                        :is="getProjectIcon(item)"
+                        :size="24"
+                      />
                     </div>
                   </template>
                   <template #title>
                     <div class="project-title">
                       <span class="project-name">{{ item.name }}</span>
-                      <a-tag :color="getRiskColor(item.riskLevel)">{{ item.riskLevel === 'safe' ? '安全' : item.riskLevel === 'moderate' ? '谨慎' : '危险' }}</a-tag>
+                      <a-tag :color="getRiskColor(item.riskLevel)">
+                        {{ item.riskLevel === 'safe' ? '安全' : item.riskLevel === 'moderate' ? '谨慎' : '危险' }}
+                      </a-tag>
                     </div>
                   </template>
                   <template #description>
@@ -159,7 +202,10 @@
                 </a-list-item-meta>
 
                 <!-- 可清理项目 -->
-                <div v-if="item.cleanableItems.length > 0" class="cleanable-items">
+                <div
+                  v-if="item.cleanableItems.length > 0"
+                  class="cleanable-items"
+                >
                   <div class="cleanable-header">
                     <span class="cleanable-label">可清理项</span>
                     <span class="cleanable-size">{{ formatSize(item.size) }}</span>
@@ -180,7 +226,10 @@
                   </div>
                 </div>
 
-                <div v-else class="no-cleanable">
+                <div
+                  v-else
+                  class="no-cleanable"
+                >
                   <CheckCircleOutlined /> 无可清理项
                 </div>
               </a-list-item>
@@ -189,10 +238,16 @@
         </div>
 
         <!-- 空状态 -->
-        <a-empty v-if="!isScanning && hasSearched && projects.length === 0" description="未找到可清理的项目" />
+        <a-empty
+          v-if="!isScanning && hasSearched && projects.length === 0"
+          description="未找到可清理的项目"
+        />
 
         <!-- 初始状态 -->
-        <div v-if="!isScanning && !hasSearched" class="initial-state">
+        <div
+          v-if="!isScanning && !hasSearched"
+          class="initial-state"
+        >
           <div class="initial-icon">
             <FolderSearch :size="64" />
           </div>
