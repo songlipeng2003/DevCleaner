@@ -858,6 +858,11 @@ pub async fn open_path(path: String) -> Result<(), String> {
     // 先展开路径中的 ~ 和环境变量
     let expanded_path = expand_path(&path);
 
+    // 检查路径是否存在
+    if !PathBuf::from(&expanded_path).exists() {
+        return Err(format!("路径不存在: {}", expanded_path));
+    }
+
     #[cfg(target_os = "windows")]
     let cmd = "explorer";
     #[cfg(target_os = "macos")]
