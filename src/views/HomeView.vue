@@ -1254,6 +1254,7 @@ onUnmounted(() => {
 /* 快速操作 (v0.2.0 新增) */
 .quick-actions {
   margin-bottom: 24px;
+  padding: 16px;
 }
 
 .quick-actions-header {
