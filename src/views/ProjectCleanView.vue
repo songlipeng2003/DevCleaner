@@ -484,11 +484,14 @@ async function cleanSelected() {
 
 // 选择文件夹
 async function selectFolder() {
-  // 简化版本：直接使用输入的路径
-  if (!scanPath.value.trim()) {
-    message.warning('请输入目录路径')
-  } else {
-    message.info('将扫描: ' + scanPath.value)
+  try {
+    const selected = await tauriApi.selectDirectory()
+    if (selected) {
+      scanPath.value = selected
+    }
+  } catch (error) {
+    console.error('选择目录失败:', error)
+    message.error('选择目录失败')
   }
 }
 

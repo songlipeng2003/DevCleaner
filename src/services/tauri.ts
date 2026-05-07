@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
+import { open } from '@tauri-apps/plugin-dialog'
 import type { ScanResult, ToolInfo, CleanResult, Settings } from '@/types'
 
 // 扫描进度类型
@@ -258,4 +259,13 @@ export async function exportCleanReport(
   format: 'json' | 'csv'
 ): Promise<string> {
   return invoke('export_clean_report', { format })
+}
+
+// 选择文件夹
+export async function selectDirectory(): Promise<string | null> {
+  const selected = await open({
+    directory: true,
+    multiple: false,
+  })
+  return selected as string | null
 }
