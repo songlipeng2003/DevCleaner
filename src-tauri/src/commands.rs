@@ -855,6 +855,9 @@ pub async fn get_disk_usage() -> Result<DiskUsage, String> {
 
 #[tauri::command]
 pub async fn open_path(path: String) -> Result<(), String> {
+    // 先展开路径中的 ~ 和环境变量
+    let expanded_path = expand_path(&path);
+
     #[cfg(target_os = "windows")]
     let cmd = "explorer";
     #[cfg(target_os = "macos")]
@@ -864,7 +867,7 @@ pub async fn open_path(path: String) -> Result<(), String> {
     #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
     let cmd = "echo";
 
-    let status = Command::new(cmd).arg(&path).status();
+    let status = Command::new(cmd).arg(&expanded_path).status();
 
     match status {
         Ok(_) => Ok(()),
