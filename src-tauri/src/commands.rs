@@ -1072,6 +1072,7 @@ pub struct ProjectScanResult {
 }
 
 // 项目类型定义
+#[allow(dead_code)]
 struct ProjectTypeDef {
     pattern: &'static str,
     name: &'static str,
@@ -1361,7 +1362,7 @@ pub async fn get_clean_preview(
                             let threshold = size_threshold.unwrap_or(1024 * 1024);
                             if file_size < threshold {
                                 is_safe = false;
-                                reason = Some(format!("文件大小低于阈值"));
+                                reason = Some("文件大小低于阈值".to_string());
                             }
                         }
                         "selective" => {
@@ -1431,9 +1432,7 @@ pub async fn get_clean_preview(
 
     // 生成建议
     if total_size > 1024 * 1024 * 1024 {
-        recommendations.push(format!(
-            "发现超过 1GB 的缓存，建议清理以释放空间"
-        ));
+        recommendations.push("发现超过 1GB 的缓存，建议清理以释放空间".to_string());
     }
     if risk_level == "moderate" {
         recommendations.push("部分文件存在风险，清理时请谨慎确认".to_string());
@@ -1616,12 +1615,11 @@ pub async fn get_clean_history(
 }
 
 fn chrono_date(timestamp: i64) -> String {
-    let secs = timestamp as i64;
-    let days = secs / (24 * 60 * 60);
+    let days = timestamp / (24 * 60 * 60);
     let years = days / 365;
     let remaining_days = days % 365;
     let months = remaining_days / 30;
-    format!("{}-{:02}", 2024 + years as i64, months + 1)
+    format!("{}-{:02}", 2024 + years, months + 1)
 }
 
 // 记录清理历史
