@@ -873,11 +873,14 @@ pub async fn open_path(path: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn get_version(_app: tauri::AppHandle) -> (String, String) {
+pub fn get_version(_app: tauri::AppHandle) -> Result<serde_json::Value, String> {
     // Tauri 2.0 使用 env! 宏获取版本号
     let version = env!("CARGO_PKG_VERSION").to_string();
     let build = if cfg!(debug_assertions) { "debug" } else { "release" }.to_string();
-    (version, build)
+    Ok(serde_json::json!({
+        "version": version,
+        "build": build
+    }))
 }
 
 // 使用统计

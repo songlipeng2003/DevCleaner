@@ -81,7 +81,8 @@ export async function openPath(path: string): Promise<void> {
 
 // 获取版本信息
 export async function getVersion(): Promise<{ version: string; build: string }> {
-  return invoke('get_version')
+  const result = await invoke<{ version: string; build: string }>('get_version')
+  return result
 }
 
 // 预览清理项
