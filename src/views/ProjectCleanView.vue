@@ -507,7 +507,7 @@ function openSettings() {
 // 初始化
 onMounted(() => {
   // 如果用户有 Projects 目录，设置默认路径
-  const defaultPath = import.meta.env.VITE_HOME ? `${import.meta.env.VITE_HOME}/Projects` : ''
+  const defaultPath = import.meta.env.VITE_HOME ? `${import.meta.env.VITE_HOME}/` : ''
   if (defaultPath) {
     scanPath.value = defaultPath
   }
