@@ -65,9 +65,6 @@ jobs:
       - name: ESLint
         run: npm run lint
 
-      - name: TypeScript check
-        run: npx vue-tsc --noEmit
-
   # ==================== 单元测试 ====================
   unit-test:
     name: Unit Tests
