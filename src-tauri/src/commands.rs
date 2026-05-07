@@ -1203,63 +1203,34 @@ pub async fn scan_projects(
             // 检测项目类型
             let entry_path_buf = PathBuf::from(entry_path);
             if let Some(project_type) = detect_project_type(&entry_path_buf) {
-                let mut project_size: i64 = 0;
-                let mut project_file_num: i32 = 0;
-                let mut project_last_modified: i64 = 0;
-                let mut cleanable_items = Vec::new();
+                // 直接扫描整个项目目录的大小
+                let (project_size, project_file_num, project_last_modified) =
+                    calculate_dir_size(&entry_path_buf, max_depth);
 
-                // 扫描可清理的目录
-                if let Ok(sub_entries) = fs::read_dir(&entry_path_buf) {
-                    for sub_entry in sub_entries.flatten() {
-                        let sub_name = sub_entry.file_name();
-                        let sub_name_str = sub_name.to_string_lossy();
+                // 计算风险等级
+                let reason = if project_type.risk_level == "moderate" {
+                    format!(
+                        "{} 项目缓存，建议谨慎清理",
+                        project_type.name
+                    )
+                } else {
+                    format!("{} 项目缓存，可安全清理", project_type.name)
+                };
 
-                        if let Some(cleanable_dir) = project_type
-                            .cleanable_dirs
-                            .iter()
-                            .find(|&d| sub_name_str == *d)
-                        {
-                            let sub_path = entry_path_buf.join(&sub_name);
-                            if sub_path.is_dir() {
-                                let (size, file_num, last_modified) =
-                                    calculate_dir_size(&sub_path, max_depth);
-
-                                // 计算风险等级
-                                let reason = if project_type.risk_level == "moderate" {
-                                    format!(
-                                        "{} 可能包含重要依赖，建议谨慎清理",
-                                        cleanable_dir
-                                    )
-                                } else {
-                                    format!("{} 可安全清理", cleanable_dir)
-                                };
-
-                                cleanable_items.push(CleanableItem {
-                                    id: format!(
-                                        "{}-{}-{}",
-                                        entry_path_buf.to_string_lossy(),
-                                        project_type.name,
-                                        cleanable_dir
-                                    ),
-                                    name: cleanable_dir.to_string(),
-                                    path: sub_path.to_string_lossy().to_string(),
-                                    item_type: cleanable_dir.to_string(),
-                                    size,
-                                    file_num,
-                                    last_modified,
-                                    cleanable: true,
-                                    reason,
-                                });
-
-                                project_size += size;
-                                project_file_num += file_num;
-                                if last_modified > project_last_modified {
-                                    project_last_modified = last_modified;
-                                }
-                            }
-                        }
-                    }
-                }
+                // 整个项目作为单个可清理项
+                let cleanable_items = vec![CleanableItem {
+                    id: format!("{}-{}", entry_path_buf.to_string_lossy(), project_type.name),
+                    name: entry_path_buf.file_name()
+                        .map(|n| n.to_string_lossy().to_string())
+                        .unwrap_or_default(),
+                    path: entry_path_buf.to_string_lossy().to_string(),
+                    item_type: project_type.name.to_string(),
+                    size: project_size,
+                    file_num: project_file_num,
+                    last_modified: project_last_modified,
+                    cleanable: true,
+                    reason,
+                }];
 
                 if project_size > 0 {
                     results.push(ProjectScanResult {
