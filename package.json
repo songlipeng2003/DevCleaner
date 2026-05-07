@@ -11,7 +11,7 @@
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "lint": "eslint src --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
-    "test:unit": "vitest",
+    "test:unit": "vitest run",
     "test:e2e": "playwright test",
     "prepare": "husky"
   },
