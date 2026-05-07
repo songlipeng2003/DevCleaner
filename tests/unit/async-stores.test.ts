@@ -15,6 +15,7 @@ vi.mock('@/services/tauri', () => ({
   getDiskUsage: vi.fn(),
   getUsageStats: vi.fn(),
   recordClean: vi.fn(),
+  recordCleanHistory: vi.fn(),
   previewTool: vi.fn(),
   getToolInfo: vi.fn(),
   onScanComplete: vi.fn(),
