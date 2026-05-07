@@ -175,7 +175,6 @@ import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import {
   SettingOutlined,
-  ArrowLeft,
   DownloadOutlined,
   DatabaseOutlined,
   CheckCircleOutlined,
@@ -189,6 +188,7 @@ import {
   HardDrive,
   Package,
   Box,
+  ArrowLeft,
 } from 'lucide-vue-next'
 import * as tauriApi from '@/services/tauri'
 import type { CleanHistory, CleanHistoryItemV2, MonthlyStat } from '@/services/tauri'
