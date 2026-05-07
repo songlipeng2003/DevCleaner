@@ -66,6 +66,8 @@ export const useToolStore = defineStore('tools', () => {
       const tool = tools.value.find(t => t.id === toolId)
       if (tool && result.cleaned > 0) {
         await tauriApi.recordClean(toolId, tool.name, result.cleaned, result.file_num)
+        // 同时记录清理历史
+        await tauriApi.recordCleanHistory(toolId, tool.name, result.cleaned, result.file_num, paths)
       }
       
       return result
