@@ -1,3 +1,4 @@
+use chrono::{DateTime, Datelike, Utc};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
@@ -1621,11 +1622,8 @@ pub async fn get_clean_history(
 }
 
 fn chrono_date(timestamp: i64) -> String {
-    let days = timestamp / (24 * 60 * 60);
-    let years = days / 365;
-    let remaining_days = days % 365;
-    let months = remaining_days / 30;
-    format!("{}-{:02}", 2024 + years, months + 1)
+    let datetime = DateTime::from_timestamp(timestamp, 0).unwrap_or_else(|| Utc::now());
+    format!("{:02}-{:02}", datetime.month(), datetime.day())
 }
 
 // 记录清理历史
