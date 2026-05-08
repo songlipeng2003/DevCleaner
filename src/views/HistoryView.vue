@@ -572,6 +572,7 @@ onMounted(() => {
   align-items: center;
   width: 60px;
   height: 100%;
+  justify-content: flex-end;
 }
 
 .trend-bar-fill {
