@@ -58,10 +58,11 @@ export const useProjectCleanStore = defineStore('projectClean', () => {
   const projectsByType = computed(() => {
     const grouped: Record<string, ProjectScanResult[]> = {}
     for (const project of projects.value) {
-      if (!grouped[project.type]) {
-        grouped[project.type] = []
+      const typeKey = project.type || project.projectType || 'unknown'
+      if (!grouped[typeKey]) {
+        grouped[typeKey] = []
       }
-      grouped[project.type].push(project)
+      grouped[typeKey].push(project)
     }
     return grouped
   })
@@ -260,7 +261,7 @@ export const useProjectCleanStore = defineStore('projectClean', () => {
     }
 
     if (criteria.minSize) {
-      filtered = filtered.filter(p => p.size >= criteria.minSize)
+      filtered = filtered.filter(p => p.size >= (criteria.minSize ?? 0))
     }
 
     if (criteria.riskLevel) {

@@ -94,7 +94,8 @@ export interface CleanPreview {
 export interface ProjectScanResult {
   name: string
   path: string
-  type: string
+  type?: string
+  projectType?: string
   size: number
   fileNum: number
   lastModified: number
@@ -107,7 +108,8 @@ export interface CleanableItem {
   id: string
   name: string
   path: string
-  type: 'node_modules' | 'pycache' | 'target' | 'vendor' | 'bin_obj' | 'dist' | 'cache' | 'other'
+  type?: string
+  itemType?: string
   size: number
   fileNum: number
   lastModified: number
