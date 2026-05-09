@@ -268,6 +268,13 @@
               <History :size="20" />
               <span>清理历史</span>
             </button>
+            <button
+              class="quick-action-btn"
+              @click="goToAnalysis"
+            >
+              <PieChart :size="20" />
+              <span>磁盘分析</span>
+            </button>
           </div>
         </div>
         
@@ -530,6 +537,7 @@ import {
   Moon,
   Sun,
   History,
+  PieChart,
 } from 'lucide-vue-next'
 import { useToolStore } from '@/stores/tools'
 import { useSettingsStore } from '@/stores/settings'
@@ -745,6 +753,10 @@ function goToProjects() {
 
 function goToHistory() {
   router.push('/history')
+}
+
+function goToAnalysis() {
+  router.push('/analysis')
 }
 
 // 快速清理所有
