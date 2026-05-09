@@ -209,7 +209,7 @@
                             ghost
                             @click="openInExplorer(record.path)"
                           >
-                            <LaunchOutlined :size="14" />
+                            <ExternalLink :size="14" />
                           </a-button>
                         </a-tooltip>
                       </a-space>
@@ -276,13 +276,13 @@ import {
   DatabaseOutlined,
   DeleteOutlined,
   PieChartOutlined,
-  LaunchOutlined,
   LineChartOutlined,
 } from '@ant-design/icons-vue'
 import {
   ArrowLeft,
   PieChart,
   FolderOpen,
+  ExternalLink,
 } from 'lucide-vue-next'
 import {
   getDiskAnalysis,
