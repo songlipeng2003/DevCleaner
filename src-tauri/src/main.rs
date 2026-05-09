@@ -29,6 +29,9 @@ fn main() {
             commands::get_clean_history,
             commands::record_clean_history,
             commands::export_clean_report,
+            // v0.3.0 新增命令
+            commands::get_disk_analysis,
+            commands::get_cache_trends,
         ])
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
