@@ -59,7 +59,7 @@
                 <a-statistic
                   title="总占用空间"
                   :value="formatSize(analysisData.totalSize)"
-                  :value-style="{ color: '#1890ff' }"
+                  :value-style="{ color: 'var(--aurora-primary)' }"
                 >
                   <template #prefix>
                     <DatabaseOutlined />
@@ -120,115 +120,95 @@
           </a-row>
 
           <!-- 分类分析 -->
-          <a-card class="categories-card glass-card">
-            <template #title>
-              <Space>
-                <PieChartOutlined />
-                <span>分类占用分析</span>
-              </Space>
-            </template>
+          <div class="section-header">
+            <div class="section-title-group">
+              <h2 class="section-title">
+                分类占用分析
+              </h2>
+              <p class="section-subtitle">
+                点击展开查看各类别的详细占用情况
+              </p>
+            </div>
+          </div>
 
-            <a-collapse
-              v-model:active-key="activeCategories"
-              accordion
+          <a-collapse
+            v-model:active-key="activeCategories"
+            class="categories-collapse"
+          >
+            <a-collapse-panel
+              v-for="category in sortedCategories"
+              :key="category.name"
+              :header="category.name"
             >
-              <a-collapse-panel
-                v-for="category in sortedCategories"
-                :key="category.name"
-                :header="`${category.name} - ${formatSize(category.totalSize)}`"
-              >
-                <template #extra>
-                  <a-tag :color="getCategoryColor(category.totalSize)">
-                    {{ formatSize(category.totalSize) }}
-                  </a-tag>
-                </template>
+              <template #extra>
+                <a-tag :color="getCategoryColor(category.totalSize)">
+                  {{ formatSize(category.totalSize) }}
+                </a-tag>
+              </template>
 
-                <a-table
-                  :data-source="category.items"
-                  :pagination="false"
-                  size="small"
-                >
-                  <a-table-column
-                    title="名称"
-                    data-index="name"
+              <div class="category-info">
+                <div class="category-bar">
+                  <div
+                    class="category-bar-fill"
+                    :style="{ width: (category.totalSize / sortedCategories[0].totalSize * 100) + '%' }"
                   />
-                  <a-table-column
-                    title="路径"
-                    data-index="path"
-                  />
-                  <a-table-column
-                    title="大小"
-                    data-index="size"
+                </div>
+                <div class="category-details">
+                  <div
+                    v-for="item in category.items"
+                    :key="item.path"
+                    class="detail-item"
                   >
-                    <template #default="{ record }">
-                      {{ formatSize(record.size) }}
-                    </template>
-                  </a-table-column>
-                  <a-table-column
-                    title="占比"
-                    data-index="percentage"
-                    width="100"
-                  >
-                    <template #default="{ record }">
-                      <a-progress
-                        :percent="record.percentage"
-                        :stroke-color="record.isCleanable ? '#52c41a' : '#1890ff'"
+                    <div class="detail-header">
+                      <span class="detail-name">{{ item.name }}</span>
+                      <span class="detail-size">{{ formatSize(item.size) }}</span>
+                    </div>
+                    <div
+                      class="detail-path"
+                      :title="item.path"
+                      @click="copyPath(item.path)"
+                    >
+                      <FolderOpen :size="12" />
+                      <span>{{ item.path }}</span>
+                    </div>
+                    <div class="detail-footer">
+                      <a-tag
+                        :color="item.isCleanable ? 'green' : 'blue'"
                         size="small"
-                      />
-                    </template>
-                  </a-table-column>
-                  <a-table-column
-                    title="状态"
-                    data-index="isCleanable"
-                    width="100"
-                  >
-                    <template #default="{ record }">
-                      <a-tag :color="record.isCleanable ? 'green' : 'blue'">
-                        {{ record.isCleanable ? '可清理' : '保留' }}
+                      >
+                        {{ item.isCleanable ? '可清理' : '保留' }}
                       </a-tag>
-                    </template>
-                  </a-table-column>
-                  <a-table-column
-                    title="操作"
-                    width="120"
-                  >
-                    <template #default="{ record }">
-                      <a-space>
-                        <a-tooltip :title="record.path">
-                          <a-button
-                            size="small"
-                            @click="openPath(record.path)"
-                          >
-                            <FolderOpen :size="14" />
-                          </a-button>
-                        </a-tooltip>
-                        <a-tooltip title="打开目录">
-                          <a-button
-                            size="small"
-                            type="primary"
-                            ghost
-                            @click="openInExplorer(record.path)"
-                          >
-                            <ExternalLink :size="14" />
-                          </a-button>
-                        </a-tooltip>
-                      </a-space>
-                    </template>
-                  </a-table-column>
-                </a-table>
-              </a-collapse-panel>
-            </a-collapse>
-          </a-card>
+                      <a-button
+                        type="text"
+                        size="small"
+                        @click="openInExplorer(item.path)"
+                      >
+                        <ExternalLink :size="14" />
+                        打开
+                      </a-button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </a-collapse-panel>
+          </a-collapse>
 
           <!-- 缓存趋势 -->
-          <a-card class="trends-card glass-card">
-            <template #title>
-              <Space>
-                <LineChartOutlined />
-                <span>缓存趋势</span>
-              </Space>
-            </template>
+          <div
+            class="section-header"
+            style="margin-top: 24px;"
+          >
+            <div class="section-title-group">
+              <h2 class="section-title">
+                缓存趋势
+              </h2>
+              <p class="section-subtitle">
+                清理历史的趋势变化
+              </p>
+            </div>
+          </div>
 
+          <div class="trends-card glass-card">
             <div
               v-if="trendData.length > 0"
               class="trend-chart"
@@ -253,7 +233,7 @@
               v-else
               description="暂无趋势数据"
             />
-          </a-card>
+          </div>
         </template>
 
         <!-- 空状态 -->
@@ -276,7 +256,6 @@ import {
   DatabaseOutlined,
   DeleteOutlined,
   PieChartOutlined,
-  LineChartOutlined,
 } from '@ant-design/icons-vue'
 import {
   ArrowLeft,
@@ -368,8 +347,7 @@ const loadAnalysis = async () => {
   }
 }
 
-const openPath = (path: string) => {
-  // 复制路径到剪贴板
+const copyPath = (path: string) => {
   navigator.clipboard.writeText(path)
   message.success('路径已复制到剪贴板')
 }
@@ -392,96 +370,109 @@ onMounted(() => {
 
 <style scoped>
 .disk-analysis-view {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #0a0e27 0%, #1a1f4e 100%);
+  height: 100vh;
   position: relative;
   overflow: hidden;
 }
 
 .hero-glow {
-  position: absolute;
+  position: fixed;
   width: 600px;
   height: 600px;
   border-radius: 50%;
   filter: blur(120px);
-  opacity: 0.15;
+  opacity: 0.3;
   pointer-events: none;
+  z-index: 0;
 }
 
 .hero-glow-1 {
   top: -200px;
-  left: -200px;
-  background: #1890ff;
+  right: -100px;
+  background: var(--aurora-primary);
 }
 
 .hero-glow-2 {
   bottom: -200px;
-  right: -200px;
-  background: #722ed1;
+  left: -100px;
+  background: var(--aurora-secondary);
 }
 
 .layout {
-  min-height: 100vh;
+  height: 100%;
   background: transparent;
+  position: relative;
+  z-index: 1;
 }
 
 .header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  background: rgba(255, 255, 255, 0.03);
+  align-items: center;
+  background: var(--aurora-bg-glass);
   backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 0 24px;
-  height: 64px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--aurora-border);
+  height: 56px;
+  min-height: 56px;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
-}
-
-.header-left h1 {
-  color: #fff;
-  font-size: 20px;
-  font-weight: 600;
-  margin: 0;
+  gap: 10px;
 }
 
 .back-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border: none;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
+  border-radius: var(--aurora-radius-md);
+  background: var(--aurora-bg-glass);
+  color: var(--aurora-text-secondary);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all var(--aurora-transition-fast);
 }
 
 .back-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  color: var(--aurora-text-primary);
+  border-color: var(--aurora-border-light);
 }
 
 .logo-icon {
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #1890ff 0%, #722ed1 100%);
-  border-radius: 10px;
-  color: #fff;
+  background: var(--aurora-gradient-hero);
+  border-radius: var(--aurora-radius-md);
+  color: white;
+}
+
+.header h1 {
+  font-size: 18px;
+  margin: 0;
+  font-weight: 700;
+  background: var(--aurora-text-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .content {
-  padding: 24px;
-  position: relative;
-  z-index: 1;
+  padding: 16px 24px;
+  overflow-y: auto;
+  max-height: calc(100vh - 56px);
 }
 
 .loading-state {
@@ -496,23 +487,145 @@ onMounted(() => {
 }
 
 .stat-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  transition: all 0.3s;
+  background: var(--aurora-bg-card);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--aurora-border);
+  border-radius: var(--aurora-radius-lg);
+  transition: all var(--aurora-transition-normal);
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-4px);
+  border-color: var(--aurora-border-light);
+  box-shadow: var(--aurora-shadow-card), 0 0 30px var(--aurora-primary-glow);
 }
 
-.categories-card,
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  background: var(--aurora-text-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.section-subtitle {
+  color: var(--aurora-text-tertiary);
+  font-size: 14px;
+}
+
+.categories-collapse {
+  background: var(--aurora-bg-card);
+  border: 1px solid var(--aurora-border);
+  border-radius: var(--aurora-radius-lg);
+  overflow: hidden;
+}
+
+.categories-collapse :deep(.ant-collapse-item) {
+  border-bottom: 1px solid var(--aurora-border);
+}
+
+.categories-collapse :deep(.ant-collapse-header) {
+  padding: 16px 20px !important;
+  background: var(--aurora-bg-glass);
+  color: var(--aurora-text-primary) !important;
+  font-weight: 600;
+}
+
+.categories-collapse :deep(.ant-collapse-content-box) {
+  padding: 0 !important;
+}
+
+.category-info {
+  padding: 16px 20px;
+}
+
+.category-bar {
+  height: 8px;
+  background: var(--aurora-bg-glass);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.category-bar-fill {
+  height: 100%;
+  background: var(--aurora-gradient-hero);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.category-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-item {
+  background: var(--aurora-bg-glass);
+  border: 1px solid var(--aurora-border);
+  border-radius: var(--aurora-radius-md);
+  padding: 12px 16px;
+  transition: all var(--aurora-transition-fast);
+}
+
+.detail-item:hover {
+  border-color: var(--aurora-border-light);
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.detail-name {
+  font-weight: 600;
+  color: var(--aurora-text-primary);
+}
+
+.detail-size {
+  color: var(--aurora-primary);
+  font-weight: 600;
+}
+
+.detail-path {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--aurora-text-tertiary);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 8px;
+}
+
+.detail-path:hover {
+  color: var(--aurora-primary);
+}
+
+.detail-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .trends-card {
-  margin-bottom: 24px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
+  background: var(--aurora-bg-card);
+  border: 1px solid var(--aurora-border);
+  border-radius: var(--aurora-radius-lg);
+  padding: 20px;
 }
 
 .trend-chart {
@@ -537,8 +650,8 @@ onMounted(() => {
 
 .trend-bar {
   width: 40px;
-  background: linear-gradient(180deg, #1890ff 0%, #722ed1 100%);
-  border-radius: 8px 8px 0 0;
+  background: var(--aurora-gradient-hero);
+  border-radius: var(--aurora-radius-md) var(--aurora-radius-md) 0 0;
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -556,43 +669,21 @@ onMounted(() => {
 .trend-date {
   margin-top: 8px;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--aurora-text-tertiary);
 }
 
-.glass-card {
-  background: rgba(255, 255, 255, 0.03) !important;
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
+/* 响应式 */
+@media (max-width: 768px) {
+  .content {
+    padding: 12px;
+  }
 
-:deep(.ant-card-head) {
-  border-bottom-color: rgba(255, 255, 255, 0.05);
-}
+  .section-title {
+    font-size: 20px;
+  }
 
-:deep(.ant-collapse-header) {
-  color: rgba(255, 255, 255, 0.85) !important;
-}
-
-:deep(.ant-table) {
-  background: transparent;
-}
-
-:deep(.ant-table-thead > tr > th) {
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.85);
-  border-bottom-color: rgba(255, 255, 255, 0.05);
-}
-
-:deep(.ant-table-tbody > tr > td) {
-  color: rgba(255, 255, 255, 0.65);
-  border-bottom-color: rgba(255, 255, 255, 0.03);
-}
-
-:deep(.ant-table-tbody > tr:hover > td) {
-  background: rgba(255, 255, 255, 0.02);
-}
-
-:deep(.ant-empty-description) {
-  color: rgba(255, 255, 255, 0.45);
+  .overview-row {
+    margin-bottom: 16px;
+  }
 }
 </style>
