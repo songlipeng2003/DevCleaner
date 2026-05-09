@@ -1622,7 +1622,7 @@ pub async fn get_clean_history(
 }
 
 fn chrono_date(timestamp: i64) -> String {
-    let datetime = DateTime::from_timestamp(timestamp, 0).unwrap_or_else(|| Utc::now());
+    let datetime = DateTime::from_timestamp(timestamp, 0).unwrap_or_else(Utc::now);
     format!("{:02}-{:02}", datetime.month(), datetime.day())
 }
 
