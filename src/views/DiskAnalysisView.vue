@@ -7,7 +7,10 @@
     <a-layout class="layout">
       <a-layout-header class="header">
         <div class="header-left">
-          <button class="back-btn" @click="goBack">
+          <button
+            class="back-btn"
+            @click="goBack"
+          >
             <ArrowLeft :size="20" />
           </button>
           <div class="logo-icon">
@@ -16,7 +19,10 @@
           <h1>磁盘使用分析</h1>
         </div>
         <div class="header-right">
-          <a-button @click="refreshAnalysis" :loading="loading">
+          <a-button
+            :loading="loading"
+            @click="refreshAnalysis"
+          >
             <template #icon>
               <ReloadOutlined />
             </template>
@@ -27,15 +33,28 @@
 
       <a-layout-content class="content">
         <!-- 加载状态 -->
-        <div v-if="loading" class="loading-state">
-          <a-spin size="large" tip="正在分析磁盘使用情况..." />
+        <div
+          v-if="loading"
+          class="loading-state"
+        >
+          <a-spin
+            size="large"
+            tip="正在分析磁盘使用情况..."
+          />
         </div>
 
         <!-- 分析结果 -->
         <template v-else-if="analysisData">
           <!-- 概览卡片 -->
-          <a-row :gutter="16" class="overview-row">
-            <a-col :xs="24" :sm="12" :md="6">
+          <a-row
+            :gutter="16"
+            class="overview-row"
+          >
+            <a-col
+              :xs="24"
+              :sm="12"
+              :md="6"
+            >
               <a-card class="stat-card glass-card">
                 <a-statistic
                   title="总占用空间"
@@ -48,7 +67,11 @@
                 </a-statistic>
               </a-card>
             </a-col>
-            <a-col :xs="24" :sm="12" :md="6">
+            <a-col
+              :xs="24"
+              :sm="12"
+              :md="6"
+            >
               <a-card class="stat-card glass-card">
                 <a-statistic
                   title="可清理空间"
@@ -61,7 +84,11 @@
                 </a-statistic>
               </a-card>
             </a-col>
-            <a-col :xs="24" :sm="12" :md="6">
+            <a-col
+              :xs="24"
+              :sm="12"
+              :md="6"
+            >
               <a-card class="stat-card glass-card">
                 <a-statistic
                   title="分析目录数"
@@ -73,7 +100,11 @@
                 </a-statistic>
               </a-card>
             </a-col>
-            <a-col :xs="24" :sm="12" :md="6">
+            <a-col
+              :xs="24"
+              :sm="12"
+              :md="6"
+            >
               <a-card class="stat-card glass-card">
                 <a-statistic
                   title="清理比例"
@@ -97,7 +128,10 @@
               </Space>
             </template>
 
-            <a-collapse v-model:activeKey="activeCategories" accordion>
+            <a-collapse
+              v-model:active-key="activeCategories"
+              accordion
+            >
               <a-collapse-panel
                 v-for="category in sortedCategories"
                 :key="category.name"
@@ -110,18 +144,31 @@
                 </template>
 
                 <a-table
-                  :dataSource="category.items"
+                  :data-source="category.items"
                   :pagination="false"
                   size="small"
                 >
-                  <a-table-column title="名称" dataIndex="name" />
-                  <a-table-column title="路径" dataIndex="path" />
-                  <a-table-column title="大小" dataIndex="size">
+                  <a-table-column
+                    title="名称"
+                    data-index="name"
+                  />
+                  <a-table-column
+                    title="路径"
+                    data-index="path"
+                  />
+                  <a-table-column
+                    title="大小"
+                    data-index="size"
+                  >
                     <template #default="{ record }">
                       {{ formatSize(record.size) }}
                     </template>
                   </a-table-column>
-                  <a-table-column title="占比" dataIndex="percentage" width="100">
+                  <a-table-column
+                    title="占比"
+                    data-index="percentage"
+                    width="100"
+                  >
                     <template #default="{ record }">
                       <a-progress
                         :percent="record.percentage"
@@ -130,18 +177,28 @@
                       />
                     </template>
                   </a-table-column>
-                  <a-table-column title="状态" dataIndex="isCleanable" width="100">
+                  <a-table-column
+                    title="状态"
+                    data-index="isCleanable"
+                    width="100"
+                  >
                     <template #default="{ record }">
                       <a-tag :color="record.isCleanable ? 'green' : 'blue'">
                         {{ record.isCleanable ? '可清理' : '保留' }}
                       </a-tag>
                     </template>
                   </a-table-column>
-                  <a-table-column title="操作" width="120">
+                  <a-table-column
+                    title="操作"
+                    width="120"
+                  >
                     <template #default="{ record }">
                       <a-space>
                         <a-tooltip :title="record.path">
-                          <a-button size="small" @click="openPath(record.path)">
+                          <a-button
+                            size="small"
+                            @click="openPath(record.path)"
+                          >
                             <FolderOpen :size="14" />
                           </a-button>
                         </a-tooltip>
@@ -172,7 +229,10 @@
               </Space>
             </template>
 
-            <div v-if="trendData.length > 0" class="trend-chart">
+            <div
+              v-if="trendData.length > 0"
+              class="trend-chart"
+            >
               <div class="trend-bars">
                 <div
                   v-for="trend in trendData"
@@ -189,12 +249,18 @@
                 </div>
               </div>
             </div>
-            <a-empty v-else description="暂无趋势数据" />
+            <a-empty
+              v-else
+              description="暂无趋势数据"
+            />
           </a-card>
         </template>
 
         <!-- 空状态 -->
-        <a-empty v-else description="暂无分析数据" />
+        <a-empty
+          v-else
+          description="暂无分析数据"
+        />
       </a-layout-content>
     </a-layout>
   </div>
@@ -205,16 +271,18 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import {
-  ArrowLeft,
-  PieChart,
+  FolderOutlined,
   ReloadOutlined,
   DatabaseOutlined,
   DeleteOutlined,
-  FolderOutlined,
   PieChartOutlined,
-  FolderOpen,
   LaunchOutlined,
   LineChartOutlined,
+} from '@ant-design/icons-vue'
+import {
+  ArrowLeft,
+  PieChart,
+  FolderOpen,
 } from 'lucide-vue-next'
 import {
   getDiskAnalysis,
