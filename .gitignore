@@ -8,6 +8,7 @@ dist-ssr
 .idea
 src-tauri/target
 src-tauri/gen
+src-tauri/.env
 backend/vendor
 backend/server
 backend/devcleaner-backend
