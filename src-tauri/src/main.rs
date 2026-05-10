@@ -3,16 +3,12 @@
 mod commands;
 
 use tauri::Manager;
-use tauri_plugin_aptabase::EventTracker;
 
 fn main() {
-    // 从环境变量读取 Aptabase App Key
-    let aptabase_key = std::env::var("APTABASE_KEY").unwrap_or_default();
-
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_aptabase::Builder::new(&aptabase_key).build())
+        .plugin(tauri_plugin_aptabase::Builder::new(std::env::var("APTABASE_KEY").unwrap_or_default()).build())
         .invoke_handler(tauri::generate_handler![
             // 工具扫描命令
             commands::scan::get_tool_list,
@@ -42,12 +38,9 @@ fn main() {
             commands::analysis::get_disk_analysis,
             commands::analysis::get_cache_trends,
         ])
-        .setup(move |app| {
+        .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
             window.set_title("DevCleaner - 开发者磁盘清理工具").unwrap();
-            if !aptabase_key.is_empty() {
-                app.track_event("app_started", None);
-            }
             Ok(())
         })
         .run(tauri::generate_context!())
