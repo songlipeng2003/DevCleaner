@@ -8,7 +8,7 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_aptabase::Builder::new(std::env::var("APTABASE_KEY").unwrap_or_default()).build())
+        .plugin(tauri_plugin_aptabase::Builder::new(&std::env::var("APTABASE_KEY").unwrap_or_default()).build())
         .invoke_handler(tauri::generate_handler![
             // 工具扫描命令
             commands::scan::get_tool_list,
