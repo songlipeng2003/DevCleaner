@@ -104,13 +104,15 @@ pub struct Config {
 #[allow(dead_code)]
 #[derive(Debug, Deserialize, Clone)]
 pub struct ProviderConfig {
-    #[serde(rename = "providerId")]
-    provider_id: String,
-    #[serde(rename = "providerName")]
-    provider_name: String,
-    #[serde(rename = "providerIcon")]
-    provider_icon: Option<String>,
-    tools: Vec<ToolConfig>,
+    id: String,
+    name: String,
+    #[serde(rename = "description")]
+    description: Option<String>,
+    #[serde(rename = "platforms")]
+    platforms: Option<Vec<String>>,
+    #[serde(rename = "icon")]
+    icon: Option<String>,
+    paths: Vec<PathPattern>,
 }
 
 #[allow(dead_code)]
@@ -131,15 +133,18 @@ pub struct ToolConfig {
 pub struct PathPattern {
     #[serde(rename = "path")]
     pub path: String,
+    #[serde(rename = "description")]
+    #[allow(dead_code)]
+    pub description: Option<String>,
     #[serde(rename = "platform")]
     #[allow(dead_code)]
     pub platform: Option<String>,
-    #[serde(rename = "scanStrategy")]
+    #[serde(rename = "strategy")]
     #[allow(dead_code)]
-    pub scan_strategy: Option<String>,
-    #[serde(rename = "priority")]
+    pub strategy: Option<String>,
+    #[serde(rename = "command")]
     #[allow(dead_code)]
-    pub priority: Option<i32>,
+    pub command: Option<String>,
 }
 
 #[allow(dead_code)]
@@ -384,9 +389,16 @@ pub fn get_config() -> Config {
 }
 
 // 获取用户配置的工具列表
+// 将 Provider 转换为 ToolConfig，因为 JSON 中 provider 就是工具
 pub fn get_tools() -> Vec<ToolConfig> {
     let config = get_config();
-    config.providers.into_iter().flat_map(|p| p.tools).collect()
+    config.providers.into_iter().map(|p| ToolConfig {
+        tool_id: p.id.clone(),
+        tool_name: p.name.clone(),
+        paths: p.paths,
+        exclude_patterns: None,
+        scan_on_init: None,
+    }).collect()
 }
 
 // 平台检测
