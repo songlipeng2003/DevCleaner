@@ -6,6 +6,31 @@ use crate::commands::types::*;
 pub async fn get_disk_usage() -> Result<DiskUsage, String> {
     #[cfg(target_os = "macos")]
     {
+        // macOS 使用 APFS，Data 卷是主要数据存储位置
+        let output = std::process::Command::new("df")
+            .args(["-k", "/System/Volumes/Data"])
+            .output()
+            .map_err(|e| e.to_string())?;
+
+        let output_str = String::from_utf8_lossy(&output.stdout);
+        let lines: Vec<&str> = output_str.lines().collect();
+
+        if lines.len() >= 2 {
+            let parts: Vec<&str> = lines[1].split_whitespace().collect();
+            if parts.len() >= 4 {
+                let total_kb: i64 = parts[1].parse().unwrap_or(0);
+                let used_kb: i64 = parts[2].parse().unwrap_or(0);
+                let free_kb: i64 = parts[3].parse().unwrap_or(0);
+
+                return Ok(DiskUsage {
+                    total: total_kb * 1024,
+                    used: used_kb * 1024,
+                    free: free_kb * 1024,
+                });
+            }
+        }
+
+        // 回退到根目录
         let output = std::process::Command::new("df")
             .args(["-k", "/"])
             .output()
