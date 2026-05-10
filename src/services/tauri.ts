@@ -199,10 +199,10 @@ export interface ProjectScanResult {
 
 // 扫描项目目录
 export async function scanProjects(
-  scanPaths: string[],
+  basePath: string,
   maxDepth?: number
 ): Promise<ProjectScanResult[]> {
-  return invoke('scan_projects', { scanPaths, maxDepth })
+  return invoke('scan_projects', { basePath, maxDepth })
 }
 
 // 清理指定路径

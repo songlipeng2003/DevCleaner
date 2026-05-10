@@ -86,7 +86,7 @@ export const useProjectCleanStore = defineStore('projectClean', () => {
 
     try {
       const results = await tauriApi.scanProjects(
-        config.value.scanPaths,
+        config.value.scanPaths[0],
         config.value.maxDepth
       )
       projects.value = results
