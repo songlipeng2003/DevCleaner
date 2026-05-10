@@ -151,7 +151,16 @@ pub async fn open_path(path: String) -> Result<(), String> {
     Ok(())
 }
 
+#[derive(serde::Serialize)]
+pub struct VersionInfo {
+    pub version: String,
+    pub build: String,
+}
+
 #[tauri::command]
-pub async fn get_version() -> Result<String, String> {
-    Ok(env!("CARGO_PKG_VERSION").to_string())
+pub async fn get_version() -> Result<VersionInfo, String> {
+    Ok(VersionInfo {
+        version: env!("CARGO_PKG_VERSION").to_string(),
+        build: "dev".to_string(),
+    })
 }
