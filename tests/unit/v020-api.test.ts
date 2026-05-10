@@ -132,10 +132,10 @@ describe('v0.2.0 Tauri Service Functions', () => {
       ]
       mockInvoke.mockResolvedValue(mockResults)
 
-      const result = await scanProjects(['/home/user/projects'])
+      const result = await scanProjects('/home/user/projects')
 
       expect(mockInvoke).toHaveBeenCalledWith('scan_projects', {
-        scanPaths: ['/home/user/projects'],
+        basePath: '/home/user/projects',
         maxDepth: undefined,
       })
       expect(result).toEqual(mockResults)
@@ -146,10 +146,10 @@ describe('v0.2.0 Tauri Service Functions', () => {
       const mockResults: ProjectScanResult[] = []
       mockInvoke.mockResolvedValue(mockResults)
 
-      await scanProjects(['/home/user/projects'], 3)
+      await scanProjects('/home/user/projects', 3)
 
       expect(mockInvoke).toHaveBeenCalledWith('scan_projects', {
-        scanPaths: ['/home/user/projects'],
+        basePath: '/home/user/projects',
         maxDepth: 3,
       })
     })
@@ -158,10 +158,10 @@ describe('v0.2.0 Tauri Service Functions', () => {
       const mockResults: ProjectScanResult[] = []
       mockInvoke.mockResolvedValue(mockResults)
 
-      await scanProjects(['/home/user/projects', '/home/user/workspace', '/code'])
+      await scanProjects('/home/user/projects')
 
       expect(mockInvoke).toHaveBeenCalledWith('scan_projects', {
-        scanPaths: ['/home/user/projects', '/home/user/workspace', '/code'],
+        basePath: '/home/user/projects',
         maxDepth: undefined,
       })
     })

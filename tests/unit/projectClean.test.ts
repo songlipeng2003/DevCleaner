@@ -121,7 +121,7 @@ describe('ProjectClean Store', () => {
       await store.scanProjects()
 
       expect(tauriApi.scanProjects).toHaveBeenCalledWith(
-        store.config.scanPaths,
+        store.config.scanPaths[0],
         store.config.maxDepth
       )
     })
