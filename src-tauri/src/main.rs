@@ -5,10 +5,13 @@ mod commands;
 use tauri::Manager;
 
 fn main() {
+    // 从环境变量读取 Aptabase App Key，运行时读取而非编译时
+    let aptabase_key = std::env::var("APTABASE_KEY").unwrap_or_default();
+
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_aptabase::Builder::new(std::env!("APTABASE_KEY")).build())
+        .plugin(tauri_plugin_aptabase::Builder::new(aptabase_key).build())
         .invoke_handler(tauri::generate_handler![
             // 工具扫描命令
             commands::scan::get_tool_list,
