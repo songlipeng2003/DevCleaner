@@ -231,6 +231,41 @@ pub struct CleanHistory {
     pub note: Option<String>,
 }
 
+// 清理历史响应（匹配前端类型）
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CleanHistoryResponse {
+    pub items: Vec<CleanHistoryItemV2>,
+    #[serde(rename = "totalCleaned")]
+    pub total_cleaned: i64,
+    #[serde(rename = "totalCount")]
+    pub total_count: i32,
+    #[serde(rename = "monthlyStats")]
+    pub monthly_stats: Vec<MonthlyStat>,
+}
+
+// 历史记录项（简化版）
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct CleanHistoryItemV2 {
+    pub id: String,
+    #[serde(rename = "toolId")]
+    pub tool_id: String,
+    #[serde(rename = "toolName")]
+    pub tool_name: String,
+    pub size: i64,
+    #[serde(rename = "fileNum")]
+    pub file_num: i32,
+    pub timestamp: i64,
+    pub paths: Vec<String>,
+}
+
+// 月度统计
+#[derive(Debug, Serialize, Deserialize, Default)]
+pub struct MonthlyStat {
+    pub month: String,
+    pub cleaned: i64,
+    pub count: i32,
+}
+
 // ============== 清理报告 ==============
 
 #[derive(Debug, Serialize, Deserialize)]

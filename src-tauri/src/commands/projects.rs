@@ -1,5 +1,5 @@
 use crate::commands::types::*;
-use chrono::Utc;
+use chrono::{Datelike, Utc};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
@@ -190,29 +190,83 @@ fn get_history_path() -> std::path::PathBuf {
 
 #[tauri::command]
 pub async fn get_clean_history(
-    limit: Option<i32>,
-) -> Result<Vec<CleanHistory>, String> {
+    filter: Option<String>,
+) -> Result<CleanHistoryResponse, String> {
     let _lock = HISTORY_MUTEX.lock().map_err(|e| e.to_string())?;
 
     let history_path = get_history_path();
 
-    if history_path.exists() {
+    let history: Vec<CleanHistory> = if history_path.exists() {
         let content = fs::read_to_string(&history_path).map_err(|e| e.to_string())?;
-        let mut history: Vec<CleanHistory> =
-            serde_json::from_str(&content).unwrap_or_default();
-
-        // 按日期降序排序
-        history.sort_by_key(|h| std::cmp::Reverse(h.date));
-
-        // 应用限制
-        if let Some(l) = limit {
-            history.truncate(l as usize);
-        }
-
-        Ok(history)
+        serde_json::from_str(&content).unwrap_or_default()
     } else {
-        Ok(vec![])
+        vec![]
+    };
+
+    // 按日期降序排序
+    let mut sorted_history = history;
+    sorted_history.sort_by_key(|h| std::cmp::Reverse(h.date));
+
+    // 应用过滤器
+    let now = chrono::Utc::now().timestamp();
+    let filtered: Vec<CleanHistory> = match filter.as_deref() {
+        Some("day") => {
+            let day_ago = now - 86400;
+            sorted_history.into_iter().filter(|h| h.date >= day_ago).collect()
+        }
+        Some("week") => {
+            let week_ago = now - 604800;
+            sorted_history.into_iter().filter(|h| h.date >= week_ago).collect()
+        }
+        Some("month") => {
+            let month_ago = now - 2592000;
+            sorted_history.into_iter().filter(|h| h.date >= month_ago).collect()
+        }
+        _ => sorted_history, // "all" 或 None
+    };
+
+    // 计算统计数据
+    let total_cleaned: i64 = filtered.iter().map(|h| h.size).sum();
+    let total_count = filtered.len() as i32;
+
+    // 转换为 CleanHistoryItemV2
+    let items: Vec<CleanHistoryItemV2> = filtered
+        .into_iter()
+        .map(|h| CleanHistoryItemV2 {
+            id: h.clean_id,
+            tool_id: h.tool_id,
+            tool_name: h.tool_name,
+            size: h.size,
+            file_num: h.file_count,
+            timestamp: h.date,
+            paths: h.paths,
+        })
+        .collect();
+
+    // 计算月度统计
+    let mut monthly_map: std::collections::HashMap<String, (i64, i32)> = std::collections::HashMap::new();
+    for item in &items {
+        let dt = chrono::DateTime::from_timestamp(item.timestamp, 0)
+            .unwrap_or_else(chrono::Utc::now);
+        let month = format!("{}-{:02}", dt.year(), dt.month());
+        let entry = monthly_map.entry(month).or_insert((0, 0));
+        entry.0 += item.size;
+        entry.1 += 1;
     }
+
+    let mut monthly_stats: Vec<MonthlyStat> = monthly_map
+        .into_iter()
+        .map(|(month, (cleaned, count))| MonthlyStat { month, cleaned, count })
+        .collect();
+    monthly_stats.sort_by_key(|s| s.month.clone());
+    monthly_stats.reverse();
+
+    Ok(CleanHistoryResponse {
+        items,
+        total_cleaned,
+        total_count,
+        monthly_stats,
+    })
 }
 
 #[tauri::command]
