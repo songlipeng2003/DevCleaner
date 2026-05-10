@@ -42,7 +42,7 @@ fn main() {
             commands::analysis::get_disk_analysis,
             commands::analysis::get_cache_trends,
         ])
-        .setup(|app| {
+        .setup(move |app| {
             let window = app.get_webview_window("main").unwrap();
             window.set_title("DevCleaner - 开发者磁盘清理工具").unwrap();
             if !aptabase_key.is_empty() {
