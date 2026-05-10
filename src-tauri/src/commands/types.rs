@@ -138,13 +138,32 @@ pub struct PathPattern {
     pub description: Option<String>,
     #[serde(rename = "platform")]
     #[allow(dead_code)]
-    pub platform: Option<String>,
+    pub platform: Option<PathPlatform>,
     #[serde(rename = "strategy")]
     #[allow(dead_code)]
     pub strategy: Option<String>,
     #[serde(rename = "command")]
     #[allow(dead_code)]
     pub command: Option<String>,
+}
+
+// 支持 platform 为字符串或数组
+#[derive(Debug, Deserialize, Clone)]
+#[serde(untagged)]
+#[allow(dead_code)]
+pub enum PathPlatform {
+    Single(String),
+    Multiple(Vec<String>),
+}
+
+#[allow(dead_code)]
+impl PathPlatform {
+    pub fn contains(&self, platform: &str) -> bool {
+        match self {
+            PathPlatform::Single(s) => s == platform,
+            PathPlatform::Multiple(v) => v.iter().any(|s| s == platform),
+        }
+    }
 }
 
 #[allow(dead_code)]
