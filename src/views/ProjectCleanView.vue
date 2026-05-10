@@ -502,6 +502,7 @@ async function selectFolder() {
       scanPath.value = selected
     }
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('选择目录失败:', error)
     message.error('选择目录失败')
   }

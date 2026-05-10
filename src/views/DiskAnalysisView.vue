@@ -341,6 +341,7 @@ const loadAnalysis = async () => {
       activeCategories.value = [analysis.categories[0].name]
     }
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Failed to load analysis:', error)
     message.error('加载分析数据失败')
   } finally {
@@ -358,6 +359,7 @@ const openInExplorer = async (path: string) => {
     const { openPath: openPathApi } = await import('@/services/tauri')
     await openPathApi(path)
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Failed to open path:', error)
     message.error('打开目录失败')
   }
