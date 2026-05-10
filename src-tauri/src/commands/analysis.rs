@@ -78,13 +78,13 @@ pub async fn get_disk_analysis(
                     // 按工具类型分组
                     category_map
                         .entry(tool_name.clone())
-                        .or_insert_with(Vec::new)
+                        .or_default()
                         .push(item);
                 }
             }
 
             // 发送进度
-            if paths_scanned % 5 == 0 {
+            if paths_scanned.is_multiple_of(5) {
                 let progress = (paths_scanned as f32 / total_paths as f32).min(1.0);
                 let _ = app.emit(
                     "scan-progress",
