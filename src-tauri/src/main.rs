@@ -3,9 +3,10 @@
 mod commands;
 
 use tauri::Manager;
+use tauri_plugin_aptabase::EventTracker;
 
 fn main() {
-    // 从环境变量读取 Aptabase App Key，运行时读取而非编译时
+    // 从环境变量读取 Aptabase App Key
     let aptabase_key = std::env::var("APTABASE_KEY").unwrap_or_default();
 
     tauri::Builder::default()
@@ -44,6 +45,9 @@ fn main() {
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
             window.set_title("DevCleaner - 开发者磁盘清理工具").unwrap();
+            if !aptabase_key.is_empty() {
+                app.track_event("app_started", None);
+            }
             Ok(())
         })
         .run(tauri::generate_context!())
