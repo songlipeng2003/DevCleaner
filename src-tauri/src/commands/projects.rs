@@ -202,7 +202,7 @@ pub async fn get_clean_history(
             serde_json::from_str(&content).unwrap_or_default();
 
         // 按日期降序排序
-        history.sort_by(|a, b| b.date.cmp(&a.date));
+        history.sort_by_key(|h| std::cmp::Reverse(h.date));
 
         // 应用限制
         if let Some(l) = limit {
@@ -250,7 +250,7 @@ pub async fn record_clean_history(
 
     // 只保留最近100条记录
     if history.len() > 100 {
-        history.sort_by(|a, b| b.date.cmp(&a.date));
+        history.sort_by_key(|h| std::cmp::Reverse(h.date));
         history.truncate(100);
     }
 
@@ -313,7 +313,7 @@ pub async fn export_clean_report(
     }
 
     // 按清理大小降序排序
-    items.sort_by(|a, b| b.size.cmp(&a.size));
+    items.sort_by_key(|i| std::cmp::Reverse(i.size));
 
     let now = Utc::now();
     let report = CleanReport {
