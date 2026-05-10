@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@aptabase/tauri": "^0.4.1",
+    "@aptabase/web": "^0.5.0",
     "@tauri-apps/api": "^2.0.0",
     "@tauri-apps/plugin-dialog": "^2.7.1",
     "ant-design-vue": "^4.1.0",
