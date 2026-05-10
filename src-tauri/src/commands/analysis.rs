@@ -1,6 +1,7 @@
 use crate::commands::types::*;
 use chrono::{Datelike, Utc};
 use std::collections::HashMap;
+use std::path::Path;
 use tauri::Emitter;
 
 // ============== 磁盘分析命令 (v0.3.0) ==============
@@ -117,7 +118,7 @@ pub async fn get_disk_analysis(
         .collect();
 
     // 按大小降序排序
-    categories.sort_by(|a, b| b.total_size.cmp(&a.total_size));
+    categories.sort_by_key(|c| std::cmp::Reverse(c.total_size));
 
     let total_items: i32 = categories.iter().map(|c| c.item_count).sum();
 
@@ -175,13 +176,13 @@ pub async fn get_cache_trends(months: Option<i32>) -> Result<Vec<CacheTrend>, St
     }
 
     // 按日期升序排序
-    trends.sort_by(|a, b| a.date.cmp(&b.date));
+    trends.sort_by_key(|t| t.date.clone());
 
     Ok(trends)
 }
 
 // 辅助函数：判断路径是否可清理
-fn is_path_cleanable(path: &std::path::PathBuf, tool_id: &str) -> bool {
+fn is_path_cleanable(path: &Path, tool_id: &str) -> bool {
     // 根据工具类型判断
     match tool_id {
         // 始终可清理
@@ -203,7 +204,7 @@ fn is_path_cleanable(path: &std::path::PathBuf, tool_id: &str) -> bool {
 }
 
 // 辅助函数：获取清理原因
-fn get_clean_reason(path: &std::path::PathBuf, tool_id: &str) -> String {
+fn get_clean_reason(path: &Path, tool_id: &str) -> String {
     let path_str = path.to_string_lossy().to_lowercase();
 
     if path_str.contains("node_modules") {
