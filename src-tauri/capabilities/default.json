@@ -12,6 +12,6 @@
     "shell:default",
     "shell:allow-open",
     "dialog:default",
-    "aptabase:default"
+    "aptabase:allow-track-event"
   ]
 }
