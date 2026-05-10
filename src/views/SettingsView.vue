@@ -250,6 +250,7 @@ import {
   Keyboard,
 } from 'lucide-vue-next'
 import { useSettingsStore } from '@/stores/settings'
+import { trackPageView } from '@/services/analytics'
 
 const router = useRouter()
 const settingsStore = useSettingsStore()
@@ -294,6 +295,7 @@ const saveSettings = async () => {
 }
 
 onMounted(async () => {
+  trackPageView('SettingsView')
   try {
     await settingsStore.fetchSettings()
     error.value = null

@@ -237,6 +237,11 @@ import {
   Laptop,
 } from 'lucide-vue-next'
 import { useToolStore } from '@/stores/tools'
+import {
+  trackPageView,
+  trackScanStart,
+  trackScanComplete,
+} from '@/services/analytics'
 
 const router = useRouter()
 const toolStore = useToolStore()
@@ -298,12 +303,14 @@ function formatSize(bytes: number): string {
 
 async function startScan() {
   error.value = null
+  trackScanStart('all')
   try {
     await toolStore.scanAllTools((progress) => {
       scanProgressLocal.value = progress.progress
       currentToolName.value = progress.toolName
     })
     message.success('扫描完成')
+    trackScanComplete('all', scanResults.value.length)
   } catch (e) {
     error.value = e instanceof Error ? e.message : '扫描失败'
     message.error('扫描失败')
@@ -315,6 +322,7 @@ function goBack() {
 }
 
 onMounted(async () => {
+  trackPageView('ScanView')
   if (scanResults.value.length === 0 && !isScanning.value) {
     await startScan()
   }

@@ -542,6 +542,14 @@ import {
 import { useToolStore } from '@/stores/tools'
 import { useSettingsStore } from '@/stores/settings'
 import { getDiskUsage, type ScanProgress, getUsageStats, type UsageStats, getVersion } from '@/services/tauri'
+import {
+  trackAppStarted,
+  trackPageView,
+  trackScanStart,
+  trackScanComplete,
+  trackCleanComplete,
+  trackSettingChange,
+} from '@/services/analytics'
 import * as tauriApi from '@/services/tauri'
 import type { ToolInfo } from '@/types'
 import type { Component } from 'vue'
@@ -649,6 +657,7 @@ function toggleTheme() {
   const newTheme = isDark.value ? 'light' : 'dark'
   settingsStore.settings.theme = newTheme
   settingsStore.saveSettings({ theme: newTheme })
+  trackSettingChange('theme', newTheme)
 }
 
 async function refreshTools() {
@@ -657,12 +666,14 @@ async function refreshTools() {
 }
 
 async function startScan() {
+  trackScanStart('all')
   try {
     await toolStore.scanAllTools((progress) => {
       scanProgress.value = progress
     })
     message.success(`扫描完成，共发现 ${scanResults.value.length} 处缓存`)
     await generateRecommendations()
+    trackScanComplete('all', scanResults.value.length)
   } catch (e) {
     error.value = e instanceof Error ? e.message : '扫描失败'
     message.error('扫描失败')
@@ -716,6 +727,7 @@ async function cleanTool(tool: ToolInfo) {
         try {
           await toolStore.cleanTool(tool.id, tool.paths)
           message.success(`${tool.name} 清理完成`)
+          trackCleanComplete(tool.id, size)
         } catch (e) {
           message.error('清理失败')
         }
@@ -748,14 +760,17 @@ function openSettings() {
 
 // v0.2.0 新增导航方法
 function goToProjects() {
+  trackPageView('ProjectCleanView')
   router.push('/projects')
 }
 
 function goToHistory() {
+  trackPageView('HistoryView')
   router.push('/history')
 }
 
 function goToAnalysis() {
+  trackPageView('DiskAnalysisView')
   router.push('/analysis')
 }
 
@@ -821,6 +836,10 @@ onMounted(async () => {
     // eslint-disable-next-line no-console
     console.warn('获取版本失败:', error)
   }
+
+  // 追踪页面浏览
+  trackAppStarted()
+  trackPageView('HomeView')
 
   await toolStore.fetchTools()
   await fetchDiskUsage()

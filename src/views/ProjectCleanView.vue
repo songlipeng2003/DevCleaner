@@ -302,6 +302,12 @@ import {
 } from 'lucide-vue-next'
 import * as tauriApi from '@/services/tauri'
 import type { ProjectScanResult } from '@/services/tauri'
+import {
+  trackPageView,
+  trackScanStart,
+  trackScanComplete,
+  trackCleanComplete,
+} from '@/services/analytics'
 
 const router = useRouter()
 
@@ -419,6 +425,7 @@ async function startScan() {
   scanProgress.value = 0
   projects.value = []
   selectedItems.value.clear()
+  trackScanStart('project')
 
   try {
     // 模拟进度
@@ -435,6 +442,7 @@ async function startScan() {
 
     projects.value = results
     message.success(`扫描完成，发现 ${results.length} 个项目`)
+    trackScanComplete('project', results.length)
   } catch (error) {
     message.error('扫描失败: ' + (error as Error).message)
   } finally {
@@ -471,6 +479,10 @@ async function cleanSelected() {
       try {
         await tauriApi.cleanPaths(paths)
         message.success('清理完成')
+        trackCleanComplete('project', paths.reduce((sum, path) => {
+          const project = projects.value.find(p => p.path === path)
+          return sum + (project?.size || 0)
+        }, 0))
 
         // 移除已清理的项目
         projects.value = projects.value.filter(p => !selectedItems.value.has(p.path))
@@ -506,6 +518,7 @@ function openSettings() {
 
 // 初始化
 onMounted(() => {
+  trackPageView('ProjectCleanView')
   // 如果用户有 Projects 目录，设置默认路径
   const defaultPath = import.meta.env.VITE_HOME ? `${import.meta.env.VITE_HOME}/` : ''
   if (defaultPath) {

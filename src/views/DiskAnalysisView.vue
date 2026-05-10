@@ -269,6 +269,7 @@ import {
   type DiskAnalysisSummary,
   type CacheTrend,
 } from '@/services/tauri'
+import { trackPageView } from '@/services/analytics'
 
 const router = useRouter()
 
@@ -364,6 +365,7 @@ const openInExplorer = async (path: string) => {
 
 // 生命周期
 onMounted(() => {
+  trackPageView('DiskAnalysisView')
   loadAnalysis()
 })
 </script>

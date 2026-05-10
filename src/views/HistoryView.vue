@@ -246,6 +246,7 @@ import {
   Box,
   ArrowLeft,
 } from 'lucide-vue-next'
+import { trackPageView } from '@/services/analytics'
 import * as tauriApi from '@/services/tauri'
 import type { CleanHistory, CleanHistoryItemV2, MonthlyStat } from '@/services/tauri'
 
@@ -387,6 +388,7 @@ function openSettings() {
 
 // 初始化
 onMounted(() => {
+  trackPageView('HistoryView')
   fetchHistory()
 })
 </script>
